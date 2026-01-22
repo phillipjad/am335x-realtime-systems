@@ -1,5 +1,5 @@
 # Repository for SWE660 pair projects
 
-## Partners
+## Partner Names
 - Phillip Miavelstuck
 - Kabir Jolly
