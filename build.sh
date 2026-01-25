@@ -5,8 +5,8 @@
 set -eu
 
 ### Global Variables
-TARGET=""                      # Which project to build
-CMAKE_ARGS=("--DEXAMPLE=HELO") # Arguments for cmake
+TARGET=""     # Which project to build
+CMAKE_ARGS=() # Arguments for cmake
 
 ### Functions
 
@@ -51,7 +51,7 @@ parse_arguments "$@"
 case $TARGET in
 "p1" | "project1")
 	echo "Building project 1"
-	CMAKE_ARGS+=("--DTARGET=P1")
+	CMAKE_ARGS+=("-DTARGET=P1")
 	;;
 *)
 	echo "Error: Unknown target '$TARGET' provided" >&2
@@ -59,4 +59,8 @@ case $TARGET in
 	;;
 esac
 
-cmake --build "${CMAKE_ARGS[@]}"
+# Run cmake configure with the build directory
+cmake -B build "${CMAKE_ARGS[@]}"
+
+# Build the project
+cmake --build build
