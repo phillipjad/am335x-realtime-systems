@@ -1,8 +1,8 @@
 # Repository for SWE660 pair projects
 
 ## Partner Names
-- Phillip Miavelstuck
-- Kabir Jolly
+- Phillip Miavelstuck (pdickey@gmu.edu)
+- Kabir Jolly (kjolly2@gmu.edu)
 
 ## How to build assignments
 - Run the command `./build.sh -t p[1..n]` or `./build.sh -t project[1..n]`
