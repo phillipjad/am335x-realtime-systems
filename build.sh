@@ -5,8 +5,10 @@
 set -eu
 
 ### Global Variables
-TARGET=""     # Which project to build
-CMAKE_ARGS=() # Arguments for cmake
+ROOT_DIR=$(dirname "$(readlink -f $0)")
+TARGET=""                                                          # Which project to build
+CMAKE_ARGS=("-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/cmake/arch.cmake") # Arguments for cmake
+ARCH="x86_64"
 
 ### Functions
 
@@ -16,6 +18,7 @@ help() {
 	echo "Options:"
 	echo "  -t, --target <value>   Set the build target"
 	echo "  -h, --help             Show this help message and exit with status code 0"
+	echo "  -a, --arch             Set the architecture to build"
 	echo ""
 	echo "Examples:"
 	echo "  ./build.sh --target project1"
@@ -29,6 +32,10 @@ parse_arguments() {
 		case "$1" in
 		-t | --target)
 			TARGET="$2"
+			shift 2
+			;;
+		-a | --arch)
+			ARCH="$2"
 			shift 2
 			;;
 		-h | --help)
@@ -55,6 +62,25 @@ case $TARGET in
 	;;
 *)
 	echo "Error: Unknown target '$TARGET' provided" >&2
+	exit 1
+	;;
+esac
+
+case $ARCH in
+"x86_64")
+	CMAKE_ARGS+=("-DCMAKE_SYSTEM_PROCESSOR=$ARCH")
+	;;
+"arm")
+	CMAKE_ARGS+=("-DCMAKE_SYSTEM_PROCESSOR=$ARCH")
+	;;
+"aarch64")
+	CMAKE_ARGS+=("-DCMAKE_SYSTEM_PROCESSOR=$ARCH")
+	;;
+"ppc" | "powerpc")
+	CMAKE_ARGS+=("-DCMAKE_SYSTEM_PROCESSOR=$ARCH")
+	;;
+*)
+	echo "Error: Unknown compilation architecture '$ARCH' provided" >&2
 	exit 1
 	;;
 esac
