@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(swe660)
 
+# Set build type - release or debug
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	message(STATUS "Global Build Mode: DEBUG")
+	add_definitions(-DDEBUG)
+else()
+	message(STATUS "Global Build Mode: RELEASE")
+	add_definitions(-DNDEBUG)
+endif()
+
 # Set default target if not specified
 if(NOT DEFINED TARGET)
     message(STATUS "No TARGET specified. Use -DTARGET=P[n] to build a specific project.")
