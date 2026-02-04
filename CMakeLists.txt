@@ -7,7 +7,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_definitions(-DDEBUG)
 else()
 	message(STATUS "Global Build Mode: RELEASE")
-	add_definitions(-DNDEBUG)
 endif()
 
 # Set default target if not specified
