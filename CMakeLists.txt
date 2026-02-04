@@ -15,6 +15,35 @@ if(NOT DEFINED TARGET)
     return()
 endif()
 
+# Master list of all options to pass to the compiler
+set(COMPILER_OPTIONS
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+    -Wformat=2
+    -Wformat-security
+    -Wshadow
+    -Wundef
+    -Wmissing-prototypes
+    -Wmissing-declarations
+    -Wstrict-prototypes
+    -Wcast-qual
+    -Wcast-align
+    -Wvla
+)
+
+# Pretty print all compiler options that are being set
+string(REPLACE ";" "\n\t" COMPILER_OPTIONS_STR "${COMPILER_OPTIONS}")
+set(COMPILER_OPTIONS_STR "\t${COMPILER_OPTIONS_STR}")
+message(STATUS "Passing compile options:\n${COMPILER_OPTIONS_STR}")
+
+# Add each option in COMPILER_OPTIONS
+foreach(opt IN LISTS COMPILER_OPTIONS)
+    add_compile_options(${opt})
+endforeach()
+
+
 # Include the appropriate project cmake file
 if("${TARGET}" MATCHES "^P[0-9]+$")
     string(TOLOWER "${TARGET}" target_lower)
