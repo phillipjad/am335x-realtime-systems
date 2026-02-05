@@ -10,6 +10,7 @@ TARGET=""                                                          # Which proje
 CMAKE_ARGS=("-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/cmake/arch.cmake") # Arguments for cmake
 ARCH="x86_64"
 BUILD_TYPE="Release"
+CLEAR_DIR=0
 
 ### Functions
 
@@ -21,6 +22,7 @@ help() {
 	echo "  -h, --help             Show this help message and exit with status code 0"
 	echo "  -a, --arch             Set the architecture to build"
 	echo "  -d, --debug            Enable debug build"
+	echo "  -c, --clear            Removes the cmake build directory"
 	echo ""
 	echo "Examples:"
 	echo "  ./build.sh --target project1"
@@ -47,6 +49,10 @@ parse_arguments() {
 		-h | --help)
 			help
 			;;
+		-c | --clear)
+			CLEAR_DIR=1
+			shift 1
+			;;
 		*)
 			echo "Error: Unknown argument '$1'" >&2
 			exit 1
@@ -59,6 +65,11 @@ parse_arguments() {
 
 # Parse arguments
 parse_arguments "$@"
+
+if [ $CLEAR_DIR -eq 1 ]; then
+	printf "Clearing build directory: %s\n" "$ROOT_DIR/build"
+	rm -rf "$ROOT_DIR/build"
+fi
 
 # Check that provided target maps to a valid assignment
 case $TARGET in
