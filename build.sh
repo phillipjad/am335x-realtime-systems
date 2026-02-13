@@ -5,7 +5,7 @@
 set -eu
 
 ### Global Variables
-ROOT_DIR=$(dirname "$(readlink -f $0)")
+ROOT_DIR=$(dirname "$(readlink -f "$0")")
 TARGET=""                                                          # Which project to build
 CMAKE_ARGS=("-DCMAKE_TOOLCHAIN_FILE=${ROOT_DIR}/cmake/arch.cmake") # Arguments for cmake
 ARCH="x86_64"

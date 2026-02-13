@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(swe660)
 
+# Per https://sourceware.org/glibc/manual/2.43/html_mono/libc.html#index-_005fPOSIX_005fC_005fSOURCE
+add_definitions(-D_POSIX_C_SOURCE=202405L)
+
+# Define C standard being used -- Using C23 for now but should probably check with Prof
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 # Set build type - release or debug
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	message(STATUS "Global Build Mode: DEBUG")

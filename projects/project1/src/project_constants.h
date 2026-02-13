@@ -1,0 +1,8 @@
+#ifndef PROJECT_CONSTANTS_H
+#define PROJECT_CONSTANTS_H
+
+#define MAIN_THREAD_SLEEP_S (1U)
+#define SHUTDOWN_DELAY_S (5U)
+
+
+#endif /* PROJECT_CONSTANTS_H */
