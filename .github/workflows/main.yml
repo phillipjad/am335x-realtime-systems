@@ -77,7 +77,6 @@ jobs:
       - name: Test Target
         run: |
           if [ -f build/p1 ]; then
-            ./build/p1
             # TODO remove this for real implementation, but timemout after 10 seconds so it does not keep running forever
             timeout --preserve-status 10s ./build/p1
           else
