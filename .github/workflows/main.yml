@@ -41,7 +41,7 @@ jobs:
           sudo apt-get install -y \
             cmake build-essential \
             qemu-system qemu-user-static qemu-utils \
-            gdb-multiarch git \
+            gdb-multiarch git
 
           # Install the architecture type we need for run
           if [ "${{ matrix.arch }}" == "arm" ]; then
