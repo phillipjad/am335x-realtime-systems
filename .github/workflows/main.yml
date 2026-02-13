@@ -78,6 +78,8 @@ jobs:
         run: |
           if [ -f build/p1 ]; then
             ./build/p1
+            # TODO remove this for real implementation, but timemout after 10 seconds so it does not keep running forever
+            timeout --preserve-status 10s
           else
             echo "Error: Build not found"
             exit 1
