@@ -72,10 +72,12 @@ jobs:
       - name: Compile Target
         run: |
           chmod +x build.sh
+          # NEED TO CHANGE PER PROJECT
           ./build.sh --target p1 --arch ${{ matrix.arch }}
 
       - name: Test Target
         run: |
+          # NEED TO CHANGE PER PROJECT
           if [ -f build/p1 ]; then
             # TODO remove this for real implementation, but timemout after 10 seconds so it does not keep running forever
             timeout --preserve-status 10s ./build/p1
@@ -89,3 +91,37 @@ jobs:
         with:
           name: p1-binary-${{ matrix.arch }}
           path: build/p1
+          # Remove artifact files after a day, but latest builds will still be saved on release
+          retention-days: 1
+
+  # Job 3: Putting build files into release tab instead of temp storage artifacts
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == "push"
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-binaries
+          # NEED TO CHANGE PER PROJECT
+          pattern: p1-binary
+          merge-multiple: true
+
+      - name: Create Branch's Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Use branch name as tag
+          tag_name: latest-${{ github.ref_name }}
+          name: Release for branch ${{ github.ref_name }}
+          body: |
+            Automated build for branch: ${{ github.ref_name }}
+            Last Updated: ${{ github.event.head_commit.timestamp }}
+
+          files: ./all-binaries/p1*
+
+          prerelease: ${{ github.ref_name != 'main' }}
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
