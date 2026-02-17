@@ -90,7 +90,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: p1-binary-${{ matrix.arch }}
-          path: build/p1
+          path: build/p1-${{ matrix.arch }}
           # Remove artifact files after a day, but latest builds will still be saved on release
           retention-days: 1
 
@@ -98,7 +98,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == "push"
+    if: github.event_name == 'push'
 
     steps:
       - name: Download Artifacts
@@ -106,7 +106,7 @@ jobs:
         with:
           path: ./all-binaries
           # NEED TO CHANGE PER PROJECT
-          pattern: p1-binary
+          pattern: p1-binary-*
           merge-multiple: true
 
       - name: Create Branch's Release
@@ -119,7 +119,7 @@ jobs:
             Automated build for branch: ${{ github.ref_name }}
             Last Updated: ${{ github.event.head_commit.timestamp }}
 
-          files: ./all-binaries/p1*
+          files: ./all-binaries/p1-*
 
           prerelease: ${{ github.ref_name != 'main' }}
           make_latest: true
