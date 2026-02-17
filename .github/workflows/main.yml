@@ -81,6 +81,9 @@ jobs:
           if [ -f build/p1 ]; then
             # TODO remove this for real implementation, but timemout after 10 seconds so it does not keep running forever
             timeout --preserve-status 10s ./build/p1
+
+            # Rename for artifact
+            mv build/p1 build/p1-${{ matrix.arch }}
           else
             echo "Error: Build not found"
             exit 1
