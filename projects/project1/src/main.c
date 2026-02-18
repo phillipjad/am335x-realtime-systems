@@ -13,6 +13,8 @@
 
 #define NUM_UTILIZED_PINS (6U)
 
+#define SEC_PER_MINUTE (60U)
+
 /* Struct for parsing user input for pins */
 typedef struct {
 	char *pin_string;
@@ -56,12 +58,18 @@ static void get_user_configuration_items(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for green light duration");
 	}
-	result = parse_input_to_uint16(input_buffer, &user_config.green_light_duration_m);
+	/* Parse user input as float in case of decimal input */
+	float64_t temp = 0.0;
+	result = parse_input_to_float64(input_buffer, &temp);
+	temp *= (float64_t)SEC_PER_MINUTE;
+	if ((temp < 0.0) || (temp > (float64_t)UINT16_MAX)) {
+		LOG_AND_EXIT("Green light duration too large");
+	}
+	user_config.green_light_duration_s = (uint16_t)temp;
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse green light duration string to int");
 	}
 	(void)memset(input_buffer, 0, sizeof(input_buffer));
-
 
 #ifdef NDEBUG
 	/* If built in RELEASE mode then we should get user input for pin layout from stdio */
