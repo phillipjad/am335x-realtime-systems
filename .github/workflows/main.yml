@@ -96,7 +96,7 @@ jobs:
             powerpc-linux-gnu-gcc --version || echo "powerpc-linux-gnu-gcc not found"
           elif [ "${{ matrix.arch }}" == "x86_64" ]; then
             echo "Native x86_64 architecture: QEMU Cross-Compile is not needed, using gcc"
-          else 
+          else
             echo "Error: Unknown architecture '${{ matrix.arch }}' requested, exiting now..."
             exit 1
           fi
@@ -106,7 +106,7 @@ jobs:
           for project in $PROJECTS; do
             echo "---Compiling Project: $project"
             ./build.sh --target $project --arch ${{ matrix.arch }}
-          done 
+          done
       - name: Test Target
         run: |
           # Loop through projects to run
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Publish artifacts to release if PR is approved
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-  
+
     permissions:
       contents: write
 
