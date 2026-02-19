@@ -13,13 +13,13 @@
 #define USER_INPUT_MAX_LEN (1024U)
 
 #ifndef USE_CONFIG /* These are only necessary for stdio configuration */
-#define NUM_UTILIZED_PINS (6U)
+#define NUM_UTILIZED_GPIO (6U)
 
-/* Struct for parsing user input for pins */
+/* Struct for parsing user input for GPIO */
 typedef struct {
-	char *pin_string;
-	uint8_t *pin_pointer;
-} pin_io_struct_t;
+	char *gpio_string;
+	uint8_t *gpio_pointer;
+} gpio_struct_t;
 #endif /* USE_CONFIG */
 
 static configuration_items_t user_config = { 0 };
@@ -74,26 +74,26 @@ static void get_user_configuration_items(void) {
 	(void)memset(input_buffer, 0, sizeof(input_buffer));
 
 #ifdef NDEBUG
-	/* If built in RELEASE mode then we should get user input for pin layout from stdio */
-	gpio_pin_layout_t *pin_layout = &user_config.pin_layout;
-	pin_io_struct_t pin_info[NUM_UTILIZED_PINS] = { { .pin_string = "North/South green light",
-		                                            .pin_pointer = &pin_layout->green_light_ns },
-		{ .pin_string = "North/South yellow light", .pin_pointer = &pin_layout->yellow_light_ns },
-		{ .pin_string = "North/South red light", .pin_pointer = &pin_layout->red_light_ns },
-		{ .pin_string = "East/West green light", .pin_pointer = &pin_layout->green_light_ew },
-		{ .pin_string = "East/West yellow light", .pin_pointer = &pin_layout->yellow_light_ew },
-		{ .pin_string = "East/West red light", .pin_pointer = &pin_layout->red_light_ew } };
-	for (uint8_t ii = 0U; ii < NUM_UTILIZED_PINS; ++ii) {
-		pin_io_struct_t *io_option = &pin_info[ii];
+	/* If built in RELEASE mode then we should get user input for gpio layout from stdio */
+	gpio_layout_t *gpio_layout = &user_config.gpio_layout;
+	gpio_struct_t gpio_info[NUM_UTILIZED_GPIO] = { { .gpio_string = "North/South green light",
+		                                           .gpio_pointer = &gpio_layout->green_light_ns },
+		{ .gpio_string = "North/South yellow light", .gpio_pointer = &gpio_layout->yellow_light_ns },
+		{ .gpio_string = "North/South red light", .gpio_pointer = &gpio_layout->red_light_ns },
+		{ .gpio_string = "East/West green light", .gpio_pointer = &gpio_layout->green_light_ew },
+		{ .gpio_string = "East/West yellow light", .gpio_pointer = &gpio_layout->yellow_light_ew },
+		{ .gpio_string = "East/West red light", .gpio_pointer = &gpio_layout->red_light_ew } };
+	for (uint8_t ii = 0U; ii < NUM_UTILIZED_GPIO; ++ii) {
+		gpio_struct_t *io_option = &gpio_info[ii];
 		char prompt[255] = { 0 };
-		(void)snprintf(prompt, 255, "Which pin should be used for %s", io_option->pin_string);
+		(void)snprintf(prompt, 255, "Which gpio should be used for %s", io_option->gpio_string);
 		result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, prompt);
 		if (result != STATUS_SUCCESS) {
-			LOG_AND_EXIT("Failed to get user input for %s pin", io_option->pin_string);
+			LOG_AND_EXIT("Failed to get user input for %s gpio", io_option->gpio_string);
 		}
-		result = parse_input_to_uint8(input_buffer, io_option->pin_pointer);
+		result = parse_input_to_uint8(input_buffer, io_option->gpio_pointer);
 		if (result != STATUS_SUCCESS) {
-			LOG_AND_EXIT("Failed to parse user input for %s pin", pin_info->pin_string);
+			LOG_AND_EXIT("Failed to parse user input for %s gpio", io_option->gpio_string);
 		}
 		(void)memset(input_buffer, 0, sizeof(input_buffer));
 	}
