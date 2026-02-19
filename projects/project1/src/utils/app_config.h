@@ -16,7 +16,7 @@
 
 /**
  * @brief Reads the configuration file for the application. Fails fast if there is any error
- * 
+ *
  * @param[out] config A struct holding all configuration items to populate
  */
 void load_app_config(configuration_items_t *config);
