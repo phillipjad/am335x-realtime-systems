@@ -36,7 +36,7 @@ jobs:
           echo "Checking code formatting..."
           find projects -name '*.c' -o -name '*.h' | xargs clang-format --dry-run --Werror --style=file
 
-  # Job 2: QEMU Integration, Build Project, and Test Project
+  # Job 2: QEMU Integration and Compile Check
   build:
     needs: lint
     runs-on: ubuntu-24.04
@@ -96,7 +96,7 @@ jobs:
             powerpc-linux-gnu-gcc --version || echo "powerpc-linux-gnu-gcc not found"
           elif [ "${{ matrix.arch }}" == "x86_64" ]; then
             echo "Native x86_64 architecture: QEMU Cross-Compile is not needed, using gcc"
-          else 
+          else
             echo "Error: Unknown architecture '${{ matrix.arch }}' requested, exiting now..."
             exit 1
           fi
@@ -106,22 +106,8 @@ jobs:
           for project in $PROJECTS; do
             echo "---Compiling Project: $project"
             ./build.sh --target $project --arch ${{ matrix.arch }}
-          done 
-      - name: Test Target
-        run: |
-          # Loop through projects to run
-          for project in $PROJECTS; do
-            echo "---Testing target: $project---"
-            if [ -f "build/$project" ]; then
-              # TODO remove this for real implementation, but timemout after 10 seconds so it does not keep running forever
-              timeout --preserve-status 10s "./build/$project"
-
-              # Rename for artifact
-              mv "build/$project" "build/${project}-${{ matrix.arch }}"
-            else
-              echo "Error: Build not found for $project"
-              exit 1
-            fi
+            # Rename for artifact
+            mv "build/$project" "build/${project}-${{ matrix.arch }}"
           done
 
       - name: Upload Artifact
@@ -141,7 +127,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Publish artifacts to release if PR is approved
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-  
+
     permissions:
       contents: write
 

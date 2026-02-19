@@ -10,4 +10,4 @@
  */
 void signal_gpio(uint16_t pin, uint8_t value);
 
-#endif
+#endif /* IO_LOGIC_H */
