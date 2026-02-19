@@ -23,6 +23,7 @@ help() {
 	echo "  -a, --arch             Set the architecture to build"
 	echo "  -d, --debug            Enable debug build"
 	echo "  -c, --clear            Removes the cmake build directory"
+	echo "  -u, --use-config       Switches the handling of user input from stdio to config file"
 	echo ""
 	echo "Examples:"
 	echo "  ./build.sh --target project1"
@@ -51,6 +52,10 @@ parse_arguments() {
 			;;
 		-c | --clear)
 			CLEAR_DIR=1
+			shift 1
+			;;
+		-u | --use-config)
+			CMAKE_ARGS+=("-DUSE_CONFIG=1")
 			shift 1
 			;;
 		*)
