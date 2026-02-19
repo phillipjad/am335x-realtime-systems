@@ -25,8 +25,14 @@ int32_t parse_input_to_uint8(const char *input_buffer, uint8_t *output) {
 	char *endptr = NULL;
 	errno = 0;
 	int64_t value = strtol(input_buffer, &endptr, BASE_DEC);
+	/* Check for errno */
 	if (errno != 0) {
 		LOG("Experienced error while parsing user input to uint8_t: %s", strerror(errno));
+		return STATUS_FAIL;
+	}
+	/* Check that input was actually parsed */
+	if (endptr == input_buffer) {
+		LOG("Failed to parse input: %s", input_buffer);
 		return STATUS_FAIL;
 	}
 
@@ -47,8 +53,15 @@ int32_t parse_input_to_uint16(const char *input_buffer, uint16_t *output) {
 	char *endptr = NULL;
 	errno = 0;
 	int64_t value = strtol(input_buffer, &endptr, BASE_DEC);
+	/* Check for errno */
 	if (errno != 0) {
 		LOG("Experienced error while parsing user input to uint16_t: %s", strerror(errno));
+		return STATUS_FAIL;
+	}
+
+	/* Check that input was actually parsed */
+	if (endptr == input_buffer) {
+		LOG("Failed to parse input: %s", input_buffer);
 		return STATUS_FAIL;
 	}
 
@@ -69,8 +82,14 @@ int32_t parse_input_to_float64(const char *input_buffer, double *output) {
 	char *endptr = NULL;
 	errno = 0;
 	float64_t value = strtod(input_buffer, &endptr);
+	/* Check for errno */
 	if (errno != 0) {
 		LOG("Experienced error while parsing user input to float64_t: %s", strerror(errno));
+		return STATUS_FAIL;
+	}
+	/* Check that input was actually parsed */
+	if (endptr == input_buffer) {
+		LOG("Failed to parse input: %s", input_buffer);
 		return STATUS_FAIL;
 	}
 
