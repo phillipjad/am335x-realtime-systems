@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 /* Local project includes after system libraries */
-#include <project_types.h>
+#include "project_types.h"
 
 /**
  * @brief printf-like logging macro
