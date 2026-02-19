@@ -13,8 +13,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	message(STATUS "Global Build Mode: DEBUG")
 	add_definitions(-DDEBUG)
+    add_compile_options(-g -O0)
 else()
 	message(STATUS "Global Build Mode: RELEASE")
+    add_compile_options(-O2)
 endif()
 
 # Set default target if not specified
