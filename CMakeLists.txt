@@ -25,6 +25,12 @@ if(NOT DEFINED TARGET)
     return()
 endif()
 
+# Set configuration input type
+if(USE_CONFIG)
+    message(STATUS "Setting parameters from configuration file")
+    add_definitions(-DUSE_CONFIG)
+endif()
+
 # Master list of all options to pass to the compiler
 set(COMPILER_OPTIONS
     -Wall
