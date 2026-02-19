@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
+#include "app_config.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -11,15 +12,15 @@
 
 #define USER_INPUT_MAX_LEN (1024U)
 
+#ifndef USE_CONFIG /* These are only necessary for stdio configuration */
 #define NUM_UTILIZED_PINS (6U)
-
-#define SEC_PER_MINUTE (60U)
 
 /* Struct for parsing user input for pins */
 typedef struct {
 	char *pin_string;
 	uint8_t *pin_pointer;
 } pin_io_struct_t;
+#endif /* USE_CONFIG */
 
 static configuration_items_t user_config = { 0 };
 
@@ -50,6 +51,7 @@ static void log_mode(void) {
 /*--------------------------------------
  * Static Function: get_user_configuration_items
  *--------------------------------------*/
+#ifndef USE_CONFIG
 static void get_user_configuration_items(void) {
 	char input_buffer[USER_INPUT_MAX_LEN] = { 0 };
 
@@ -97,16 +99,23 @@ static void get_user_configuration_items(void) {
 	}
 #endif /* NDEBUG */
 }
+#endif /* USE_CONFIG */
 
 /* Application entrypoint */
 int32_t main(void) {
+#ifdef USE_CONFIG /* If we are using a config file then we load it in first */
+	load_app_config(&user_config);
+#endif /* USE_CONFIG */
+
 	/* Log the mode that the binary was compiled with */
 	log_mode();
 
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
 
+#ifndef USE_CONFIG /* If we are not using config we should get inpus from stdio */
 	get_user_configuration_items();
+#endif /* USE_CONFIG */
 
 	while (is_shutdown_requested() == 0) {
 		run_traffic_signal();
