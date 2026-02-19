@@ -80,18 +80,18 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		}
 		config->green_light_duration_s = (uint16_t)temp;
 		return STATUS_SUCCESS;
-	} else if (strcmp(key, GREEN_LIGHT_PIN_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.green_light_ns);
-	} else if (strcmp(key, YELLOW_LIGHT_PIN_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.yellow_light_ns);
-	} else if (strcmp(key, RED_LIGHT_PIN_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.red_light_ns);
-	} else if (strcmp(key, GREEN_LIGHT_PIN_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.green_light_ew);
-	} else if (strcmp(key, YELLOW_LIGHT_PIN_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.yellow_light_ew);
-	} else if (strcmp(key, RED_LIGHT_PIN_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.red_light_ew);
+	} else if (strcmp(key, GREEN_LIGHT_GPIO_NS_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.green_light_ns);
+	} else if (strcmp(key, YELLOW_LIGHT_GPIO_NS_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.yellow_light_ns);
+	} else if (strcmp(key, RED_LIGHT_GPIO_NS_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.red_light_ns);
+	} else if (strcmp(key, GREEN_LIGHT_GPIO_EW_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.green_light_ew);
+	} else if (strcmp(key, YELLOW_LIGHT_GPIO_EW_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.yellow_light_ew);
+	} else if (strcmp(key, RED_LIGHT_GPIO_EW_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.red_light_ew);
 	} else {
 		LOG("Received unknown config key: %s", key);
 		return STATUS_FAIL;
@@ -110,9 +110,12 @@ static void parse_config_file_contents(const char *config_content, configuration
 	char *saveptr = NULL;
 	char *line = strtok_r(config_content_copy, "\n", &saveptr);
 	while (line != NULL) {
-		int32_t result = parse_config_file_line(line, config);
-		if (result != STATUS_SUCCESS) {
-			LOG_AND_EXIT("Failed to parse config line: (%s)", line);
+		/* We should ignore comment lines */
+		if (line[0] != '#') {
+			int32_t result = parse_config_file_line(line, config);
+			if (result != STATUS_SUCCESS) {
+				LOG_AND_EXIT("Failed to parse config line: (%s)", line);
+			}
 		}
 		line = strtok_r(NULL, "\n", &saveptr);
 	}

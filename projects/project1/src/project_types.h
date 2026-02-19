@@ -19,11 +19,11 @@ typedef struct {
 	uint8_t yellow_light_ew; /**< Pin for yellow light on east/west */
 	uint8_t red_light_ns;    /**< Pin for red light on north/south */
 	uint8_t red_light_ew;    /**< Pin for red light on east/west */
-} gpio_pin_layout_t;
+} gpio_layout_t;
 
 typedef struct {
 	uint16_t green_light_duration_s;
-	gpio_pin_layout_t pin_layout;
+	gpio_layout_t gpio_layout;
 } configuration_items_t;
 
 #endif /* PROJECT_TYPES_H */
