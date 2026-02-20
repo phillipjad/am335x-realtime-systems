@@ -12,7 +12,7 @@
  *
  * @param[in] color Traffic Light color
  */
-void light_on_stdio(const char *color);
+void light_on_sw(const char *color);
 
 /**
  * @brief Hardware version of LED turns on through pin
@@ -20,14 +20,14 @@ void light_on_stdio(const char *color);
  * @param[in] color Traffic Light color
  * @param[in] light_pin Pin number for LEDs corresponding to Traffic Light
  */
-void light_on_led(const char *color, uint8_t light_pin);
+void light_on_hw(const char *color, uint8_t light_pin);
 
 /**
  * @brief Software version of LED turns off through LOG
  *
  * @param[in] color Traffic Light color
  */
-void light_off_stdio(const char *color);
+void light_off_sw(const char *color);
 
 /**
  * @brief Hardware version of LED turns off through pin
@@ -35,7 +35,7 @@ void light_off_stdio(const char *color);
  * @param[in] color Traffic Light color
  * @param[in] light_pin Pin number for LED corresponding to Traffic Light
  */
-void light_off_led(const char *color, uint8_t light_pin);
+void light_off_hw(const char *color, uint8_t light_pin);
 
 /**
  * @brief Overarching function to invoke hardware and software versions of turning LED on

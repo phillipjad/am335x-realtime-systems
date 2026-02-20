@@ -11,6 +11,9 @@
 #include "logger.h"
 #include "project_types.h"
 
+/*--------------------------------------
+ * Function: handle_shutdown
+ *--------------------------------------*/
 void handle_shutdown(gpio_layout_t light_pins) {
 	/* TODO: This will need to actually handle shutdown at some point */
 
@@ -31,6 +34,9 @@ void handle_shutdown(gpio_layout_t light_pins) {
 	exit(EXIT_SUCCESS);
 }
 
+/*--------------------------------------
+ * Function: run_traffic_signal
+ *--------------------------------------*/
 void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 	// Use char to say which set of lights are on: ns = 0, ew = 1
 	static bool isNSGroup = true;
