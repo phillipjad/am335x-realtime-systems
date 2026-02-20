@@ -8,6 +8,14 @@
 #include "project_types.h"
 
 /**
+ * @brief Get the pin number for the traffic light based on color and flow direction
+ *
+ * @param[in] color Traffic Light color
+ * @param[in] direction Direction for LEDs corresponding to Traffic Light
+ */
+uint8_t get_pin_for_light(const char *color, const char *direction);
+
+/**
  * @brief Software version of LED turns on through LOG
  *
  * @param[in] color Traffic Light color

@@ -49,6 +49,7 @@ void light_on_sw(const char *color, const char *direction) {
 void light_on_hw(const char *color, const char *direction) {
 	uint8_t light_pin = get_pin_for_light(color, direction);
 	// TODO: Add hardware control
+	(void)light_pin;
 	return;
 }
 
@@ -65,6 +66,7 @@ void light_off_sw(const char *color, const char *direction) {
 void light_off_hw(const char *color, const char *direction) {
 	uint8_t light_pin = get_pin_for_light(color, direction);
 	// TODO: Add hardware control
+	(void)light_pin;
 	return;
 }
 
