@@ -22,7 +22,7 @@ typedef struct {
 } gpio_struct_t;
 #endif /* USE_CONFIG */
 
-extern configuration_items_t user_config;
+configuration_items_t user_config = { 0 };
 
 /*--------------------------------------
  * Static Function: application_init
