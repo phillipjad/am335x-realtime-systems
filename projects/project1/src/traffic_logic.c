@@ -1,5 +1,6 @@
 #include "traffic_logic.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -8,7 +9,6 @@
 /* Local project includes after system libraries */
 #include "led_control.h"
 #include "logger.h"
-#include "project_constants.h"
 #include "project_types.h"
 
 void handle_shutdown(void) {
@@ -21,35 +21,74 @@ void handle_shutdown(void) {
 	exit(EXIT_SUCCESS);
 }
 
-void run_traffic_signal(uint_16_t green_light_time, gpio_pin_layout_t light_pins) {
+void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 	// Use char to say which set of lights are on: ns = 0, ew = 1
-	bool isNSGroup = true;
+	static bool isNSGroup = true;
+	// Use to setup all lights to red
+	static bool isStart = true;
 
-	if (isNSGroup) {
+	// Light pins for rotation
+	uint8_t greenLightPin = 0, yellowLightPin = 0, redLightPin = 0;
+
+	// Setup lights
+	if (isStart) {
+		light_on(RED, light_pins.red_light_ns);
+		light_on(RED, light_pins.red_light_ew);
+		isStart = false;
 	}
+
+	// Setup groups for lights
+	if (isNSGroup) {
+		// Group subheader
+		LOG("\tNS GROUP LIGHTS:");
+		// NS Group Pins
+		greenLightPin = light_pins.green_light_ns;
+		yellowLightPin = light_pins.yellow_light_ns;
+		redLightPin = light_pins.red_light_ns;
+	} else {
+		// Group subheader
+		LOG("\tEW GROUP LIGHTS:");
+		// EW Group Pins
+		greenLightPin = light_pins.green_light_ew;
+		yellowLightPin = light_pins.yellow_light_ew;
+		redLightPin = light_pins.red_light_ew;
+	}
+
 	// Timer varirables
 	struct timespec timer;
-	timer.tv_sec = green_light_time;
+	// Yellow + Red 2 seconds before Green
+	timer.tv_sec = 2;
 	timer.tv_nsec = 0;
+	// Yellow light on
+	light_on(YELLOW, yellowLightPin);
+	nanosleep(&timer, NULL);
 
+	// Set Green Light Timer
+	timer.tv_sec = green_light_time;
+
+	// Turn off red and yellow light
+	light_off(RED, redLightPin);
+	light_off(YELLOW, yellowLightPin);
 	// GREEN LIGHT
-	light_on(GREEN, light_pins);
+	light_on(GREEN, greenLightPin);
 	// Sleep for stdio input green light time
 	nanosleep(&timer, NULL);
-	light_flash(GREEN, light_pins, LIGHT_FLASH_TIME);
-	light_off(GREEN, light_pins);
+
+	// Start flashing green light since its almost over
+	// flash: off -> on -> ...
+	light_flash(GREEN, greenLightPin, LIGHT_FLASH_TIME);
+	light_off(GREEN, greenLightPin);
 
 	// YELLOW LIGHT
 	timer.tv_sec = 5;
-	light_on(YELLOW, light_pins);
+	light_on(YELLOW, yellowLightPin);
 	// Sleep for 5 seconds
 	nanosleep(&timer, NULL);
-	light_off(YELLOW, light_pins);
+	light_off(YELLOW, yellowLightPin);
 
 	// RED LIGHT
-	timer.tv_sec = 2;
-	light_on(RED, light_pins);
-	// Sleep for 2 seconds
+	light_on(RED, redLightPin);
 
 	// Flip Light Groups
+	isNSGroup = !isNSGroup;
 }
