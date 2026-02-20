@@ -118,7 +118,7 @@ int32_t main(void) {
 #endif /* USE_CONFIG */
 
 	while (is_shutdown_requested() == 0) {
-		run_traffic_signal(user_config.green_light_duration_s, user_config.gpio_layout);
+		run_traffic_signal(user_config.green_light_duration_s);
 		(void)sleep(MAIN_THREAD_SLEEP_S);
 	}
 
