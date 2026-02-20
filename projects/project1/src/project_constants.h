@@ -12,15 +12,15 @@
 /* Traffic Light Flashing Time */
 #define LIGHT_FLASH_TIME (4U)
 
+/* Light Directions */
+#define NORTH_SOUTH ("North/South")
+#define EAST_WEST ("East/West")
+
 /* Light Colors */
 #define GREEN ("Green")
 #define YELLOW ("Yellow")
 #define RED ("Red")
 
-/* boolean */
-#define bool int
-#define false 0
-#define true 1
 /* Filenames */
 #define CONFIG_FILENAME ("/p1_config.cfg")
 
