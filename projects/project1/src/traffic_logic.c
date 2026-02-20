@@ -32,6 +32,7 @@ void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 
 	// Setup lights
 	if (isStart) {
+		LOG("Starting Traffic Lights:");
 		light_on(RED, light_pins.red_light_ns);
 		light_on(RED, light_pins.red_light_ew);
 		isStart = false;
@@ -40,14 +41,14 @@ void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 	// Setup groups for lights
 	if (isNSGroup) {
 		// Group subheader
-		LOG("\tNS GROUP LIGHTS:");
+		LOG("\n\tNS GROUP LIGHTS:");
 		// NS Group Pins
 		greenLightPin = light_pins.green_light_ns;
 		yellowLightPin = light_pins.yellow_light_ns;
 		redLightPin = light_pins.red_light_ns;
 	} else {
 		// Group subheader
-		LOG("\tEW GROUP LIGHTS:");
+		LOG("\n\tEW GROUP LIGHTS:");
 		// EW Group Pins
 		greenLightPin = light_pins.green_light_ew;
 		yellowLightPin = light_pins.yellow_light_ew;
@@ -61,6 +62,7 @@ void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 	timer.tv_nsec = 0;
 	// Yellow light on
 	light_on(YELLOW, yellowLightPin);
+	LOG("\tgreen in 2 seconds");
 	nanosleep(&timer, NULL);
 
 	// Set Green Light Timer
@@ -69,19 +71,23 @@ void run_traffic_signal(uint16_t green_light_time, gpio_layout_t light_pins) {
 	// Turn off red and yellow light
 	light_off(RED, redLightPin);
 	light_off(YELLOW, yellowLightPin);
+
 	// GREEN LIGHT
 	light_on(GREEN, greenLightPin);
+	LOG("\tsolid for %d\n", green_light_time);
 	// Sleep for stdio input green light time
 	nanosleep(&timer, NULL);
 
 	// Start flashing green light since its almost over
 	// flash: off -> on -> ...
+	LOG("\tFlashing %d times\n", LIGHT_FLASH_TIME);
 	light_flash(GREEN, greenLightPin, LIGHT_FLASH_TIME);
 	light_off(GREEN, greenLightPin);
 
 	// YELLOW LIGHT
 	timer.tv_sec = 5;
 	light_on(YELLOW, yellowLightPin);
+	LOG("\tsolid for 5 seconds");
 	// Sleep for 5 seconds
 	nanosleep(&timer, NULL);
 	light_off(YELLOW, yellowLightPin);

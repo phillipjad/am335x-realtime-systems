@@ -1,9 +1,9 @@
 #ifndef LED_CONTROL_H
 #define LED_CONTROL_H
 
+#include <stdint.h>
 #include "project_constants.h"
 #include "project_types.h"
-#include <_types/_uint8_t.h>
 
 /**
  * @brief Software version of LED turns on through LOG
