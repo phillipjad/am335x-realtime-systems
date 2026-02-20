@@ -2,6 +2,8 @@
 #define LED_CONTROL_H
 
 #include <stdint.h>
+
+/* Local project includes after system libraries */
 #include "project_constants.h"
 #include "project_types.h"
 

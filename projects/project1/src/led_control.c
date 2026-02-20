@@ -1,4 +1,5 @@
 #include "led_control.h"
+
 #include <time.h>
 
 #include "logger.h"
@@ -29,7 +30,7 @@ void light_on(const char *color, uint8_t light_pin) {
 #ifdef NDEBUG
 	light_on_led(color, light_pin);
 #else
-	(void) light_pin;
+	(void)light_pin;
 #endif
 }
 
@@ -39,7 +40,7 @@ void light_off(const char *color, uint8_t light_pin) {
 #ifdef NDEBUG
 	light_off_led(color, light_pin);
 #else
-	(void) light_pin;
+	(void)light_pin;
 #endif
 }
 
