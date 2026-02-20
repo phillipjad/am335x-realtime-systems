@@ -123,5 +123,5 @@ int32_t main(void) {
 	}
 
 	LOG("Starting application shutdown sequence...");
-	handle_shutdown();
+	handle_shutdown(user_config.gpio_layout);
 }
