@@ -4,9 +4,9 @@
 #include "project_types.h"
 
 /**
- * @brief Gracefully shuts down the system
+ * @brief Gracefully shuts down the system - turn off LEDs
  */
-void handle_shutdown(void);
+void handle_shutdown(gpio_layout_t light_pins);
 
 /**
  * @brief Runs the applications' traffic signal logic

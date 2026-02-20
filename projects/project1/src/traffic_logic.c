@@ -11,8 +11,18 @@
 #include "logger.h"
 #include "project_types.h"
 
-void handle_shutdown(void) {
+void handle_shutdown(gpio_layout_t light_pins) {
 	/* TODO: This will need to actually handle shutdown at some point */
+
+	// Turn off all LEDs
+	LOG("Turning off all lights...");
+	light_off(GREEN, light_pins.green_light_ns);
+	light_off(GREEN, light_pins.green_light_ew);
+	light_off(YELLOW, light_pins.yellow_light_ns);
+	light_off(YELLOW, light_pins.yellow_light_ew);
+	light_off(RED, light_pins.red_light_ns);
+	light_off(RED, light_pins.red_light_ew);
+
 	uint32_t sleep_time = sleep(SHUTDOWN_DELAY_S);
 	if (sleep_time == SHUTDOWN_DELAY_S) {
 		LOG("Failed to gracefully shutdown");
