@@ -6,7 +6,7 @@
 /**
  * @brief Gracefully shuts down the system - turn off LEDs
  */
-void handle_shutdown(gpio_layout_t light_pins);
+void handle_shutdown();
 
 /**
  * @brief Runs the applications' traffic signal logic

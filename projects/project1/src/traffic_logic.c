@@ -17,7 +17,7 @@
 /*--------------------------------------
  * Function: handle_shutdown
  *--------------------------------------*/
-void handle_shutdown(gpio_layout_t light_pins) {
+void handle_shutdown() {
 	/* TODO: This will need to actually handle shutdown at some point */
 
 	// Turn off all LEDs
