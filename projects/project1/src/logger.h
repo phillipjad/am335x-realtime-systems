@@ -22,7 +22,7 @@
 /**
  * @brief disabled for release mode
  */
-#define DEBUG_LOG(format, ...) 
+#define DEBUG_LOG(format, ...)
 #endif
 
 /**
