@@ -16,25 +16,26 @@ extern configuration_items_t user_config;
  * Function: get_pin_for_light
  *--------------------------------------*/
 uint8_t get_pin_for_light(const char *color, const char *direction) {
+	uint8_t pin = 0U;
 	if (strcmp(direction, NORTH_SOUTH) == 0) {
 		if (strcmp(color, GREEN) == 0) {
-			return user_config.gpio_layout.green_light_ns;
+			pin = user_config.gpio_layout.green_light_ns;
 		} else if (strcmp(color, YELLOW) == 0) {
-			return user_config.gpio_layout.yellow_light_ns;
+			pin = user_config.gpio_layout.yellow_light_ns;
 		} else {
-			return user_config.gpio_layout.red_light_ns;
+			pin = user_config.gpio_layout.red_light_ns;
 		}
 	} else {
 		if (strcmp(color, GREEN) == 0) {
-			return user_config.gpio_layout.green_light_ew;
+			pin = user_config.gpio_layout.green_light_ew;
 		} else if (strcmp(color, YELLOW) == 0) {
-			return user_config.gpio_layout.yellow_light_ew;
+			pin = user_config.gpio_layout.yellow_light_ew;
 		} else {
-			return user_config.gpio_layout.red_light_ew;
+			pin = user_config.gpio_layout.red_light_ew;
 		}
 	}
+	return pin;
 }
-
 
 /*--------------------------------------
  * Function: light_on_sw
