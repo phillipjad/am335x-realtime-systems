@@ -13,7 +13,7 @@
 #define LOG(format, ...) project_log(stdout, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
 
 
-#if defined(DEBUG)
+#ifdef DEBUG
 /**
  * @brief printf-like logging macro only for debug mode
  */

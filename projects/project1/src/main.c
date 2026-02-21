@@ -39,12 +39,14 @@ static void application_init(void) {
  * Static Function: log_mode
  *--------------------------------------*/
 static void log_mode(void) {
-#if defined(DEBUG)
+#ifdef DEBUG
 	LOG("DEBUG MODE ENABLED");
-#elif defined(NDEBUG)
+#else
+#ifdef NDEBUG
 	LOG("RELEASE MODE ENABLED");
 #else
 	LOG_AND_EXIT("No release mode detected!");
+#endif
 #endif
 }
 
