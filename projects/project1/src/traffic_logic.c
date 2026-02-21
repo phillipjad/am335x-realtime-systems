@@ -50,7 +50,7 @@ void run_traffic_signal(uint16_t green_light_time) {
 
 	// Setup lights
 	if (isStart) {
-		LOG("Starting Traffic Lights:");
+		DEBUG_LOG("Starting Traffic Lights:");
 		light_on(RED, NORTH_SOUTH);
 		light_on(RED, EAST_WEST);
 		isStart = false;
@@ -63,7 +63,7 @@ void run_traffic_signal(uint16_t green_light_time) {
 	timer.tv_nsec = 0;
 	// Yellow light on
 	light_on(YELLOW, traffic_direction);
-	LOG("\tgreen in 2 seconds");
+	DEBUG_LOG("\tgreen in 2 seconds");
 	nanosleep(&timer, NULL);
 
 	// Set Green Light Timer
@@ -75,20 +75,20 @@ void run_traffic_signal(uint16_t green_light_time) {
 
 	// GREEN LIGHT
 	light_on(GREEN, traffic_direction);
-	LOG("\tsolid for %d\n", green_light_time);
+	DEBUG_LOG("\tsolid for %d\n", green_light_time);
 	// Sleep for stdio input green light time
 	nanosleep(&timer, NULL);
 
 	// Start flashing green light since its almost over
 	// flash: off -> on -> ...
-	LOG("\tFlashing %d times\n", LIGHT_FLASH_TIME);
-	light_flash(GREEN, traffic_direction, LIGHT_FLASH_TIME);
+	DEBUG_LOG("\tFlashing %d times\n", LIGHT_FLASH_COUNT);
+	light_flash(GREEN, traffic_direction, LIGHT_FLASH_COUNT);
 	light_off(GREEN, traffic_direction);
 
 	// YELLOW LIGHT
 	timer.tv_sec = 5;
 	light_on(YELLOW, traffic_direction);
-	LOG("\tsolid for 5 seconds");
+	DEBUG_LOG("\tsolid for 5 seconds");
 	// Sleep for 5 seconds
 	nanosleep(&timer, NULL);
 	light_off(YELLOW, traffic_direction);

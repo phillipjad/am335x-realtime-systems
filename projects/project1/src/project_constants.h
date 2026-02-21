@@ -10,7 +10,7 @@
 #define SHUTDOWN_DELAY_S (5U)
 
 /* Traffic Light Flashing Time */
-#define LIGHT_FLASH_TIME (4U)
+#define LIGHT_FLASH_COUNT (4U)
 
 /* Light Directions */
 #define NORTH_SOUTH ("North/South")

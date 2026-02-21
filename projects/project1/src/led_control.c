@@ -104,8 +104,10 @@ void light_off(const char *color, const char *direction) {
 void light_solid(const char *color, const char *direction, float64_t time) {
 	// Timer varirables
 	struct timespec timer;
+	// Extract seconds
 	timer.tv_sec = time;
-	timer.tv_nsec = 0;
+	// Extract remainder in nanoseconds and multiply by 1B to get seconds
+	timer.tv_nsec = (long)((time - timer.tv_sec) * 1000000000L);
 	light_on(color, direction);
 	nanosleep(&timer, NULL);
 	light_off(color, direction);
