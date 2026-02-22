@@ -12,6 +12,9 @@
 /* Traffic Light Flashing Time */
 #define LIGHT_FLASH_COUNT (4U)
 
+/* Seconds to Nanoseconds Multiplier */
+#define SEC_TO_NSEC (1000000000.0)
+
 /* Light Directions */
 #define NORTH_SOUTH ("North/South")
 #define EAST_WEST ("East/West")

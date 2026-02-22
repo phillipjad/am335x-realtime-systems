@@ -47,6 +47,8 @@ void run_traffic_signal(uint16_t green_light_time) {
 	static bool isStart = true;
 	// Set the traffic direction for rotation
 	const char *traffic_direction = isNSGroup ? NORTH_SOUTH : EAST_WEST;
+        // Float var
+        float64_t float_time = 0.0;
 
 	// Setup lights
 	if (isStart) {
@@ -56,7 +58,7 @@ void run_traffic_signal(uint16_t green_light_time) {
 		isStart = false;
 	}
 
-	// Timer varirables
+	// Timer variables
 	struct timespec timer;
 	// Yellow + Red 2 seconds before Green
 	timer.tv_sec = 2;
@@ -67,7 +69,9 @@ void run_traffic_signal(uint16_t green_light_time) {
 	nanosleep(&timer, NULL);
 
 	// Set Green Light Timer
-	timer.tv_sec = green_light_time;
+        // Resolved MISRA23_10.8 and 10.3
+        float_time = (float64_t)green_light_time;
+	timer.tv_sec = (time_t)float_time;
 
 	// Turn off red and yellow light
 	light_off(RED, traffic_direction);
