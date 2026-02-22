@@ -107,9 +107,12 @@ void light_solid(const char *color, const char *direction, float64_t time) {
 	struct timespec timer;
 	// Extract seconds
 	timer.tv_sec = (int64_t)time;
-	// Extract remainder in nanoseconds and multiply by 1B to get seconds
-	float64_t nsec_as_float = (time - (float64_t)timer.tv_sec) + SEC_TO_NSEC;
-        tv.nsec = (int64_t)(nsec_as_float);
+	// Extract remainder in nanoseconds and multiply by SEC_TO_NSEC to get seconds
+	int64_t sec_tmp = timer.tv_sec;
+	float64_t timer_sec_as_double = (float64_t)sec_tmp;
+	float64_t nsec_as_float = (time - timer_sec_as_double) * SEC_TO_NSEC;
+	int64_t nsec_as_int = (int64_t)nsec_as_float;
+	timer.tv_nsec = nsec_as_int;
 	light_on(color, direction);
 	nanosleep(&timer, NULL);
 	light_off(color, direction);
