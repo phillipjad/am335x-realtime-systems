@@ -17,12 +17,12 @@
 
 /* Struct for parsing user input for GPIO */
 typedef struct {
-	char *gpio_string;
+	const char *gpio_string;
 	uint8_t *gpio_pointer;
 } gpio_struct_t;
 #endif /* USE_CONFIG */
 
-static configuration_items_t user_config = { 0 };
+configuration_items_t user_config = { 0 };
 
 /*--------------------------------------
  * Static Function: application_init
@@ -39,12 +39,14 @@ static void application_init(void) {
  * Static Function: log_mode
  *--------------------------------------*/
 static void log_mode(void) {
-#if defined(DEBUG)
+#ifdef DEBUG
 	LOG("DEBUG MODE ENABLED");
-#elif defined(NDEBUG)
+#else
+#ifdef NDEBUG
 	LOG("RELEASE MODE ENABLED");
 #else
 	LOG_AND_EXIT("No release mode detected!");
+#endif
 #endif
 }
 
@@ -64,18 +66,19 @@ static void get_user_configuration_items(void) {
 	float64_t temp = 0.0;
 	result = parse_input_to_float64(input_buffer, &temp);
 	temp *= (float64_t)SEC_PER_MINUTE;
-	if ((temp < 0.0) || (temp > (float64_t)UINT16_MAX)) {
+	float64_t uint16_max_as_float = (float64_t)UINT16_MAX;
+	if ((temp < 0.0) || (temp > uint16_max_as_float)) {
 		LOG_AND_EXIT("Green light duration too large");
 	}
 	user_config.green_light_duration_s = (uint16_t)temp;
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse green light duration string to int");
 	}
-	(void)memset(input_buffer, 0, sizeof(input_buffer));
+	(void)memset((void *)input_buffer, 0, sizeof(input_buffer));
 
 #ifdef NDEBUG
 	/* If built in RELEASE mode then we should get user input for gpio layout from stdio */
-	gpio_layout_t *gpio_layout = &user_config.gpio_layout;
+	gpio_layout_t *const gpio_layout = &user_config.gpio_layout;
 	gpio_struct_t gpio_info[NUM_UTILIZED_GPIO] = { { .gpio_string = "North/South green light",
 		                                           .gpio_pointer = &gpio_layout->green_light_ns },
 		{ .gpio_string = "North/South yellow light", .gpio_pointer = &gpio_layout->yellow_light_ns },
@@ -95,7 +98,7 @@ static void get_user_configuration_items(void) {
 		if (result != STATUS_SUCCESS) {
 			LOG_AND_EXIT("Failed to parse user input for %s gpio", io_option->gpio_string);
 		}
-		(void)memset(input_buffer, 0, sizeof(input_buffer));
+		(void)memset((void *)input_buffer, 0, sizeof(input_buffer));
 	}
 #endif /* NDEBUG */
 }
@@ -118,7 +121,7 @@ int32_t main(void) {
 #endif /* USE_CONFIG */
 
 	while (is_shutdown_requested() == 0) {
-		run_traffic_signal();
+		run_traffic_signal(user_config.green_light_duration_s);
 		(void)sleep(MAIN_THREAD_SLEEP_S);
 	}
 

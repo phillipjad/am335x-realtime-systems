@@ -5,12 +5,25 @@
 #include <stdlib.h>
 
 /* Local project includes after system libraries */
-#include <project_types.h>
+#include "project_types.h"
 
 /**
  * @brief printf-like logging macro
  */
 #define LOG(format, ...) project_log(stdout, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
+
+
+#ifdef DEBUG
+/**
+ * @brief printf-like logging macro only for debug mode
+ */
+#define DEBUG_LOG(format, ...) project_log(stdout, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
+#else
+/**
+ * @brief disabled for release mode
+ */
+#define DEBUG_LOG(format, ...)
+#endif
 
 /**
  * @brief printf-like logging macro, with no newline

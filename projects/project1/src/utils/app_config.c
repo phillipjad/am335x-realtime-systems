@@ -12,13 +12,16 @@
  * Static Function: get_config_file_path
  *--------------------------------------*/
 static void get_config_file_path(char *config_path, size_t config_path_len) {
+	if ((strlen(CONFIG_FILENAME) - 1U) > (MAX_FILENAME_LENGTH)) {
+		LOG_AND_EXIT("Filename larger than maximum possible length: %zu > %u", strlen(CONFIG_FILENAME) - 1U, MAX_FILENAME_LENGTH);
+	}
 	char *result = getcwd(config_path, config_path_len);
 	if (result == NULL) {
 		LOG_AND_EXIT("Failed to get current working directory");
 	}
 
 	size_t cwd_len = strnlen(config_path, config_path_len);
-	size_t remaining = (size_t)config_path_len - cwd_len;
+	size_t remaining = config_path_len - cwd_len;
 	size_t required_size = (strlen("/config") + strlen(CONFIG_FILENAME));
 	if (remaining < required_size) {
 		LOG_AND_EXIT("Remaining CWD string length less than required: (%zu) < (%zu)", remaining, required_size);

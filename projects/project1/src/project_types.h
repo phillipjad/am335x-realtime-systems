@@ -10,8 +10,6 @@
 
 typedef double float64_t;
 
-typedef float float32_t;
-
 typedef struct {
 	uint8_t green_light_ns;  /**< Pin for green light on north/south */
 	uint8_t green_light_ew;  /**< Pin for green light on east/west */
