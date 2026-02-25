@@ -48,9 +48,9 @@ Build Type: Debug
 [100%] Built target p1
 [?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ uname -a
 [?2004lLinux trn-pop-os 6.17.9-76061709-generic #202511241048~1764607909~24.04~df6b2b6 SMP PREEMPT_DYNAMIC Mon D x86_64 x86_64 x86_64 GNU/Linux
-[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ file build/p1 
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ file build/p1
 [?2004lbuild/p1: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, BuildID[sha1]=b681059d42e14b908c49b123536587bdcae30190, for GNU/Linux 3.2.0, with debug_info, not stripped
-[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ qemu-arm build/p1 
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ qemu-arm build/p1
 [?2004l[main.c:43]: DEBUG MODE ENABLED
 [main.c:35]: Initialized application
 [user_input.c:16]: How many minutes should green lights last: 0 0.25

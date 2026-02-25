@@ -1,9 +1,9 @@
 Script started on 2020-04-06 17:29:09+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="105" LINES="52"]
 ]0;debian@trn-beagle: ~[01;32mdebian@trn-beagle[00m:[01;34m~[00m$ uname -a
 Linux trn-beagle 4.19.94-ti-r42 #1buster SMP PREEMPT Tue Mar 31 19:38:29 UTC 2020 armv7l GNU/Linux
-]0;debian@trn-beagle: ~[01;32mdebian@trn-beagle[00m:[01;34m~[00m$ file pa[K1 
+]0;debian@trn-beagle: ~[01;32mdebian@trn-beagle[00m:[01;34m~[00m$ file pa[K1
 p1: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, BuildID[sha1]=a02e866ef3fb33da1afefb746526717762a9dda8, for GNU/Linux 3.2.0, not stripped
-]0;debian@trn-beagle: ~[01;32mdebian@trn-beagle[00m:[01;34m~[00m$ ./p1 
+]0;debian@trn-beagle: ~[01;32mdebian@trn-beagle[00m:[01;34m~[00m$ ./p1
 [main.c:46]: RELEASE MODE ENABLED
 [main.c:35]: Initialized application
 [user_input.c:16]: How many minutes should green lights last: 0.5
