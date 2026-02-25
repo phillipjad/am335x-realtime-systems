@@ -3,6 +3,7 @@
 
 /* Local project includes after system libraries */
 #include "app_config.h"
+#include "io_logic.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -11,6 +12,8 @@
 #include "user_input.h"
 #ifdef USE_MMAP
 #include "gpio_control.h"
+#else
+extern configuration_items_t user_config;
 #endif
 
 #define USER_INPUT_MAX_LEN (1024U)
@@ -27,6 +30,19 @@ typedef struct {
 
 configuration_items_t user_config = { 0 };
 
+#ifdef NDEBUG
+static void init_hardware_pins(void) {
+	LOG("Starting hardware pins");
+	init_gpio(user_config.gpio_layout.green_light_ns);
+	init_gpio(user_config.gpio_layout.yellow_light_ns);
+	init_gpio(user_config.gpio_layout.red_light_ns);
+
+	init_gpio(user_config.gpio_layout.green_light_ew);
+	init_gpio(user_config.gpio_layout.yellow_light_ew);
+	init_gpio(user_config.gpio_layout.red_light_ew);
+}
+#endif
+
 /*--------------------------------------
  * Static Function: application_init
  *--------------------------------------*/
@@ -38,6 +54,9 @@ static void application_init(void) {
 #ifdef USE_MMAP
 	LOG("Init for GPIO mmap");
 	gpio_map_init();
+#else
+    	LOG("Init for sysfs GPIO");
+    	init_hardware_pins();
 #endif
 	LOG("Initialized application");
 }

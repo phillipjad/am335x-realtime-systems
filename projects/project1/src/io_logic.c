@@ -31,7 +31,6 @@
 #else /* Constants for mmap implementation */
 #endif
 
-
 #ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 /*--------------------------------------
  * Static Function: wait_for_file
@@ -86,7 +85,7 @@ static void export_gpio(uint8_t gpio) {
 /*--------------------------------------
  * Static Function: unexport_gpio
  *--------------------------------------*/
-static void unexport_gpio(uint8_t gpio) {
+void unexport_gpio(uint8_t gpio) {
 	char gpio_pin_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(gpio_pin_as_string, SYSFS_GPIO_MAX_BUFFER_SIZE, "%u", gpio);
 	/* We want to ignore any errors received here, this unexport is best effort just so exporting always succeeds */
@@ -95,6 +94,15 @@ static void unexport_gpio(uint8_t gpio) {
 		(void)fprintf(fp, "%s", gpio_pin_as_string);
 		(void)fclose(fp);
 	}
+}
+
+/*--------------------------------------
+ * Static Function: is_gpio_exported
+ *--------------------------------------*/
+static bool is_gpio_exported(uint8_t gpio) {
+	char gpio_direction_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
+	(void)snprintf(gpio_direction_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/direction", SYSFS_GPIO_PATH, gpio);
+	return (access(SYSFS_GPIO_PATH, F_OK) == 0);
 }
 
 /*--------------------------------------
@@ -122,17 +130,31 @@ static void gpio_write(uint8_t gpio, int8_t value) {
 }
 #endif
 
+void init_gpio(uint8_t gpio_pin) {
+#ifdef USE_MMAP
+	gpio_set_direction_out(gpio_pin);
+#else
+	if (!is_gpio_exported(gpio_pin)) {
+		export_gpio(gpio_pin);
+		char gpio_dir_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
+		(void)snprintf(gpio_dir_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u", SYSFS_GPIO_PATH, gpio_pin);
+		bool exported = wait_for_file(gpio_dir_path);
+		if (!exported) {
+			LOG_AND_EXIT("Failed to export GPIO %u", gpio_pin);
+		}
+	}
+	set_gpio_dir(gpio_pin, GPIO_DIR_OUT);
+#endif
+}
+
+
 /*--------------------------------------
  * Function: signal_gpio
  *--------------------------------------*/
 void signal_gpio(uint8_t gpio_pin, int8_t value) {
 #ifdef USE_MMAP
-	gpio_set_direction_out(gpio_pin);
 	gpio_set(gpio_pin, value >= 1 ? true : false);
 #else
-	unexport_gpio(gpio_pin);
-	export_gpio(gpio_pin);
-	set_gpio_dir(gpio_pin, GPIO_DIR_OUT);
 	gpio_write(gpio_pin, value);
 #endif
 }
