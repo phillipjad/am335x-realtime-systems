@@ -20,13 +20,16 @@
 /** Out direction for GPIO */
 /** The number of times to attempt to open GPIO file */
 #define SYSFS_GPIO_MAX_FILE_POLL_ATTEMPTS (3U)
-/** A quarter of a second represented in nanoseconds */
-#define QUARTER_SECOND_AS_NSEC (250000000L)
 #else /* Constants for mmap implementation */
 #endif
 /* General constants */
 #define GPIO_DIR_OUT ("out")
+/** A quarter of a second represented in nanoseconds */
+#define QUARTER_SECOND_AS_NSEC (250000000L)
 
+/*--------------------------------------
+ * Static Function: wait_for_file
+ *--------------------------------------*/
 static bool wait_for_file(const char *path) {
 	FILE *fp = fopen(path, "w");
 	uint8_t attempts = 0U;
@@ -46,6 +49,9 @@ static bool wait_for_file(const char *path) {
 	}
 }
 
+/*--------------------------------------
+ * Static Function: write_to_file
+ *--------------------------------------*/
 static void write_to_file(const char *path, const char *value) {
 	/* If anything in this function fails then we should exit catastrophically */
 	FILE *fp = fopen(path, "w");
@@ -62,6 +68,9 @@ static void write_to_file(const char *path, const char *value) {
 	}
 }
 
+/*--------------------------------------
+ * Static Function: export_gpio
+ *--------------------------------------*/
 static void export_gpio(uint8_t gpio) {
 #ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_pin_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
@@ -71,6 +80,9 @@ static void export_gpio(uint8_t gpio) {
 #endif
 }
 
+/*--------------------------------------
+ * Static Function: unexport_gpio
+ *--------------------------------------*/
 static void unexport_gpio(uint8_t gpio) {
 #ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_pin_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
@@ -85,6 +97,9 @@ static void unexport_gpio(uint8_t gpio) {
 #endif
 }
 
+/*--------------------------------------
+ * Static Function: set_gpio_dir
+ *--------------------------------------*/
 static void set_gpio_dir(uint8_t gpio, const char *dir) {
 #ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_direction_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
@@ -98,6 +113,9 @@ static void set_gpio_dir(uint8_t gpio, const char *dir) {
 #endif
 }
 
+/*--------------------------------------
+ * Static Function: gpio_write
+ *--------------------------------------*/
 static void gpio_write(uint8_t gpio, int8_t value) {
 #ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
@@ -109,6 +127,9 @@ static void gpio_write(uint8_t gpio, int8_t value) {
 #endif
 }
 
+/*--------------------------------------
+ * Function: signal_gpio
+ *--------------------------------------*/
 void signal_gpio(uint8_t gpio_pin, int8_t value) {
 	unexport_gpio(gpio_pin);
 	export_gpio(gpio_pin);
