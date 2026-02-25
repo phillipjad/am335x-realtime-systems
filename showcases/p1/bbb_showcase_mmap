@@ -1,0 +1,58 @@
+Script started on 2020-04-06 22:38:52+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="80" LINES="24"]
+]0;debian@beaglebone: ~[01;32mdebian@beaglebone[00m:[01;34m~[00m$ unma -[K[K[K[Kame -a
+Linux beaglebone 4.19.94-ti-r42 #1buster SMP PREEMPT Tue Mar 31 19:38:29 UTC 2020 armv7l GNU/Linux
+]0;debian@beaglebone: ~[01;32mdebian@beaglebone[00m:[01;34m~[00m$ file ./p1 
+./p1: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, BuildID[sha1]=98edfb09d8acc0221789f981796d0ceb81e644b4, for GNU/Linux 3.2.0, not stripped
+]0;debian@beaglebone: ~[01;32mdebian@beaglebone[00m:[01;34m~[00m$ sjd\\[K[K[K[K[Ksudo ./p1 
+[sudo] password for debian: 
+[app_config.c:131]: Reading application configuration
+[main.c:53]: RELEASE MODE ENABLED
+[main.c:39]: Init for GPIO mmap
+[main.c:42]: Initialized application
+[led_control.c:45]: North/South Red lights are on!
+[led_control.c:45]: East/West Red lights are on!
+[led_control.c:45]: North/South Yellow lights are on!
+[led_control.c:60]: North/South Red lights are off.
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Yellow lights are on!
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Red lights are on!
+[led_control.c:45]: East/West Yellow lights are on!
+[led_control.c:60]: East/West Red lights are off.
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Green lights are on!
+^C[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Yellow lights are on!
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Red lights are on!
+[main.c:134]: Starting application shutdown sequence...
+[traffic_logic.c:25]: Turning off all lights...
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:60]: North/South Red lights are off.
+[led_control.c:60]: East/West Red lights are off.
+[traffic_logic.c:36]: Shutdown sequence successfully completed
+]0;debian@beaglebone: ~[01;32mdebian@beaglebone[00m:[01;34m~[00m$ exit
+exit
+
+Script done on 2020-04-06 22:41:24+00:00 [COMMAND_EXIT_CODE="0"]
