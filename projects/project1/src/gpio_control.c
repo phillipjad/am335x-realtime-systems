@@ -34,7 +34,7 @@ static gpio_map_t gpios_array[GPIO_COUNT];
 
 // Helper to access 32-bit registers by offset
 static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
-	return (volatile uint32_t *)(base + off);
+	return (volatile uint32_t *)((void *)(base + off));
 }
 
 /*---------------------------------------------
