@@ -3,11 +3,11 @@
 #include "project_types.h"
 
 /**
- * @brief Currently does nothing
+ * @brief Signals \p gpio_pin by writing \p value to it through sysfs GPIO control
  *
- * @param[in] pin Unused
- * @param[in] value Unused
+ * @param[in] gpio_pin The GPIO pin to signal
+ * @param[in] value The value to signal to \p gpio_pin
  */
-void signal_gpio(uint16_t pin, uint8_t value);
+void signal_gpio(uint8_t gpio_pin, int8_t value);
 
 #endif /* IO_LOGIC_H */
