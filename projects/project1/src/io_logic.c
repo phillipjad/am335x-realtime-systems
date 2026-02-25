@@ -1,9 +1,9 @@
 #include "io_logic.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 #include "logger.h"
 #include "project_constants.h"
