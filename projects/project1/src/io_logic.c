@@ -7,6 +7,11 @@
 #include "logger.h"
 #include "project_constants.h"
 
+#ifdef USE_MMAP
+#include <stdbool.h>
+
+#include "gpio_control.h"
+#endif
 
 #ifndef USE_MMAP /* Constants for sysfs implementation */
 /** Path for sysfs GPIO control */
@@ -131,8 +136,13 @@ static void gpio_write(uint8_t gpio, int8_t value) {
  * Function: signal_gpio
  *--------------------------------------*/
 void signal_gpio(uint8_t gpio_pin, int8_t value) {
+#ifdef USE_MMAP
+	gpio_set_direction_out(gpio_pin);
+	bool bool_value = gpio_set(gpio_pin, value >= 1 ? true : false);
+#else
 	unexport_gpio(gpio_pin);
 	export_gpio(gpio_pin);
 	set_gpio_dir(gpio_pin, GPIO_DIR_OUT);
 	gpio_write(gpio_pin, value);
+#endif
 }

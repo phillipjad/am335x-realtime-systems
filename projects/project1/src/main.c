@@ -10,6 +10,10 @@
 #include "traffic_logic.h"
 #include "user_input.h"
 
+#ifdef USE_MAP
+#include "gpio_control.h"
+#endif
+
 #define USER_INPUT_MAX_LEN (1024U)
 
 #ifndef USE_CONFIG /* These are only necessary for stdio configuration */
@@ -32,6 +36,10 @@ static void application_init(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to register application signal handlers. Status code: %d", result);
 	}
+#ifdef USE_MAP
+	LOG("Init for GPIO mmap");
+	gpio_map_init();
+#endif
 	LOG("Initialized application");
 }
 
@@ -124,6 +132,9 @@ int32_t main(void) {
 		run_traffic_signal(user_config.green_light_duration_s);
 		(void)sleep(MAIN_THREAD_SLEEP_S);
 	}
+#ifdef USE_MAP
+	gpio_map_close();
+#endif
 
 	LOG("Starting application shutdown sequence...");
 	handle_shutdown();
