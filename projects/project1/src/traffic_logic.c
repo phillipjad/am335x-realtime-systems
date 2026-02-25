@@ -18,8 +18,6 @@
  * Function: handle_shutdown
  *--------------------------------------*/
 void handle_shutdown() {
-	/* TODO: This will need to actually handle shutdown at some point */
-
 	// Turn off all LEDs
 	LOG("Turning off all lights...");
 	light_off(GREEN, NORTH_SOUTH);
@@ -29,10 +27,6 @@ void handle_shutdown() {
 	light_off(RED, NORTH_SOUTH);
 	light_off(RED, EAST_WEST);
 
-	uint32_t sleep_time = sleep(SHUTDOWN_DELAY_S);
-	if (sleep_time == SHUTDOWN_DELAY_S) {
-		LOG("Failed to gracefully shutdown");
-	}
 	LOG("Shutdown sequence successfully completed");
 	exit(EXIT_SUCCESS);
 }
@@ -65,7 +59,7 @@ void run_traffic_signal(uint16_t green_light_time) {
 	timer.tv_nsec = 0;
 	// Yellow light on
 	light_on(YELLOW, traffic_direction);
-	DEBUG_LOG("\tgreen in 2 seconds");
+	DEBUG_LOG("\tGreen in 2 seconds");
 	nanosleep(&timer, NULL);
 
 	// Set Green Light Timer
@@ -79,13 +73,13 @@ void run_traffic_signal(uint16_t green_light_time) {
 
 	// GREEN LIGHT
 	light_on(GREEN, traffic_direction);
-	DEBUG_LOG("\tsolid for %d\n", green_light_time);
+	DEBUG_LOG("\tSolid for %d seconds", green_light_time);
 	// Sleep for stdio input green light time
 	nanosleep(&timer, NULL);
 
 	// Start flashing green light since its almost over
 	// flash: off -> on -> ...
-	DEBUG_LOG("\tFlashing %d times\n", LIGHT_FLASH_COUNT);
+	DEBUG_LOG("\tFlashing %d times", LIGHT_FLASH_COUNT);
 	light_flash(GREEN, traffic_direction, LIGHT_FLASH_COUNT);
 	light_off(GREEN, traffic_direction);
 

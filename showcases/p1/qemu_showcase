@@ -1,0 +1,152 @@
+Script started on 2026-02-24 23:58:33-05:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="107" LINES="19"]
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ (reverse-i-search)`': [K[19@b': qemu-arm [7mb[27muild/p1[1@u': qemu-arm [7mbu[27m[1@i': qemu-arm [7mbui[27m[4Pfile[C./[7mbui[27mld.sh -t p1 -a arm -c --debug[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ ./build.sh -t p1 -a arm -c --debug
+[?2004lClearing build directory: /home/phillipjam/Documents/swe660/build
+Building project 1
+Build Type: Debug
+-- Target is ARM 32-bit (gnueabihf)
+-- Target is ARM 32-bit (gnueabihf)
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/arm-linux-gnueabihf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Global Build Mode: DEBUG
+-- Passing compile options:
+	-Wall
+	-Wextra
+	-Wpedantic
+	-Werror
+	-Wformat=2
+	-Wformat-security
+	-Wshadow
+	-Wundef
+	-Wmissing-prototypes
+	-Wmissing-declarations
+	-Wstrict-prototypes
+	-Wcast-qual
+	-Wcast-align
+	-Wvla
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/phillipjam/Documents/swe660/build
+[ 11%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/io_logic.c.o[0m
+[ 22%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/led_control.c.o[0m
+[ 33%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/logger.c.o[0m
+[ 44%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/main.c.o[0m
+[ 55%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/signal_handler.c.o[0m
+[ 66%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/traffic_logic.c.o[0m
+[ 77%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/utils/app_config.c.o[0m
+[ 88%] [32mBuilding C object CMakeFiles/p1.dir/projects/project1/src/utils/user_input.c.o[0m
+[100%] [32m[1mLinking C executable p1[0m
+[100%] Built target p1
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ uname -a
+[?2004lLinux trn-pop-os 6.17.9-76061709-generic #202511241048~1764607909~24.04~df6b2b6 SMP PREEMPT_DYNAMIC Mon D x86_64 x86_64 x86_64 GNU/Linux
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ file build/p1 
+[?2004lbuild/p1: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, BuildID[sha1]=b681059d42e14b908c49b123536587bdcae30190, for GNU/Linux 3.2.0, with debug_info, not stripped
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ qemu-arm build/p1 
+[?2004l[main.c:43]: DEBUG MODE ENABLED
+[main.c:35]: Initialized application
+[user_input.c:16]: How many minutes should green lights last: 0 0.25
+[traffic_logic.c:49]: Starting Traffic Lights:
+[led_control.c:45]: North/South Red lights are on!
+[led_control.c:45]: East/West Red lights are on!
+[led_control.c:45]: North/South Yellow lights are on!
+[traffic_logic.c:62]: 	green in 2 seconds
+[led_control.c:60]: North/South Red lights are off.
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[traffic_logic.c:76]: 	solid for 15 seconds
+[traffic_logic.c:82]: 	Flashing 4 times
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Yellow lights are on!
+[traffic_logic.c:89]: 	solid for 5 seconds
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Red lights are on!
+[led_control.c:45]: East/West Yellow lights are on!
+[traffic_logic.c:62]: 	green in 2 seconds
+[led_control.c:60]: East/West Red lights are off.
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[traffic_logic.c:76]: 	solid for 15 seconds
+[traffic_logic.c:82]: 	Flashing 4 times
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Yellow lights are on!
+[traffic_logic.c:89]: 	solid for 5 seconds
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Red lights are on!
+[led_control.c:45]: North/South Yellow lights are on!
+[traffic_logic.c:62]: 	green in 2 seconds
+[led_control.c:60]: North/South Red lights are off.
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[traffic_logic.c:76]: 	solid for 15 seconds
+[traffic_logic.c:82]: 	Flashing 4 times
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Green lights are on!
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:45]: North/South Yellow lights are on!
+[traffic_logic.c:89]: 	solid for 5 seconds
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:45]: North/South Red lights are on!
+[led_control.c:45]: East/West Yellow lights are on!
+[traffic_logic.c:62]: 	green in 2 seconds
+[led_control.c:60]: East/West Red lights are off.
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[traffic_logic.c:76]: 	solid for 15 seconds
+[traffic_logic.c:82]: 	Flashing 4 times
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Green lights are on!
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:45]: East/West Yellow lights are on!
+[traffic_logic.c:89]: 	solid for 5 seconds
+^C[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:45]: East/West Red lights are on!
+[main.c:128]: Starting application shutdown sequence...
+[traffic_logic.c:22]: Turning off all lights...
+[led_control.c:60]: North/South Green lights are off.
+[led_control.c:60]: East/West Green lights are off.
+[led_control.c:60]: North/South Yellow lights are off.
+[led_control.c:60]: East/West Yellow lights are off.
+[led_control.c:60]: North/South Red lights are off.
+[led_control.c:60]: East/West Red lights are off.
+[traffic_logic.c:30]: Shutdown sequence successfully completed
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ exit
+[?2004lexit
+
+Script done on 2026-02-25 00:01:05-05:00 [COMMAND_EXIT_CODE="0"]
