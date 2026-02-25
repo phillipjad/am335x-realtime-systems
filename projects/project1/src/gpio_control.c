@@ -1,3 +1,5 @@
+#include "gpio_control.h"
+
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
