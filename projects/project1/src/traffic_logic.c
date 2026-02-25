@@ -18,8 +18,6 @@
  * Function: handle_shutdown
  *--------------------------------------*/
 void handle_shutdown() {
-	/* TODO: This will need to actually handle shutdown at some point */
-
 	// Turn off all LEDs
 	LOG("Turning off all lights...");
 	light_off(GREEN, NORTH_SOUTH);
@@ -29,10 +27,6 @@ void handle_shutdown() {
 	light_off(RED, NORTH_SOUTH);
 	light_off(RED, EAST_WEST);
 
-	uint32_t sleep_time = sleep(SHUTDOWN_DELAY_S);
-	if (sleep_time == SHUTDOWN_DELAY_S) {
-		LOG("Failed to gracefully shutdown");
-	}
 	LOG("Shutdown sequence successfully completed");
 	exit(EXIT_SUCCESS);
 }
