@@ -2,6 +2,9 @@
 #define IO_LOGIC_H
 #include "project_types.h"
 
+#define PIN_ON (1)
+#define PIN_OFF (0)
+
 /**
  * @brief Signals \p gpio_pin by writing \p value to it through sysfs GPIO control
  *

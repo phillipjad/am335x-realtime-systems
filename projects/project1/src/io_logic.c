@@ -21,7 +21,7 @@ static void write_to_file(const char *path, const char *value) {
 	if (fp == NULL) {
 		LOG_AND_EXIT("Failed to open file at (%s) during write attempt", path);
 	}
-	int32_t result = fprintf(fp, value);
+	int32_t result = fprintf(fp, "%s", value);
 	if (result < 0) {
 		LOG_AND_EXIT("Failed to write %s to %s", value, path);
 	}
@@ -45,7 +45,7 @@ static void set_gpio_dir(uint8_t gpio, const char *dir) {
 
 static void gpio_write(uint8_t gpio, int8_t value) {
 	char gpio_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
-	(void)snprint(gpio_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/value", SYSFS_GPIO_PATH, gpio);
+	(void)snprintf(gpio_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/value", SYSFS_GPIO_PATH, gpio);
 	char value_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(value_as_string, SYSFS_GPIO_MAX_BUFFER_SIZE, "%d", value);
 	write_to_file(gpio_path, value_as_string);

@@ -5,6 +5,7 @@
 #include <time.h>
 
 /* Local project includes after system libraries */
+#include "io_logic.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -49,9 +50,7 @@ void light_on_sw(const char *color, const char *direction) {
  *--------------------------------------*/
 void light_on_hw(const char *color, const char *direction) {
 	uint8_t light_pin = get_pin_for_light(color, direction);
-	// TODO: Add hardware control
-	(void)light_pin;
-	return;
+	signal_gpio(light_pin, PIN_ON);
 }
 
 /*--------------------------------------
@@ -66,9 +65,7 @@ void light_off_sw(const char *color, const char *direction) {
  *--------------------------------------*/
 void light_off_hw(const char *color, const char *direction) {
 	uint8_t light_pin = get_pin_for_light(color, direction);
-	// TODO: Add hardware control
-	(void)light_pin;
-	return;
+	signal_gpio(light_pin, PIN_OFF);
 }
 
 /*--------------------------------------
@@ -76,12 +73,9 @@ void light_off_hw(const char *color, const char *direction) {
  *--------------------------------------*/
 void light_on(const char *color, const char *direction) {
 	light_on_sw(color, direction);
-// If in release, use hardware pin to turn light on
-#ifdef NDEBUG
+#ifdef NDEBUG /* If in release, use hardware pin to turn light on */
 	light_on_hw(color, direction);
 #else
-	// Called so program can compile
-	(void)direction;
 #endif
 }
 
@@ -90,12 +84,8 @@ void light_on(const char *color, const char *direction) {
  *--------------------------------------*/
 void light_off(const char *color, const char *direction) {
 	light_off_sw(color, direction);
-// If in release, use hardware pin to turn light off
-#ifdef NDEBUG
+#ifdef NDEBUG /* If in release, use hardware pin to turn light on */
 	light_off_hw(color, direction);
-#else
-	// Called so program can compile
-	(void)direction;
 #endif
 }
 
