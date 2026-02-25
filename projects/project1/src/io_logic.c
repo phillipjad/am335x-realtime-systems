@@ -7,6 +7,8 @@
 #include "logger.h"
 #include "project_constants.h"
 
+
+#ifndef USE_MMAP /* Constants for sysfs implementation */
 /** Path for sysfs GPIO control */
 #define SYSFS_GPIO_PATH ("/sys/class/gpio")
 /** Path for GPIO export */
@@ -16,11 +18,14 @@
 /** Maximum buffer size for sysfs gpio-related writing and reading */
 #define SYSFS_GPIO_MAX_BUFFER_SIZE (64U)
 /** Out direction for GPIO */
-#define SYSFS_GPIO_DIR_OUT ("out")
 /** The number of times to attempt to open GPIO file */
 #define SYSFS_GPIO_MAX_FILE_POLL_ATTEMPTS (3U)
 /** A quarter of a second represented in nanoseconds */
 #define QUARTER_SECOND_AS_NSEC (250000000L)
+#else /* Constants for mmap implementation */
+#endif
+/* General constants */
+#define GPIO_DIR_OUT ("out")
 
 static bool wait_for_file(const char *path) {
 	FILE *fp = fopen(path, "w");
@@ -58,12 +63,16 @@ static void write_to_file(const char *path, const char *value) {
 }
 
 static void export_gpio(uint8_t gpio) {
+#ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_pin_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(gpio_pin_as_string, SYSFS_GPIO_MAX_BUFFER_SIZE, "%u", gpio);
 	write_to_file(SYSFS_GPIO_EXPORT_PATH, gpio_pin_as_string);
+#else
+#endif
 }
 
 static void unexport_gpio(uint8_t gpio) {
+#ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_pin_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(gpio_pin_as_string, SYSFS_GPIO_MAX_BUFFER_SIZE, "%u", gpio);
 	/* We want to ignore any errors received here, this unexport is best effort just so exporting always succeeds */
@@ -72,9 +81,12 @@ static void unexport_gpio(uint8_t gpio) {
 		(void)fprintf(fp, "%s", gpio_pin_as_string);
 		(void)fclose(fp);
 	}
+#else
+#endif
 }
 
 static void set_gpio_dir(uint8_t gpio, const char *dir) {
+#ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_direction_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(gpio_direction_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/direction", SYSFS_GPIO_PATH, gpio);
 	/* Ensure that direction file exists */
@@ -82,19 +94,24 @@ static void set_gpio_dir(uint8_t gpio, const char *dir) {
 		LOG_AND_EXIT("Timed out waiting for direction file at %s", gpio_direction_path);
 	}
 	write_to_file(gpio_direction_path, dir);
+#else
+#endif
 }
 
 static void gpio_write(uint8_t gpio, int8_t value) {
+#ifndef USE_MMAP /* If not compiled for mmap use sysfs */
 	char gpio_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(gpio_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/value", SYSFS_GPIO_PATH, gpio);
 	char value_as_string[SYSFS_GPIO_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(value_as_string, SYSFS_GPIO_MAX_BUFFER_SIZE, "%d", value);
 	write_to_file(gpio_path, value_as_string);
+#else
+#endif
 }
 
 void signal_gpio(uint8_t gpio_pin, int8_t value) {
 	unexport_gpio(gpio_pin);
 	export_gpio(gpio_pin);
-	set_gpio_dir(gpio_pin, SYSFS_GPIO_DIR_OUT);
+	set_gpio_dir(gpio_pin, GPIO_DIR_OUT);
 	gpio_write(gpio_pin, value);
 }
