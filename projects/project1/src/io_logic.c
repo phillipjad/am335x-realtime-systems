@@ -25,11 +25,11 @@
 /** Out direction for GPIO */
 /** The number of times to attempt to open GPIO file */
 #define SYSFS_GPIO_MAX_FILE_POLL_ATTEMPTS (3U)
-#else /* Constants for mmap implementation */
 /* General constants */
 #define GPIO_DIR_OUT ("out")
 /** A quarter of a second represented in nanoseconds */
 #define QUARTER_SECOND_AS_NSEC (250000000L)
+#else /* Constants for mmap implementation */
 #endif
 
 
