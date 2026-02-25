@@ -24,4 +24,10 @@ typedef struct {
 	gpio_layout_t gpio_layout;
 } configuration_items_t;
 
+typedef struct {
+	int fd;
+	volatile uint8_t *map_base;  // mapped page base
+	volatile uint8_t *gpio_base; // base + page_offset
+} gpio_map_t;
+
 #endif /* PROJECT_TYPES_H */
