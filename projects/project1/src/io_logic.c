@@ -138,7 +138,7 @@ static void gpio_write(uint8_t gpio, int8_t value) {
 void signal_gpio(uint8_t gpio_pin, int8_t value) {
 #ifdef USE_MMAP
 	gpio_set_direction_out(gpio_pin);
-	bool bool_value = gpio_set(gpio_pin, value >= 1 ? true : false);
+	gpio_set(gpio_pin, value >= 1 ? true : false);
 #else
 	unexport_gpio(gpio_pin);
 	export_gpio(gpio_pin);
