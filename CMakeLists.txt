@@ -34,7 +34,7 @@ if(USE_CONFIG)
 endif()
 
 # Set configuration mmap 
-if(USE_CONFIG)
+if(USE_MMAP)
   message(STATUS "Using MMAP for GPIO access")
   add_definitions(-DUSE_MMAP)
 endif()
