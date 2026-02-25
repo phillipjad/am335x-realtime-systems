@@ -24,6 +24,7 @@ help() {
 	echo "  -d, --debug            Enable debug build"
 	echo "  -c, --clear            Removes the cmake build directory"
 	echo "  -u, --use-config       Switches the handling of user input from stdio to config file"
+	echo "  -m, --mmap             Enable MMAP usage for GPIO access"
 	echo ""
 	echo "Examples:"
 	echo "  ./build.sh --target project1"
@@ -58,6 +59,11 @@ parse_arguments() {
 			CMAKE_ARGS+=("-DUSE_CONFIG=1")
 			shift 1
 			;;
+		-m | --mmap)
+			CMAKE_ARGS+=("-DUSE_MMAP=ON")
+			shift 1
+			;;
+
 		*)
 			echo "Error: Unknown argument '$1'" >&2
 			exit 1

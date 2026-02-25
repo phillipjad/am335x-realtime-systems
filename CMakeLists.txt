@@ -33,6 +33,12 @@ if(USE_CONFIG)
     add_definitions(-DUSE_CONFIG)
 endif()
 
+# Set configuration mmap
+if(USE_MMAP)
+  message(STATUS "Using MMAP for GPIO access")
+  add_definitions(-DUSE_MMAP)
+endif()
+
 # Master list of all options to pass to the compiler
 set(COMPILER_OPTIONS
     -Wall

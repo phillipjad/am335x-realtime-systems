@@ -13,4 +13,8 @@
  */
 void signal_gpio(uint8_t gpio_pin, int8_t value);
 
+void init_gpio(uint8_t gpio_pin);
+
+void unexport_gpio(uint8_t gpio);
+
 #endif /* IO_LOGIC_H */

@@ -13,6 +13,12 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#ifdef USE_MMAP
+#include "gpio_control.h"
+#else
+#include "io_logic.h"
+extern configuration_items_t user_config;
+#endif
 
 /*--------------------------------------
  * Function: handle_shutdown
@@ -27,6 +33,18 @@ void handle_shutdown() {
 	light_off(RED, NORTH_SOUTH);
 	light_off(RED, EAST_WEST);
 
+#ifdef USE_MMAP
+	gpio_map_close();
+#else
+	LOG("Unexporting LEDs");
+	unexport_gpio(user_config.gpio_layout.green_light_ns);
+	unexport_gpio(user_config.gpio_layout.yellow_light_ns);
+	unexport_gpio(user_config.gpio_layout.red_light_ns);
+
+	unexport_gpio(user_config.gpio_layout.green_light_ew);
+	unexport_gpio(user_config.gpio_layout.yellow_light_ew);
+	unexport_gpio(user_config.gpio_layout.red_light_ew);
+#endif
 	LOG("Shutdown sequence successfully completed");
 	exit(EXIT_SUCCESS);
 }
