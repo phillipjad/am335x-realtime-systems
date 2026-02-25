@@ -94,7 +94,7 @@ void light_off(const char *color, const char *direction) {
  *--------------------------------------*/
 void light_solid(const char *color, const char *direction, float64_t time) {
 	// Timer variables
-	struct timespec timer;
+	struct timespec timer = { 0 };
 	// Extract seconds
 	timer.tv_sec = (int64_t)time;
 	// Extract remainder in nanoseconds and multiply by SEC_TO_NSEC to get seconds
@@ -113,7 +113,7 @@ void light_solid(const char *color, const char *direction, float64_t time) {
  *--------------------------------------*/
 void light_flash(const char *color, const char *direction, int flash_count) {
 	// Timer variables
-	struct timespec timer;
+	struct timespec timer = { 0 };
 	timer.tv_sec = 1;
 	timer.tv_nsec = 0;
 	// Flash flash_count times at 1 Hz
