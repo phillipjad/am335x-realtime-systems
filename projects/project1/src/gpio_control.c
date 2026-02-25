@@ -32,10 +32,29 @@
 // Store GPIOs
 static gpio_map_t gpios_array[GPIO_COUNT];
 
+// Helper to access 32-bit registers by offset
+static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
+	return (volatile uint32_t *)(base + off);
+}
+
+/*---------------------------------------------
+ * Function: get_gpio_base - helper function
+ *---------------------------------------------*/
+static volatile uint8_t *get_gpio_base(uint8_t pin) {
+	uint8_t gpio_base_nubmer = pin / REGISTERS_PER_GROUP;
+	if (gpio_base_nubmer >= GPIO_COUNT || gpios_array[gpio_base_nubmer].gpio_base == NULL ||
+	gpios_array[gpio_base_nubmer].fd <= 0) {
+		LOG_AND_EXIT("Failed to get gpio base for pin %d", pin);
+		return NULL;
+	} else {
+		return gpios_array[gpio_base_nubmer].gpio_base;
+	}
+}
+
 /*--------------------------------------
  * Function: gpio_map_init
  *--------------------------------------*/
-static void gpio_map_init(void) {
+void gpio_map_init(void) {
 	// Page base
 	uint32_t page_base = 0;
 	// Page offset
@@ -69,32 +88,14 @@ static void gpio_map_init(void) {
 /*--------------------------------------
  * Function: gpio_map_close
  *--------------------------------------*/
-static void gpio_map_close(void) {
+void gpio_map_close(void) {
 	for (int i = 0; i < GPIO_COUNT; ++i) {
 		if (gpios_array[i].map_base && gpios_array[i].map_base != MAP_FAILED) {
-			munmap((void *)gpios_array[i].map_base, PAGE_SIZE);
+			munmap((void *)(uintptr_t)gpios_array[i].map_base, PAGE_SIZE);
 		}
 		if (gpios_array[i].fd >= 0) {
 			close(gpios_array[i].fd);
 		}
-	}
-}
-
-// Helper to access 32-bit registers by offset
-static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
-	return (volatile uint32_t *)(base + off);
-}
-
-/*---------------------------------------------
- * Function: get_gpio_base - helper function
- *---------------------------------------------*/
-static volatile uint8_t *get_gpio_base(uint8_t pin) {
-	uint8_t gpio_base_nubmer = pin / REGISTERS_PER_GROUP;
-	if (gpio_base_nubmer >= GPIO_COUNT || gpios_array[gpio_base_nubmer].gpio_base == NULL ||
-	gpios_array[gpio_base_nubmer].fd <= 0) {
-		LOG_AND_EXIT("Failed to get gpio base for pin %d", pin);
-	} else {
-		return gpios_array[gpio_base_nubmer].gpio_base;
 	}
 }
 
@@ -113,7 +114,7 @@ void gpio_set(uint8_t pin, bool value) {
 		// Get registers values
 		volatile uint32_t *register_address = reg32(base, GPIO_SETDATAOUT_OFF);
 		// Set register value to 1
-		*register_address |= (1 << pin);
+		*register_address |= (1 << pin_number);
 	} else {
 		// Get registers values
 		volatile uint32_t *register_address = reg32(base, GPIO_CLEARDATAOUT_OFF);
