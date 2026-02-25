@@ -1,9 +1,9 @@
 Script started on 2020-04-07 00:43:46+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="105" LINES="52"]
 root@trn-beagle:/home/debian# uname -a
 Linux trn-beagle 4.19.94-ti-r42 #1buster SMP PREEMPT Tue Mar 31 19:38:29 UTC 2020 armv7l GNU/Linux
-root@trn-beagle:/home/debian# file p1 
+root@trn-beagle:/home/debian# file p1
 p1: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, BuildID[sha1]=98edfb09d8acc0221789f981796d0ceb81e644b4, for GNU/Linux 3.2.0, not stripped
-root@trn-beagle:/home/debian# ./p1 
+root@trn-beagle:/home/debian# ./p1
 [app_config.c:131]: Reading application configuration
 [main.c:53]: RELEASE MODE ENABLED
 [main.c:39]: Init for GPIO mmap
