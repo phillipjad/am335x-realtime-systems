@@ -9,7 +9,6 @@
 #include "signal_handler.h"
 #include "traffic_logic.h"
 #include "user_input.h"
-
 #ifdef USE_MMAP
 #include "gpio_control.h"
 #endif
@@ -132,10 +131,6 @@ int32_t main(void) {
 		run_traffic_signal(user_config.green_light_duration_s);
 		(void)sleep(MAIN_THREAD_SLEEP_S);
 	}
-#ifdef USE_MMAP
-	gpio_map_close();
-#endif
-
 	LOG("Starting application shutdown sequence...");
 	handle_shutdown();
 }

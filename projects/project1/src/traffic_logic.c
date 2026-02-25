@@ -13,6 +13,9 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#ifdef USE_MMAP
+#include "gpio_control.h"
+#endif
 
 /*--------------------------------------
  * Function: handle_shutdown
@@ -27,6 +30,9 @@ void handle_shutdown() {
 	light_off(RED, NORTH_SOUTH);
 	light_off(RED, EAST_WEST);
 
+#ifdef USE_MMAP
+	gpio_map_close();
+#endif
 	LOG("Shutdown sequence successfully completed");
 	exit(EXIT_SUCCESS);
 }
