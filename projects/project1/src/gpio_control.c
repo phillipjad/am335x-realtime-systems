@@ -34,7 +34,7 @@ static gpio_map_t gpios_array[GPIO_COUNT];
 
 // Helper to access 32-bit registers by offset
 static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
-	return (volatile uint32_t *)((void *)(base + off));
+	return (volatile uint32_t *)(void *)(base + off);
 }
 
 /*---------------------------------------------
@@ -110,17 +110,10 @@ void gpio_set(uint8_t pin, bool value) {
 	uint8_t pin_number = pin % REGISTERS_PER_GROUP;
 
 	// Depending on bool value can put register to 1 using set or 0 using clear
-	if (value) {
-		// Get registers values
-		volatile uint32_t *register_address = reg32(base, GPIO_SETDATAOUT_OFF);
-		// Set register value to 1
-		*register_address |= (1 << pin_number);
-	} else {
-		// Get registers values
-		volatile uint32_t *register_address = reg32(base, GPIO_CLEARDATAOUT_OFF);
-		// Clear register value
-		*register_address &= ~(1 << pin_number);
-	}
+	// Get registers values
+	volatile uint32_t *register_address = reg32(base, value ? GPIO_SETDATAOUT_OFF : GPIO_CLEARDATAOUT_OFF);
+	// Set register value to 1
+	*register_address = (1U << pin_number);
 }
 
 /*--------------------------------------
@@ -137,5 +130,5 @@ void gpio_set_direction_out(uint8_t pin) {
 	volatile uint32_t *register_address = reg32(base, GPIO_OE_OFFSET);
 
 	// Set register to value 0 to set as output pin
-	*register_address &= ~(1 << pin_number);
+	*register_address &= ~(1U << pin_number);
 }
