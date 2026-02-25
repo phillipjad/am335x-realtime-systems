@@ -55,8 +55,8 @@ static void application_init(void) {
 	LOG("Init for GPIO mmap");
 	gpio_map_init();
 #else
-    	LOG("Init for sysfs GPIO");
-    	init_hardware_pins();
+	LOG("Init for sysfs GPIO");
+	init_hardware_pins();
 #endif
 	LOG("Initialized application");
 }

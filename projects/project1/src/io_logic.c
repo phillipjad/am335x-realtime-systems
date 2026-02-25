@@ -36,18 +36,17 @@
  * Static Function: wait_for_file
  *--------------------------------------*/
 static bool wait_for_file(const char *path) {
-	FILE *fp = fopen(path, "w");
+	bool file_exists = access(path, F_OK) == 0;
 	uint8_t attempts = 0U;
-	while ((fp == NULL) && (attempts < SYSFS_GPIO_MAX_FILE_POLL_ATTEMPTS)) {
+	while ((!file_exists) && (attempts < SYSFS_GPIO_MAX_FILE_POLL_ATTEMPTS)) {
 		++attempts;
 		/* If file still isn't accessible on disk, sleep and reattempt access */
 		struct timespec timer = { 0 };
 		timer.tv_nsec = QUARTER_SECOND_AS_NSEC;
 		nanosleep(&timer, NULL);
-		fp = fopen(path, "w");
+		file_exists = access(path, F_OK) == 0;
 	}
-	if (fp != NULL) {
-		(void)fclose(fp);
+	if (file_exists) {
 		return true;
 	} else {
 		return false;
@@ -101,8 +100,8 @@ void unexport_gpio(uint8_t gpio) {
  *--------------------------------------*/
 static bool is_gpio_exported(uint8_t gpio) {
 	char gpio_direction_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
-	(void)snprintf(gpio_direction_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u/direction", SYSFS_GPIO_PATH, gpio);
-	return (access(SYSFS_GPIO_PATH, F_OK) == 0);
+	(void)snprintf(gpio_direction_path, MAX_FILE_PATH_LENGTH, "%s/gpio%u", SYSFS_GPIO_PATH, gpio);
+	return (access(gpio_direction_path, F_OK) == 0);
 }
 
 /*--------------------------------------
