@@ -3,13 +3,12 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "logger.h"
 #include "project_constants.h"
 
 #ifdef USE_MMAP
-#include <stdbool.h>
-
 #include "gpio_control.h"
 #endif
 
