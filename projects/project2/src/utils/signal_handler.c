@@ -14,7 +14,7 @@ atomic_bool *shutdown_requested = NULL;
 /*--------------------------------------
  * Static Function: signal_handler
  *--------------------------------------*/
-static void signal_handler(int signal_number) {
+static void signal_handler(int32_t signal_number) {
 	(void)signal_number;
 	LOG("Setting shutdown flag!");
 	atomic_store(shutdown_requested, true);

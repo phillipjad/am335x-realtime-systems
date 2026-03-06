@@ -16,7 +16,7 @@ static volatile sig_atomic_t shutdown_requested = 0;
 /*--------------------------------------
  * Static Function: signal_handler
  *--------------------------------------*/
-static void signal_handler(int32_t signal_number) {
+static void signal_handler(int signal_number) {
 	(void)signal_number;
 	shutdown_requested = 1;
 }
