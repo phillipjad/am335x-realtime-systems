@@ -6,19 +6,10 @@
 #include "project_types.h"
 
 /* Config file key definitions */
-#define GREEN_LIGHT_DURATION_KEY ("GREEN_LIGHT_DURATION_M")
-#define GREEN_LIGHT_GPIO_NS_KEY ("GREEN_LIGHT_GPIO_NS")
-#define YELLOW_LIGHT_GPIO_NS_KEY ("YELLOW_LIGHT_GPIO_NS")
-#define RED_LIGHT_GPIO_NS_KEY ("RED_LIGHT_GPIO_NS")
-#define GREEN_LIGHT_GPIO_EW_KEY ("GREEN_LIGHT_GPIO_EW")
-#define YELLOW_LIGHT_GPIO_EW_KEY ("YELLOW_LIGHT_GPIO_EW")
-#define RED_LIGHT_GPIO_EW_KEY ("RED_LIGHT_GPIO_EW")
 
 /**
  * @brief Reads the configuration file for the application. Fails fast if there is any error
- *
- * @param[out] config A struct holding all configuration items to populate
  */
-void load_app_config(configuration_items_t *config);
+void load_app_config(void);
 
 #endif /* APP_CONFIG_H */

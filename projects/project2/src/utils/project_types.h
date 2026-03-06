@@ -1,6 +1,8 @@
 #ifndef PROJECT_TYPES_H
 #define PROJECT_TYPES_H
 
+#include "pthread.h"
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,23 +13,8 @@
 typedef double float64_t;
 
 typedef struct {
-	uint8_t green_light_ns;  /**< Pin for green light on north/south */
-	uint8_t green_light_ew;  /**< Pin for green light on east/west */
-	uint8_t yellow_light_ns; /**< Pin for yellow light on north/south */
-	uint8_t yellow_light_ew; /**< Pin for yellow light on east/west */
-	uint8_t red_light_ns;    /**< Pin for red light on north/south */
-	uint8_t red_light_ew;    /**< Pin for red light on east/west */
-} gpio_layout_t;
-
-typedef struct {
-	uint16_t green_light_duration_s;
-	gpio_layout_t gpio_layout;
-} configuration_items_t;
-
-typedef struct {
-	int fd;
-	volatile uint8_t *map_base;  // mapped page base
-	volatile uint8_t *gpio_base; // base + page_offset
-} gpio_map_t;
+	pthread_mutex_t mutex;
+	atomic_bool is_shutdown_requested;
+} global_values_t;
 
 #endif /* PROJECT_TYPES_H */

@@ -8,6 +8,14 @@
  * Function: gate_control_thread_entry
  *--------------------------------------*/
 void *gate_control_thread_entry(void *arg) {
-	(void)arg;
+	global_values_t *shared_info = (global_values_t *)arg;
+	while (!atomic_load(&shared_info->is_shutdown_requested)) {
+		LOG("Hello from gate_control!");
+		struct timespec timer = { 0 };
+		timer.tv_sec = 3;
+		nanosleep(&timer, NULL);
+	}
+
+	LOG("Shutting down gate control thread");
 	return NULL;
 }

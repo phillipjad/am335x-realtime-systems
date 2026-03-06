@@ -3,18 +3,14 @@
 
 #include <stdint.h>
 
-/**
- * @brief Registers SIGINT and SIGTERM signal handlers
- *
- * @return int32_t Returns STATUS_SUCCESS on success and STATUS_FAIL on failure
- */
-int32_t register_signal_handlers(void);
+/* Local project includes after system libraries */
+#include <project_types.h>
 
 /**
- * @brief Check if shutdown has been requested via signal
- *
- * @return int32_t Returns non-zero if shutdown requested, 0 otherwise
+ * @brief Registers SIGINT and SIGTERM signal handlers
+ * @param[in,out] is_shutdown_requested An atomic boolean value to set when shutdown is signalled
+ * @return int32_t Returns STATUS_SUCCESS on success and STATUS_FAIL on failure
  */
-int32_t is_shutdown_requested(void);
+int32_t register_signal_handlers(atomic_bool *is_shutdown_requested);
 
 #endif /* SIGNAL_HANDLER_H */

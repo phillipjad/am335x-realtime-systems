@@ -8,29 +8,23 @@
 
 /* Local project includes after system libraries */
 #include "logger.h"
-#include "project_types.h"
 
-static volatile sig_atomic_t shutdown_requested = 0;
+atomic_bool *shutdown_requested = NULL;
 
 /*--------------------------------------
  * Static Function: signal_handler
  *--------------------------------------*/
 static void signal_handler(int signal_number) {
 	(void)signal_number;
-	shutdown_requested = 1;
-}
-
-/*--------------------------------------
- * Function: is_shutdown_requested
- *--------------------------------------*/
-int32_t is_shutdown_requested(void) {
-	return shutdown_requested;
+	LOG("Setting shutdown flag!");
+	atomic_store(shutdown_requested, true);
 }
 
 /*--------------------------------------
  * Function: register_signal_handlers
  *--------------------------------------*/
-int32_t register_signal_handlers(void) {
+int32_t register_signal_handlers(atomic_bool *is_shutdown_requested) {
+	shutdown_requested = is_shutdown_requested;
 	struct sigaction sig_handler = { 0 };
 
 	sig_handler.sa_handler = signal_handler;
