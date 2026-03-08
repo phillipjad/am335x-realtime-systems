@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - '**'
-  pull_request:
-    branches:
-      - '**'
-    # PR Status's
-    types: [closed]
 
 # Project list
 env:
@@ -123,15 +118,22 @@ jobs:
 
   # Job 3: Putting build files into release tab instead of temp storage artifacts
   release:
+    # We don't want to stop a release-in-progress
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
     needs: build
     runs-on: ubuntu-24.04
-    # Publish artifacts to release if PR is approved
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-
+    # Publish artifacts to release on any push to main branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      MAIN_REF: 'refs/heads/main'
     permissions:
       contents: write
-
     steps:
+      - name: Get push date
+        id: date
+        run: echo "DATE=$(date +'%Y.%-m.%-d')" >> $GITHUB_ENV
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -142,17 +144,15 @@ jobs:
       - name: Create Branch's Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest-${{ github.base_ref }}
-          name: Release for branch ${{ github.base_ref }}
+          tag_name: main-${{ env.DATE }}-${{ github.sha }}
+          name: Release for ${{ env.MAIN_REF }} (${{ env.DATE }})
           body: |
-            Automated build for merge to main from PR...
-            Source Branch: ${{ github.head_ref }}
-            Target Branch: ${{ github.base_ref }}
-            Merge Date: ${{ github.event.pull_request.merged_at }}
-
+            Automated build for push to main
+            Commit: ${{ github.sha }}
+            Pushed by: ${{ github.actor }}
+            Date: ${{ env.DATE }}
           files: ./all-binaries/*
-
-          prerelease: ${{ github.base_ref != 'main' }}
+          prerelease: false
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
