@@ -13,7 +13,7 @@ on:
 # Project list
 env:
   # Add more projects with space followed by project name, Ex: p1 p2 p3 ...
-  PROJECTS: "p1"
+  PROJECTS: p1 p2
 
 # Cancel build if new push comes while running
 concurrency:
