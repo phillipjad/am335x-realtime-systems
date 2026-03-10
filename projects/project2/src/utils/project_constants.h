@@ -33,5 +33,6 @@
 
 /* Unit conversions */
 #define SEC_PER_MINUTE (60U)
+#define NSEC_PER_USEC (1000U)
 
 #endif /* PROJECT_CONSTANTS_H */
