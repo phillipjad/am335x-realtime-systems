@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 /* Local project includes after system libraries */
-#include "project_types.h"
+#include "project_types.h" // IWYU pragma: keep | We are trying to pull stdint and stdbool from this intrinisically
 
 /**
  * @brief printf-like logging macro
@@ -48,6 +48,7 @@
  * @param[in] ... Variadic arguments to print according to \p format
  */
 void project_log(FILE *stream, bool include_newline, const char *filename, uint32_t line_no, const char *format, ...)
-__attribute__((format(printf, 5, 6)));
+    /* GCC format attribute for printf-style format checking */
+    __attribute__((format(printf, 5, 6)));
 
 #endif /* LOGGER_H */

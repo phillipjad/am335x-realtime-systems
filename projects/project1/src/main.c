@@ -106,7 +106,7 @@ static void get_user_configuration_items(void) {
 	/* If built in RELEASE mode then we should get user input for gpio layout from stdio */
 	gpio_layout_t *const gpio_layout = &user_config.gpio_layout;
 	gpio_struct_t gpio_info[NUM_UTILIZED_GPIO] = { { .gpio_string = "North/South green light",
-		                                           .gpio_pointer = &gpio_layout->green_light_ns },
+		                                               .gpio_pointer = &gpio_layout->green_light_ns },
 		{ .gpio_string = "North/South yellow light", .gpio_pointer = &gpio_layout->yellow_light_ns },
 		{ .gpio_string = "North/South red light", .gpio_pointer = &gpio_layout->red_light_ns },
 		{ .gpio_string = "East/West green light", .gpio_pointer = &gpio_layout->green_light_ew },

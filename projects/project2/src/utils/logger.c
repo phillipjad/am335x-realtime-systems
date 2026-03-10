@@ -5,7 +5,6 @@
 /* Local project includes after system libraries */
 #include "logger.h"
 #include "project_constants.h"
-#include "project_types.h"
 
 #define MAX_LOG_LEN (1000U)
 
