@@ -3,17 +3,20 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
-#include "app_config.h"
 #include "gate_control/gate_control.h"
-#include "logger.h"
-#include "project_types.h"
 #include "sensor_monitoring/sensor_monitoring.h"
-#include "signal_handler.h"
-#include "user_input.h"
+#include "utils/app_config.h"
+#include "utils/gpio_control.h"
+#include "utils/logger.h"
+#include "utils/project_constants.h"
+#include "utils/project_types.h"
+#include "utils/signal_handler.h"
+#include "utils/user_input.h"
 #include "warning_light/warning_light.h"
 
 #define USER_INPUT_MAX_LEN (1024U)
 
+extern configuration_items_t user_config;
 global_values_t shared_info = { 0 };
 
 /*--------------------------------------
@@ -25,6 +28,39 @@ static void application_init(void) {
 		LOG_AND_EXIT("Failed to register application signal handlers. Status code: %d", result);
 	}
 	LOG("Initialized application");
+}
+
+/*--------------------------------------
+ * Static Function: hardware_init
+ *--------------------------------------*/
+static void hardware_init(void) {
+	LOG("Initializing mmap");
+	gpio_map_init();
+	LOG("Initialized hardware buttons");
+	gpio_set_direction(user_config.gpio_layout.east_button, GPIO_IN);
+	gpio_set_direction(user_config.gpio_layout.west_button, GPIO_IN);
+
+	LOG("Initialized hardware LEDs");
+	gpio_set_direction(user_config.gpio_layout.led_1, GPIO_OUT);
+	gpio_set_direction(user_config.gpio_layout.led_2, GPIO_OUT);
+	// Start with lights off
+	gpio_set(user_config.gpio_layout.led_1, false);
+	gpio_set(user_config.gpio_layout.led_2, false);
+
+	// TODO: NEED TO SETUP SERVO STILL
+}
+
+/*--------------------------------------
+ * Static Function: software_init
+ *--------------------------------------*/
+static void software_init(void) {
+	LOG("Initializing global states");
+	pthread_mutex_init(&shared_info.mutex, NULL);
+	pthread_cond_init(&shared_info.cv, NULL);
+	shared_info.current_state = STATE_IDLE;
+	shared_info.current_direction = DIRECTION_NONE;
+	shared_info.arrival_time = (struct timespec){ 0 };
+	shared_info.clear_time = (struct timespec){ 0 };
 }
 
 /*--------------------------------------
@@ -53,9 +89,9 @@ static void get_user_configuration_items(void) {
 
 /* Application entrypoint */
 int32_t main(void) {
-	// #ifdef USE_CONFIG /* If we are using a config file then we load it in first */
-	// 	load_app_config(&user_config);
-	// #endif /* USE_CONFIG */
+#ifdef USE_CONFIG /* If we are using a config file then we load it in first */
+	load_app_config(&user_config);
+#endif /* USE_CONFIG */
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
@@ -67,9 +103,14 @@ int32_t main(void) {
 	get_user_configuration_items();
 #endif /* USE_CONFIG */
 
+/* Hardware mmap init if we are in release mode */
+#ifdef NDEBUG
+	hardware_init();
+#endif
+
+	/* Global params init */
+	software_init();
 	/* Start threads */
-	pthread_t gate_control_thread = { 0 };
-	pthread_t warning_light_thread = { 0 };
 	pthread_t sensor_monitoring_thread = { 0 };
 	int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
@@ -98,5 +139,11 @@ int32_t main(void) {
 	}
 
 	LOG("Starting application shutdown sequence...");
+
+/* Hardware mmap close if we are in release mode */
+#ifdef NDEBUG
+	gpio_map_close();
+#endif
+
 	// handle_shutdown();
 }

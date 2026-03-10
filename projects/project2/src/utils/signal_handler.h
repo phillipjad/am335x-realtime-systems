@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* Local project includes after system libraries */
-#include <project_types.h>
+#include "project_types.h"
 
 /**
  * @brief Registers SIGINT and SIGTERM signal handlers
