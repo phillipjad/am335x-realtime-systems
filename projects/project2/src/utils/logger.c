@@ -5,6 +5,8 @@
 #include "logger.h"
 #include "project_types.h"
 
+static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /*--------------------------------------
  * Function: project_log
  *--------------------------------------*/
@@ -26,6 +28,11 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 	fprintf(stream, "[%s:%d]: ", file_of_interest, line_no);
 	va_list args;
 	va_start(args, format);
+	/* Add lock around print and flush */
+	pthread_mutex_lock(&log_mutex);
 	vfprintf(stream, format_with_newline, args);
+	/* Immediately flush to prevent intreleaved output */
+	(void)fflush(stream);
+	pthread_mutex_unlock(&log_mutex);
 	va_end(args);
 }
