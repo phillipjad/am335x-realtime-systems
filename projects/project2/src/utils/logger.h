@@ -10,14 +10,14 @@
 /**
  * @brief printf-like logging macro
  */
-#define LOG(format, ...) project_log(stdout, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
+#define LOG(format, ...) project_log(stdout, true, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 
 #ifdef DEBUG
 /**
  * @brief printf-like logging macro only for debug mode
  */
-#define DEBUG_LOG(format, ...) project_log(stdout, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
+#define DEBUG_LOG(format, ...) project_log(stdout, true, __FILE__, __LINE__, format, ##__VA_ARGS__)
 #else
 /**
  * @brief disabled for release mode
@@ -28,13 +28,13 @@
 /**
  * @brief printf-like logging macro, with no newline
  */
-#define LOG_WITHOUT_NEWLINE(format, ...) project_log(stdout, false, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__)
+#define LOG_WITHOUT_NEWLINE(format, ...) project_log(stdout, false, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 /**
  * @brief Panics the message in \p format to stderr and then exits with a non-zero status code
  */
-#define LOG_AND_EXIT(format, ...)                                              \
-	project_log(stderr, true, __FILE_NAME__, __LINE__, format, ##__VA_ARGS__); \
+#define LOG_AND_EXIT(format, ...)                                         \
+	project_log(stderr, true, __FILE__, __LINE__, format, ##__VA_ARGS__); \
 	exit(EXIT_FAILURE)
 
 /**

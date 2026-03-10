@@ -16,7 +16,14 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 		/* TODO: This is kinda janky rn, but I don't want to put newlines in every log */
 		format_with_newline[strlen(format)] = '\n';
 	}
-	fprintf(stream, "[%s:%d]: ", filename, line_no);
+	const char *file_of_interest = NULL;
+	if (strrchr(filename, (int32_t)'/') != NULL) {
+		char *file_of_interest_with_slash = strrchr(filename, (int32_t)'/');
+		file_of_interest = ++file_of_interest_with_slash;
+	} else {
+		file_of_interest = filename;
+	}
+	fprintf(stream, "[%s:%d]: ", file_of_interest, line_no);
 	va_list args;
 	va_start(args, format);
 	vfprintf(stream, format_with_newline, args);
