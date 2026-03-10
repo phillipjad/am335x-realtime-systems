@@ -47,6 +47,7 @@
  * @param[in] format LOG-like format string to use when printing
  * @param[in] ... Variadic arguments to print according to \p format
  */
-void project_log(FILE *stream, bool include_newline, const char *filename, uint32_t line_no, const char *format, ...);
+void project_log(FILE *stream, bool include_newline, const char *filename, uint32_t line_no, const char *format, ...)
+__attribute__((format(printf, 5, 6)));
 
 #endif /* LOGGER_H */
