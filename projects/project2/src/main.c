@@ -112,27 +112,31 @@ int32_t main(void) {
 	software_init();
 	/* Start threads */
 	pthread_t sensor_monitoring_thread = { 0 };
-	int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create gate control thread");
-	}
-	result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create warning light thread");
-	}
-	result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
+	/*
+	  int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
+	  if (result != STATUS_SUCCESS) {
+	      LOG_AND_EXIT("Failed to create gate control thread");
+	  }
+	  result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
+	  if (result != STATUS_SUCCESS) {
+	      LOG_AND_EXIT("Failed to create warning light thread");
+	  }
+	*/
+	int32_t result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
 
-	result = pthread_join(gate_control_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join gate control thread");
-	}
-	result = pthread_join(warning_light_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join warning light thread");
-	}
+	/*
+	  result = pthread_join(gate_control_thread, NULL);
+	  if (result != STATUS_SUCCESS) {
+	      LOG("Failed to join gate control thread");
+	  }
+	  result = pthread_join(warning_light_thread, NULL);
+	  if (result != STATUS_SUCCESS) {
+	      LOG("Failed to join warning light thread");
+	  }
+	*/
 	result = pthread_join(sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
