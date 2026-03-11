@@ -1,13 +1,13 @@
 #ifndef PROJECT_TYPES_H
 #define PROJECT_TYPES_H
 
+#include <inttypes.h>
+#include <pthread.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
-
-#include "pthread.h"
 
 #define STATUS_SUCCESS (0)
 #define STATUS_FAIL (-1)

@@ -3,10 +3,14 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
+#ifdef USE_CONFIG /* We only need this header if we are using config file logic */
 #include "app_config.h"
+#endif /* USE_CONFIG */
 #include "gate_control.h"
+
 #include "gpio_control.h"
 #include "logger.h"
+#include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "signal_handler.h"
@@ -95,7 +99,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* West Button Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for West Button");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for West Button");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for West Button pin");
 	}
@@ -105,7 +109,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Led 1 Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for LED 1 pin");
 	}
@@ -115,7 +119,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Led 2 Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 2");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 2");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for LED 2 pin");
 	}
@@ -125,7 +129,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
