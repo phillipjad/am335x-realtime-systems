@@ -22,7 +22,7 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 		exit(EXIT_FAILURE);
 	}
 	int64_t microseconds = curr_time.tv_nsec / NSEC_PER_USEC;
-	int32_t used = snprintf(output_buffer, MAX_LOG_LEN, "%ld.%.6ld ", curr_time.tv_sec, microseconds);
+	int32_t used = snprintf(output_buffer, MAX_LOG_LEN, "%lld.%.6lld ", (int64_t)curr_time.tv_sec, microseconds);
 	const char *file_of_interest = NULL;
 	if (strrchr(filename, (int32_t)'/') != NULL) {
 		char *file_of_interest_with_slash = strrchr(filename, (int32_t)'/');

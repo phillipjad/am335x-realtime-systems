@@ -71,31 +71,16 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return STATUS_FAIL;
 	}
 
-	if (strcmp(key, GREEN_LIGHT_DURATION_KEY) == 0) {
-		float64_t temp = 0.0;
-		int32_t result = parse_input_to_float64(value, &temp);
-		if (result != STATUS_SUCCESS) {
-			return result;
-		}
-		/* Parse user input as float in case of decimal input */
-		temp *= (float64_t)SEC_PER_MINUTE;
-		if ((temp < 0.0) || (temp > (float64_t)UINT16_MAX)) {
-			return STATUS_FAIL;
-		}
-		config->green_light_duration_s = (uint16_t)temp;
-		return STATUS_SUCCESS;
-	} else if (strcmp(key, GREEN_LIGHT_GPIO_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.green_light_ns);
-	} else if (strcmp(key, YELLOW_LIGHT_GPIO_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.yellow_light_ns);
-	} else if (strcmp(key, RED_LIGHT_GPIO_NS_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.red_light_ns);
-	} else if (strcmp(key, GREEN_LIGHT_GPIO_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.green_light_ew);
-	} else if (strcmp(key, YELLOW_LIGHT_GPIO_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.yellow_light_ew);
-	} else if (strcmp(key, RED_LIGHT_GPIO_EW_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.red_light_ew);
+	if (strcmp(key, EAST_BUTTON_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.east_button);
+	} else if (strcmp(key, WEST_BUTTON_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.west_button);
+	} else if (strcmp(key, LED_1_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.led_1);
+	} else if (strcmp(key, LED_2_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.led_2);
+	} else if (strcmp(key, SERVO_GPIO_PIN) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.servo);
 	} else {
 		LOG("Received unknown config key: %s", key);
 		return STATUS_FAIL;

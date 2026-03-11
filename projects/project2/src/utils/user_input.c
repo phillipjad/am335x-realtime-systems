@@ -37,7 +37,7 @@ int32_t parse_input_to_uint8(const char *input_buffer, uint8_t *output) {
 	}
 
 	if ((value > UINT8_MAX) || (value < 0)) {
-		LOG("User input is out of bounds for uint8_t: %ld not within range 0 <= X <= %d", value, UINT8_MAX);
+		LOG("User input is out of bounds for uint8_t: %lld not within range 0 <= X <= %d", value, UINT8_MAX);
 		return STATUS_FAIL;
 	}
 
@@ -66,7 +66,7 @@ int32_t parse_input_to_uint16(const char *input_buffer, uint16_t *output) {
 	}
 
 	if ((value > UINT16_MAX) || (value < 0)) {
-		LOG("User input is out of bounds for uint16_t: %ld not within range 0 <= X <= %d", value, UINT16_MAX);
+		LOG("User input is out of bounds for uint16_t: %lld not within range 0 <= X <= %d", value, UINT16_MAX);
 		return STATUS_FAIL;
 	}
 
