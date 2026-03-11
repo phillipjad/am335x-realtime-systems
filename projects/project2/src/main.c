@@ -5,6 +5,7 @@
 /* Local project includes after system libraries */
 #include "app_config.h"
 #include "gate_control.h"
+#include "gpio_control.h"
 #include "logger.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
@@ -14,7 +15,6 @@
 
 #define USER_INPUT_MAX_LEN (1024U)
 
-configuration_items_t user_config = { 0 };
 global_values_t shared_info = { 0 };
 
 /*--------------------------------------
@@ -35,15 +35,16 @@ static void hardware_init(void) {
 	LOG("Initializing mmap");
 	gpio_map_init();
 	LOG("Initialized hardware buttons");
-	gpio_set_direction(user_config.gpio_layout.east_button, GPIO_IN);
-	gpio_set_direction(user_config.gpio_layout.west_button, GPIO_IN);
+	configuration_items_t *user_config = &shared_info.config;
+	gpio_set_direction(user_config->gpio_layout.east_button, GPIO_IN);
+	gpio_set_direction(user_config->gpio_layout.west_button, GPIO_IN);
 
 	LOG("Initialized hardware LEDs");
-	gpio_set_direction(user_config.gpio_layout.led_1, GPIO_OUT);
-	gpio_set_direction(user_config.gpio_layout.led_2, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
 	// Start with lights off
-	gpio_set(user_config.gpio_layout.led_1, false);
-	gpio_set(user_config.gpio_layout.led_2, false);
+	gpio_set(user_config->gpio_layout.led_1, false);
+	gpio_set(user_config->gpio_layout.led_2, false);
 
 	// TODO: NEED TO SETUP SERVO STILL
 }
@@ -135,6 +136,15 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* USE_CONFIG */
 
+static void handle_shutdown(void) {
+	LOG("Shutting down...");
+#ifdef NDEBUG
+	/* Hardware mmap close if we are in release mode */
+	gpio_map_close();
+#endif
+	exit(EXIT_SUCCESS);
+}
+
 /* Application entrypoint */
 int32_t main(void) {
 	configuration_items_t *user_config = &shared_info.config;
@@ -193,10 +203,5 @@ int32_t main(void) {
 
 	LOG("Starting application shutdown sequence...");
 
-/* Hardware mmap close if we are in release mode */
-#ifdef NDEBUG
-	gpio_map_close();
-#endif
-
-	// handle_shutdown();
+	handle_shutdown();
 }

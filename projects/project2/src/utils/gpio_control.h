@@ -3,9 +3,9 @@
 
 #include "project_types.h"
 
-void gpio_map_init();
+void gpio_map_init(void);
 
-void gpio_map_close();
+void gpio_map_close(void);
 
 void gpio_set(uint8_t pin, bool value);
 
