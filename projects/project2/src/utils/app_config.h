@@ -10,6 +10,6 @@
 /**
  * @brief Reads the configuration file for the application. Fails fast if there is any error
  */
-void load_app_config(void);
+void load_app_config(configuration_items_t *config);
 
 #endif /* APP_CONFIG_H */

@@ -31,8 +31,8 @@ static bool read_with_debounce(button_debounce_t *d) {
 	// Check if we reached the stable count
 	if (d->stable_count == STABLE_NEEDED) {
 		d->debounce = raw;
-		// Check for resing edge: 0 -> 1 means "pressed"
-		if (d->prev_debounced == 0 && d->debounce == 1) {
+		// Check for falling edge: 1 -> 0 means "pressed"
+		if (d->prev_debounced == 1 && d->debounce == 0) {
 			pressed = true;
 		}
 		d->prev_debounced = d->debounce;
