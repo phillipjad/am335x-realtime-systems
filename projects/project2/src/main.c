@@ -3,16 +3,14 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
-#include "gate_control/gate_control.h"
-#include "sensor_monitoring/sensor_monitoring.h"
-#include "utils/app_config.h"
-#include "utils/gpio_control.h"
-#include "utils/logger.h"
-#include "utils/project_constants.h"
-#include "utils/project_types.h"
-#include "utils/signal_handler.h"
-#include "utils/user_input.h"
-#include "warning_light/warning_light.h"
+#include "app_config.h"
+#include "gate_control.h"
+#include "logger.h"
+#include "project_types.h"
+#include "sensor_monitoring.h"
+#include "signal_handler.h"
+#include "user_input.h"
+#include "warning_light.h"
 
 #define USER_INPUT_MAX_LEN (1024U)
 
@@ -78,19 +76,70 @@ static void log_mode(void) {
 #endif
 }
 
+#ifndef USE_CONFIG
 /*--------------------------------------
  * Static Function: get_user_configuration_items
  *--------------------------------------*/
-#ifndef USE_CONFIG
-static void get_user_configuration_items(void) {
-	return;
+static void get_user_configuration_items(configuration_items_t *user_config) {
+	char input_buffer[USER_INPUT_MAX_LEN + 1U] = { 0 };
+
+	/* East Button Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for East Button");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for East Button pin");
+	}
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.east_button);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to parse user input for East Button GPIO");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* West Button Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for West Button");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for West Button pin");
+	}
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.west_button);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to parse user input for West Button GPIO");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* Led 1 Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for LED 1 pin");
+	}
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_1);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to parse user input for LED 1 GPIO");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* Led 2 Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 2");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for LED 2 pin");
+	}
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_2);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to parse user input for LED 2 GPIO");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* Servo Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for Servo pin");
+	}
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.servo);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to parse user input for Servo GPIO");
+	}
 }
 #endif /* USE_CONFIG */
 
 /* Application entrypoint */
 int32_t main(void) {
+	configuration_items_t *user_config = &shared_info.config;
 #ifdef USE_CONFIG /* If we are using a config file then we load it in first */
-	load_app_config(&user_config);
+	load_app_config(user_config);
 #endif /* USE_CONFIG */
 
 	/* Log the mode that the binary was compiled with */
@@ -100,7 +149,7 @@ int32_t main(void) {
 	application_init();
 
 #ifndef USE_CONFIG /* If we are not using config we should get inputs from stdio */
-	get_user_configuration_items();
+	get_user_configuration_items(user_config);
 #endif /* USE_CONFIG */
 
 /* Hardware mmap init if we are in release mode */
