@@ -67,7 +67,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		// Grab lock
 		pthread_mutex_lock(&shared_info->mutex);
 		// If state is still idle even after potential context switch
-		if (shared_info->current_direction == STATE_IDLE) {
+		if (shared_info->current_state == STATE_IDLE) {
 			// Update State to active - Train is arriving
 			shared_info->current_state = STATE_ACTIVE;
 			// Store direction_t
@@ -97,7 +97,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		// Grab lock
 		pthread_mutex_lock(&shared_info->mutex);
 		// If state is still active even after potential context switch
-		if (shared_info->current_direction == STATE_ACTIVE) {
+		if (shared_info->current_state == STATE_ACTIVE) {
 			// Check if train direction is still on the same button or has arrived to the next button
 			if (snapshot_direction == train_direction || overall_time > (float64_t)TIMEOUT_TIME) {
 				// Train has not moved since last button press
