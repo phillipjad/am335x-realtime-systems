@@ -14,15 +14,19 @@
 
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
+#define MSEC_PER_SEC (1000U)
+#define NSEC_PER_MSEC (1000000L)
 
-/* Light Directions */
-#define NORTH_SOUTH ("North/South")
-#define EAST_WEST ("East/West")
+/* Debounce Values */
+#define SAMPLE_MS (5)
+#define STABLE_NEEDED (6)
 
-/* Light Colors */
-#define GREEN ("Green")
-#define YELLOW ("Yellow")
-#define RED ("Red")
+/* Train Timeout Time */
+#define TIMEOUT_TIME (5)
+
+/* GPIO Types */
+#define GPIO_IN ("In")
+#define GPIO_OUT ("Out")
 
 /* Filenames */
 #define CONFIG_FILENAME ("/p1_config.cfg")

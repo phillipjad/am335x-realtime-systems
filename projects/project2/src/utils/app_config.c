@@ -127,8 +127,10 @@
 /*--------------------------------------
  * Function: load_app_config
  *--------------------------------------*/
-void load_app_config(void) {
+void load_app_config(configuration_items_t *config) {
 	LOG("Reading application configuration");
+	config->gpio_layout.west_button = 66;
+	config->gpio_layout.east_button = 69;
 	// char config_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	// char config_content[CONFIG_CONTENT_MAX_LENGTH + 1U] = { 0 };
 }
