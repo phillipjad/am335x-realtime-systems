@@ -138,7 +138,6 @@ void failsafe_timout(global_values_t *shared_info) {
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t snapshot_state = shared_info->current_state;
-	direction_t snapshot_direction = shared_info->current_direction;
 	struct timespec snapshot_arrival_time = shared_info->arrival_time;
 	// Release lock
 	pthread_mutex_unlock(&shared_info->mutex);
