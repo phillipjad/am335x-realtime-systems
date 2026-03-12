@@ -14,6 +14,8 @@
 
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
+#define MSEC_PER_SEC (1000U)
+#define NSEC_PER_MSEC (1000000L)
 
 /* Debounce Values */
 #define SAMPLE_MS (5)

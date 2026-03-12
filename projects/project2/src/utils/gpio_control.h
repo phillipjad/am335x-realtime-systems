@@ -1,8 +1,6 @@
 #ifndef GPIO_CONTROL_H
 #define GPIO_CONTROL_H
 
-#include <stdint.h>
-
 #include "project_types.h"
 
 void gpio_map_init();

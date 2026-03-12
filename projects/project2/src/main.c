@@ -51,9 +51,9 @@ static void hardware_init(void) {
 }
 
 /*--------------------------------------
- * Static Function: software_init
+ * Static Function: globals_init
  *--------------------------------------*/
-static void software_init(void) {
+static void globals_init(void) {
 	LOG("Initializing global states");
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
@@ -109,7 +109,7 @@ int32_t main(void) {
 #endif
 
 	/* Global params init */
-	software_init();
+	globals_init();
 	/* Start threads */
 	pthread_t sensor_monitoring_thread = { 0 };
 	/*

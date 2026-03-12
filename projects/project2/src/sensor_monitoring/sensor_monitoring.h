@@ -16,7 +16,7 @@ void *sensor_monitoring_thread_entry(void *arg);
  *
  * @param[in] shared_info Shared variables
  * @param[in] direction Incoming train direction
- * @return void* Returns NULL
+ * @return void
  */
 void sensor_monitoring(global_values_t *shared_info, direction_t train_direction);
 
@@ -24,7 +24,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
  * @brief Fail-safe for train buttons
  *
  * @param[in] shared_info Shared variables
- * @return void* Returns NULL
+ * @return void
  */
 void failsafe_timout(global_values_t *shared_info);
 
