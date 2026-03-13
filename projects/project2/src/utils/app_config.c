@@ -114,10 +114,10 @@ static void parse_config_file_contents(const char *config_content, configuration
  * Function: load_app_config
  *--------------------------------------*/
 void load_app_config(configuration_items_t *config) {
-	LOG("Reading application configuration");
 	char config_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	char config_content[CONFIG_CONTENT_MAX_LENGTH + 1U] = { 0 };
 	get_config_file_path(config_path, MAX_FILE_PATH_LENGTH);
+	LOG("Reading application configuration from %s", config_path);
 	read_config_file_contents(config_path, config_content, CONFIG_CONTENT_MAX_LENGTH);
 	parse_config_file_contents(config_content, config);
 }

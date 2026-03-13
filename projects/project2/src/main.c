@@ -1,20 +1,22 @@
 #include <pthread.h>
-#include <string.h>
 #include <unistd.h>
 
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
 #include "app_config.h"
-#endif /* USE_CONFIG */
-#include "gate_control.h"
-
+#else /* If we aren't using a config file then we need user input */
+#include "user_input.h"
+#include <string.h> /* string.h needed for memset */
+#endif              /* USE_CONFIG */
+#ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
+#endif
+#include "gate_control.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "signal_handler.h"
-#include "user_input.h"
 #include "warning_light.h"
 
 #define USER_INPUT_MAX_LEN (1024U)
@@ -32,6 +34,7 @@ static void application_init(void) {
 	LOG("Initialized application");
 }
 
+#ifdef NDEBUG
 /*--------------------------------------
  * Static Function: hardware_init
  *--------------------------------------*/
@@ -52,6 +55,7 @@ static void hardware_init(void) {
 
 	// TODO: NEED TO SETUP SERVO STILL
 }
+#endif
 
 /*--------------------------------------
  * Static Function: globals_init
@@ -87,6 +91,8 @@ static void log_mode(void) {
  *--------------------------------------*/
 static void get_user_configuration_items(configuration_items_t *user_config) {
 	char input_buffer[USER_INPUT_MAX_LEN + 1U] = { 0 };
+
+	LOG("Prompting user for configuration items");
 
 	/* East Button Pin */
 	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for East Button");
