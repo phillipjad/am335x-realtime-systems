@@ -45,7 +45,7 @@ static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
 static volatile uint8_t *get_gpio_base(uint8_t pin) {
 	uint8_t gpio_base_nubmer = pin / REGISTERS_PER_GROUP;
 	if (gpio_base_nubmer >= GPIO_COUNT || gpios_array[gpio_base_nubmer].gpio_base == NULL ||
-	gpios_array[gpio_base_nubmer].fd <= 0) {
+	    gpios_array[gpio_base_nubmer].fd <= 0) {
 		LOG_AND_EXIT("Failed to get gpio base for pin %d", pin);
 		return NULL;
 	} else {
@@ -78,7 +78,7 @@ void gpio_map_init(void) {
 		page_off = (uint32_t)(addresses[i] - page_base);
 
 		gpios_array[i].map_base =
-		(volatile uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, gpios_array[i].fd, page_base);
+		    (volatile uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, gpios_array[i].fd, page_base);
 		if (gpios_array[i].map_base == MAP_FAILED) {
 			LOG_AND_EXIT("Failed to create mmap base for GPIO PHYSICAL BASE: %d, at physical address: 0x%X", i, addresses[i]);
 		}

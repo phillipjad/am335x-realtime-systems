@@ -4,13 +4,10 @@
 #include <time.h>
 
 /* Local project includes after system libraries */
-#include "../utils/app_config.h"
-#include "../utils/gpio_control.h"
-#include "../utils/logger.h"
-#include "../utils/project_constants.h"
-#include "../utils/project_types.h"
-
-extern configuration_items_t user_config;
+#include "gpio_control.h"
+#include "logger.h"
+#include "project_constants.h"
+#include "project_types.h"
 
 /*--------------------------------------
  * Function: read_with_debounce
@@ -123,7 +120,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		if (fail_safe_active) {
 			LOG("FAILSAFE STATE ACTIVE: Train has not moved from the %s. Lowering gate and warning lights blinking. "
 			    "Awaiting supervisor clear...",
-			(train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
+			    (train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
 		} else {
 			LOG("CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
 		}
@@ -184,8 +181,8 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	timer.tv_nsec = (SAMPLE_MS % MSEC_PER_SEC) * NSEC_PER_MSEC;
 
 	// Button setup
-	button_debounce_t east_button = { user_config.gpio_layout.east_button, 0, 0, 0, 0 };
-	button_debounce_t west_button = { user_config.gpio_layout.west_button, 0, 0, 0, 0 };
+	button_debounce_t east_button = { shared_info->config.gpio_layout.east_button, 0, 0, 0, 0 };
+	button_debounce_t west_button = { shared_info->config.gpio_layout.west_button, 0, 0, 0, 0 };
 
 	// Check for button press
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {

@@ -11,4 +11,7 @@ add_executable(p2 ${P2_SOURCES})
 target_include_directories(p2 PRIVATE
     "${CMAKE_SOURCE_DIR}/projects/project2/src"
     "${CMAKE_SOURCE_DIR}/projects/project2/src/utils"
+    "${CMAKE_SOURCE_DIR}/projects/project2/src/gate_control"
+    "${CMAKE_SOURCE_DIR}/projects/project2/src/sensor_monitoring"
+    "${CMAKE_SOURCE_DIR}/projects/project2/src/warning_light"
 )

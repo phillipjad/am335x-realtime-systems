@@ -9,9 +9,6 @@
 #define MAIN_THREAD_SLEEP_S (1U)
 #define SHUTDOWN_DELAY_S (5U)
 
-/* Traffic Light Flashing Time */
-#define LIGHT_FLASH_COUNT (4U)
-
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
 #define MSEC_PER_SEC (1000U)
@@ -29,9 +26,10 @@
 #define GPIO_OUT ("Out")
 
 /* Filenames */
-#define CONFIG_FILENAME ("/p1_config.cfg")
+#define CONFIG_FILENAME ("/p2_config.cfg")
 
 /* Unit conversions */
 #define SEC_PER_MINUTE (60U)
+#define NSEC_PER_USEC (1000U)
 
 #endif /* PROJECT_CONSTANTS_H */

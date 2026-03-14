@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21)
 project(swe660)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -9,7 +9,6 @@ add_definitions(-D_POSIX_C_SOURCE=202405L)
 # Define C standard being used -- Using C23 for now but should probably check with Prof
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 
 # Set build type - release or debug
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

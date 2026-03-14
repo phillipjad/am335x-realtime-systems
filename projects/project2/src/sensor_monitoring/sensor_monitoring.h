@@ -1,7 +1,7 @@
 #ifndef SENSOR_MONITORING_H
 #define SENSOR_MONITORING_H
 
-#include "../utils/project_types.h"
+#include "project_types.h"
 
 /**
  * @brief Thread entry point for the sensor monitoring module
