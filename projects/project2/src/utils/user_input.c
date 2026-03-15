@@ -150,6 +150,6 @@ void *user_input_thread_entry(void *args) {
 		}
 	}
 
-	LOG("Shuttind down supervisor thread...");
+	LOG("Shutting down supervisor thread...");
 	return NULL;
 }
