@@ -4,19 +4,19 @@
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
 #include "app_config.h"
-#else /* If we aren't using a config file then we need user input */
+#else               /* If we aren't using a config file then we need user input */
 #include <string.h> /* string.h needed for memset */
 #endif              /* USE_CONFIG */
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
 #endif
-#include "user_input.h"
 #include "gate_control.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "signal_handler.h"
+#include "user_input.h"
 #include "warning_light.h"
 
 global_values_t shared_info = { 0 };
