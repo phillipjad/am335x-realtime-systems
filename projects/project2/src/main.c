@@ -19,8 +19,6 @@
 #include "signal_handler.h"
 #include "warning_light.h"
 
-#define USER_INPUT_MAX_LEN (1024U)
-
 global_values_t shared_info = { 0 };
 
 /*--------------------------------------
@@ -181,6 +179,7 @@ int32_t main(void) {
 	globals_init();
 	/* Start threads */
 	pthread_t sensor_monitoring_thread = { 0 };
+	pthread_t supervisor_input_thread = { 0 };
 	/*
 	  int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
 	  if (result != STATUS_SUCCESS) {
@@ -196,6 +195,11 @@ int32_t main(void) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
 
+	result = pthread_create(&supervisor_input_thread, NULL, &user_input_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create supervisor input thread");
+	}
+
 	/*
 	  result = pthread_join(gate_control_thread, NULL);
 	  if (result != STATUS_SUCCESS) {
@@ -209,6 +213,11 @@ int32_t main(void) {
 	result = pthread_join(sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
+	}
+
+	result = pthread_join(supervisor_input_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join supervisor input thread");
 	}
 
 	LOG("Starting application shutdown sequence...");
