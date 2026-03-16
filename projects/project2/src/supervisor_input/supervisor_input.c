@@ -2,8 +2,6 @@
 
 #include <errno.h>
 #include <pthread.h>
-#include <stdatomic.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/poll.h>
@@ -31,6 +29,7 @@ void *supervisor_input_thread_entry(void *args) {
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		// Start polling every 100ms
 		int32_t poll_fd = poll(&poll_stdin, 1, 100);
+		// Not checking for when poll returns -1, since if poll fails, will retry poll in 100ms
 
 		// Check for input with poll length
 		if (poll_fd > 0 && (poll_stdin.revents & POLLIN)) {
