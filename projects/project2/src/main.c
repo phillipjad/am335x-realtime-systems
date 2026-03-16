@@ -13,7 +13,6 @@
 #endif
 #include "gate_control.h"
 #include "logger.h"
-#include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "signal_handler.h"

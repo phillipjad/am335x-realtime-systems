@@ -26,10 +26,6 @@
 /* Train Timeout Time */
 #define TIMEOUT_TIME (5)
 
-/* GPIO Types */
-#define GPIO_IN ("In")
-#define GPIO_OUT ("Out")
-
 /* Filenames */
 #define CONFIG_FILENAME ("/p2_config.cfg")
 
