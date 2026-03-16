@@ -9,6 +9,7 @@
 /* Sleep timers */
 #define MAIN_THREAD_SLEEP_S (1U)
 #define SHUTDOWN_DELAY_S (5U)
+#define WARNING_LIGHT_THREAD_SLEEP_MS (10L)
 
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
