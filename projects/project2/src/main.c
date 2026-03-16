@@ -4,7 +4,8 @@
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
 #include "app_config.h"
-#else               /* If we aren't using a config file then we need user input */
+#else /* If we aren't using a config file then we need user input */
+#include "user_input.h"
 #include <string.h> /* string.h needed for memset */
 #endif              /* USE_CONFIG */
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
@@ -16,7 +17,7 @@
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "signal_handler.h"
-#include "user_input.h"
+#include "supervisor_input.h"
 #include "warning_light.h"
 
 global_values_t shared_info = { 0 };
@@ -195,7 +196,7 @@ int32_t main(void) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
 
-	result = pthread_create(&supervisor_input_thread, NULL, &user_input_thread_entry, (void *)&shared_info);
+	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
 	}

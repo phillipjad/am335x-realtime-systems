@@ -39,12 +39,4 @@ int32_t parse_input_to_uint16(const char *input_buffer, uint16_t *output);
  */
 int32_t parse_input_to_float64(const char *input_buffer, float64_t *output);
 
-/**
- * @brief Thread entry point for fail-safe supervisor user input_buffer
- *
- * @param[in] args Shared global values pointer
- * @param[out] void* returns NULL
- */
-void *user_input_thread_entry(void *args);
-
 #endif /* USER_INPUT_H */
