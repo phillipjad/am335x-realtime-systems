@@ -25,6 +25,16 @@
 #define GPIO_IN ("In")
 #define GPIO_OUT ("Out")
 
+/* Servo Angles */
+#define SERVO_RIGHT (2000000L)
+#define SERVO_CENTER (1500000L)
+#define SERVO_LEFT (1000000L)
+
+/* Servo Constants */
+#define SERVO_PWM_NS (20000000L)
+#define GATE_RAISED (SERVO_RIGHT)
+#define GATE_LOWER (SERVO_LEFT)
+
 /* Filenames */
 #define CONFIG_FILENAME ("/p2_config.cfg")
 
