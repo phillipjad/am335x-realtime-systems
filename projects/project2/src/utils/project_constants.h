@@ -11,6 +11,9 @@
 #define SHUTDOWN_DELAY_S (5U)
 #define WARNING_LIGHT_THREAD_SLEEP_MS (10L)
 
+/* Warning light blinker time */
+#define WARNING_LIGHT_BLINK_MS (500L)
+
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
 #define MSEC_PER_SEC (1000U)

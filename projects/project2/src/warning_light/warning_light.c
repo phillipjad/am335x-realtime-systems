@@ -1,19 +1,42 @@
 #include "warning_light.h"
 
 /* Local project includes after system libraries */
+#include "gpio_control.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
 #include <pthread.h>
+#include <time.h>
 
+static global_values_t *shared_info = NULL;
+
+#ifdef NDEBUG
 static void warning_lights_blink_hw(void) {
-	return;
-}
+	uint8_t led1_gpio = shared_info->config.gpio_layout.led_1;
+	uint8_t led2_gpio = shared_info->config.gpio_layout.led_2;
 
+	struct timespec blink_period = { 0 };
+	blink_period.tv_nsec = WARNING_LIGHT_BLINK_MS * NSEC_PER_MSEC;
+
+	/* LED1 on, LED2 off */
+	gpio_set(led1_gpio, true);
+	gpio_clear(led2_gpio);
+	nanosleep(&blink_period, NULL);
+
+	/* LED1 off, LED2 on */
+	gpio_clear(led1_gpio);
+	gpio_set(led2_gpio, true);
+	nanosleep(&blink_period, NULL);
+
+	/* LED1 off, LED2 off */
+	gpio_clear(led2_gpio);
+}
+#else
 static void warning_lights_blink_sw(void) {
 	LOG("Blinking warning light 1");
 	LOG("Blinking warning light 2");
 }
+#endif /* NDEBUG */
 
 static void warning_lights_blink(void) {
 #ifdef NDEBUG
@@ -28,7 +51,7 @@ static void warning_lights_blink(void) {
  *--------------------------------------*/
 void *warning_light_thread_entry(void *arg) {
 	LOG("Starting warning light thread!");
-	global_values_t *shared_info = (global_values_t *)arg;
+	shared_info = (global_values_t *)arg;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		state_t current_state = STATE_INVALID;
 		pthread_mutex_lock(&shared_info->mutex);
