@@ -15,10 +15,12 @@
 void *gate_control_thread_entry(void *arg) {
 	LOG("Starting gate control thread");
 	global_values_t *shared_info = (global_values_t *)arg;
-	// Assign current starting state which will be STATE_IDLE
-	state_t servo_state = shared_info->current_state;
+	// Starting state
+	state_t servo_state = STATE_IDLE;
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
+	// Assign current starting state
+	servo_state = shared_info->current_state;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		// While state is same as initializing state, wait on cv
 		while (shared_info->current_state == servo_state && !atomic_load(&shared_info->is_shutdown_requested)) {
