@@ -43,7 +43,31 @@ static void warning_lights_blink(void) {
 	warning_lights_blink_hw();
 #else
 	warning_lights_blink_sw();
-#endif
+#endif /* NDEBUG */
+}
+
+static void warning_lights_blink_one_second(void) {
+	/* Set stop time one second in the future */
+	struct timespec stop = { 0 };
+	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &stop);
+	++stop.tv_sec;
+
+	/* We're going to blink on a loop until we reach stop */
+	float64_t sub_result = 0.0;
+	do {
+		warning_lights_blink();
+
+		/* Get time now */
+		struct timespec now = { 0 };
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+
+		/* Compare now to when we should be stopping */
+		time_t sec_result = (stop.tv_sec - now.tv_sec);
+		sub_result = (float64_t)sec_result;
+		int64_t nsec_result = (stop.tv_nsec - now.tv_nsec);
+		float64_t nsec_result_as_float = nsec_result;
+		sub_result += (float64_t)(nsec_result_as_float / (float64_t)SEC_TO_NSEC);
+	} while (sub_result > 0.0); /* sub_result being greater than 0.0 means that stop is still in the future */
 }
 
 /*--------------------------------------
@@ -66,6 +90,9 @@ void *warning_light_thread_entry(void *arg) {
 			current_state = shared_info->current_state;
 			pthread_mutex_unlock(&shared_info->mutex);
 			light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+		}
+		if (current_state == STATE_CLEARING) {
+			warning_lights_blink_one_second();
 		}
 
 		/* This thread must activate within 200ms of a button press so sleep is only 10ms. Each cycle is minimal */
