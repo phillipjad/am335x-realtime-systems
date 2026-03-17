@@ -14,4 +14,5 @@ target_include_directories(p2 PRIVATE
     "${CMAKE_SOURCE_DIR}/projects/project2/src/gate_control"
     "${CMAKE_SOURCE_DIR}/projects/project2/src/sensor_monitoring"
     "${CMAKE_SOURCE_DIR}/projects/project2/src/warning_light"
+    "${CMAKE_SOURCE_DIR}/projects/project2/src/supervisor_input"
 )

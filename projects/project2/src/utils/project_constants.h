@@ -4,6 +4,7 @@
 /* Size constants */
 #define MAX_FILENAME_LENGTH (255U)
 #define MAX_FILE_PATH_LENGTH (4096U)
+#define USER_INPUT_MAX_LEN (1024U)
 
 /* Sleep timers */
 #define MAIN_THREAD_SLEEP_S (1U)

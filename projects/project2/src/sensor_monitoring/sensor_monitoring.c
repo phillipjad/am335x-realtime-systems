@@ -119,7 +119,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		// Logs outside critical section
 		if (fail_safe_active) {
 			LOG("FAILSAFE STATE ACTIVE: Train has not moved from the %s. Lowering gate and warning lights blinking. "
-			    "Awaiting supervisor clear...",
+			    "Awaiting supervisor \"clear\" or \"c\"...",
 			    (train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
 		} else {
 			LOG("CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
@@ -157,13 +157,17 @@ void failsafe_timout(global_values_t *shared_info) {
 			if (shared_info->current_state == STATE_ACTIVE) {
 				// Enter fail-safe state
 				shared_info->current_state = STATE_FAIL_SAFE;
+				// Set fail_safe_active to true
+				fail_safe_active = true;
 				// Signal to sleeping threads (LEDS and servo)
 				pthread_cond_broadcast(&shared_info->cv);
 			}
 			// Release lock
 			pthread_mutex_unlock(&shared_info->mutex);
 			if (fail_safe_active) {
-				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %d seconds.", TIMEOUT_TIME);
+				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %d seconds. Awaiting supervisor \"clear\" or "
+				    "\"c\"...",
+				    TIMEOUT_TIME);
 			}
 		}
 	}
