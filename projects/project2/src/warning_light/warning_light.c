@@ -107,7 +107,8 @@ void *warning_light_thread_entry(void *arg) {
 		bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
 
 		/* While in states of interest, we'll make lights blink */
-		while (light_should_be_active) {
+		// Make sure timeout is not requested while we are blinking
+		while (light_should_be_active && (!atomic_load(&shared_info->is_shutdown_requested))) {
 			/* Blink lights and then loop */
 			warning_lights_blink();
 			pthread_mutex_lock(&shared_info->mutex);
