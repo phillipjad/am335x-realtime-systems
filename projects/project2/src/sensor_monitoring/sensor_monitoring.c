@@ -128,9 +128,9 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 }
 
 /*-----------------------------
- * Function: sensor_monitoring
+ * Function: failsafe_timeout
  *-----------------------------*/
-void failsafe_timout(global_values_t *shared_info) {
+void failsafe_timeout(global_values_t *shared_info) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
