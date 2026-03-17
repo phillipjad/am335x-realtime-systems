@@ -18,7 +18,7 @@ typedef double float64_t;
 typedef enum { DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NONE, DIRECTION_UNKOWN } direction_t;
 
 /** State Machine States */
-typedef enum { STATE_IDLE, STATE_ACTIVE, STATE_CLEARING, STATE_FAIL_SAFE } state_t;
+typedef enum { STATE_IDLE, STATE_ACTIVE, STATE_CLEARING, STATE_FAIL_SAFE, STATE_INVALID } state_t;
 
 typedef struct {
 	uint8_t servo_chip; /**< chip number for servo */

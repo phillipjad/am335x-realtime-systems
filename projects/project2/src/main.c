@@ -1,5 +1,5 @@
 #include <pthread.h>
-#include <unistd.h>
+#include <sys/utsname.h>
 
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
@@ -49,6 +49,7 @@ static void hardware_init(void) {
 	LOG("Initialized hardware LEDs");
 	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
+
 	// Start with lights off
 	gpio_set(user_config->gpio_layout.led_1, false);
 	gpio_set(user_config->gpio_layout.led_2, false);
@@ -147,6 +148,9 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* USE_CONFIG */
 
+/**
+ * @brief Shuts down the application and handles any required cleanup
+ */
 static void handle_shutdown(void) {
 	LOG("Shutting down...");
 	servo_shutdown();
@@ -155,6 +159,18 @@ static void handle_shutdown(void) {
 	gpio_map_close();
 #endif
 	exit(EXIT_SUCCESS);
+}
+
+/**
+ * @brief Logs the system machine name and architecture
+ */
+static void log_system_info(void) {
+	struct utsname sys_info = { 0 };
+	int32_t result = uname(&sys_info);
+	if (result != EXIT_SUCCESS) {
+		LOG_AND_EXIT("Failed to log system info");
+	}
+	LOG("System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version, sys_info.machine);
 }
 
 /* Application entrypoint */
@@ -166,6 +182,8 @@ int32_t main(void) {
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
+
+	log_system_info();
 
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
@@ -182,15 +200,19 @@ int32_t main(void) {
 	/* Global params init */
 	globals_init();
 	/* Start threads */
+	pthread_t gate_control_thread = { 0 };
+	pthread_t warning_light_thread = { 0 };
 	pthread_t sensor_monitoring_thread = { 0 };
 	pthread_t supervisor_input_thread = { 0 };
-	/*
-	  result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
-	  if (result != STATUS_SUCCESS) {
-	      LOG_AND_EXIT("Failed to create warning light thread");
-	  }
-	*/
-	int32_t result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
+	int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create gate control thread");
+	}
+	result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create warning light thread");
+	}
+	result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
@@ -205,12 +227,19 @@ int32_t main(void) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
 	}
 
-	/*
-	  result = pthread_join(warning_light_thread, NULL);
-	  if (result != STATUS_SUCCESS) {
-	      LOG("Failed to join warning light thread");
-	  }
-	*/
+	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create supervisor input thread");
+	}
+
+	result = pthread_join(gate_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join gate control thread");
+	}
+	result = pthread_join(warning_light_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join warning light thread");
+	}
 	result = pthread_join(sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");

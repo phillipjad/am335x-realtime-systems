@@ -70,7 +70,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 			// Store direction_t
 			shared_info->current_direction = train_direction;
 			// 5 second timer - log current time
-			clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->arrival_time);
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->arrival_time);
 			// Wake up lights and servo threads
 			pthread_cond_broadcast(&shared_info->cv);
 		}
@@ -85,7 +85,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		// Struct containing time of second button press (either same or other side)
 		struct timespec second_button_time = { 0 };
 		// End 5 second timer - log current time
-		clock_gettime(CLOCK_MONOTONIC_RAW, &second_button_time);
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &second_button_time);
 		// Calculate time taken
 		float64_t overall_time = time_taken(&snapshot_arrival_time, &second_button_time);
 		// Used for log flow
@@ -143,7 +143,7 @@ void failsafe_timeout(global_values_t *shared_info) {
 	if (snapshot_state == STATE_ACTIVE) {
 		struct timespec current_time = { 0 };
 		// Grab current amount of time passed
-		clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
 		float64_t overall_time = time_taken(&snapshot_arrival_time, &current_time);
 
 		// If longer than 5 seconds go to fail-safe state

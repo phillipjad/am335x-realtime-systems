@@ -1,8 +1,6 @@
 #include "servo_controller.h"
 
 #include <pthread.h>
-#include <stdatomic.h>
-#include <stdint.h>
 #include <time.h>
 
 #ifdef NDEBUG /* We only need PWM control in release */

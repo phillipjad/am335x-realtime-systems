@@ -9,6 +9,10 @@
 /* Sleep timers */
 #define MAIN_THREAD_SLEEP_S (1U)
 #define SHUTDOWN_DELAY_S (5U)
+#define WARNING_LIGHT_THREAD_SLEEP_MS (10L)
+
+/* Warning light active duration */
+#define WARNING_LIGHT_ACTIVE_DURATION_MS (250L)
 
 /* Seconds to Nanoseconds Multiplier */
 #define SEC_TO_NSEC (1000000000.0)
@@ -21,10 +25,6 @@
 
 /* Train Timeout Time */
 #define TIMEOUT_TIME (5)
-
-/* GPIO Types */
-#define GPIO_IN ("In")
-#define GPIO_OUT ("Out")
 
 /* Filenames */
 #define CONFIG_FILENAME ("/p2_config.cfg")
