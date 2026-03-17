@@ -1,5 +1,5 @@
 #include <pthread.h>
-#include <unistd.h>
+#include <sys/utsname.h>
 
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
@@ -146,6 +146,9 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* USE_CONFIG */
 
+/**
+ * @brief Shuts down the application and handles any required cleanup
+ */
 static void handle_shutdown(void) {
 	LOG("Shutting down...");
 #ifdef NDEBUG
@@ -153,6 +156,18 @@ static void handle_shutdown(void) {
 	gpio_map_close();
 #endif
 	exit(EXIT_SUCCESS);
+}
+
+/**
+ * @brief Logs the system machine name and architecture
+ */
+static void log_system_info(void) {
+	struct utsname sys_info = { 0 };
+	int32_t result = uname(&sys_info);
+	if (result != EXIT_SUCCESS) {
+		LOG_AND_EXIT("Failed to log system info");
+	}
+	LOG("System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version, sys_info.machine);
 }
 
 /* Application entrypoint */
@@ -164,6 +179,8 @@ int32_t main(void) {
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
+
+	log_system_info();
 
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
