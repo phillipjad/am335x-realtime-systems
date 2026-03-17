@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "servo_controller.h"
 
 /*--------------------------------------
  * Function: gate_control_thread_entry
@@ -35,20 +36,20 @@ void *gate_control_thread_entry(void *arg) {
 			// Release lock
 			pthread_mutex_unlock(&shared_info->mutex);
 			if (snapshot_state == STATE_IDLE) {
-				// TODO: SERVO UP FUNCTION
+				servo_raise();
 				LOG("Gate read IDLE state, raising gate.");
 			} else if (snapshot_state == STATE_ACTIVE) {
-				// TODO: SERVO DOWN FUNCTION
+				servo_lower();
 				LOG("Gate read STATE_ACTIVE state, lowering gate.");
 			} else if (snapshot_state == STATE_FAIL_SAFE) {
-				// TODO: SERVO DOWN FUNCTION
+				servo_lower();
 				LOG("Gate read FAIL_STATE state, lowering gate.");
 			} else if (snapshot_state == STATE_CLEARING) {
 				LOG("Gate read CLEARING_STATE state");
 				// Sleep for 1 second as per requirements
 				sleep(1);
+				servo_raise();
 				LOG("Waited and raising gate.");
-				// TODO: SERVO UP FUNCTION
 				// Grab lock
 				pthread_mutex_lock(&shared_info->mutex);
 

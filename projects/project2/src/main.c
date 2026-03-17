@@ -135,13 +135,13 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo (ex: 2b for EHRPWM2B)");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.servo);
+	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.chip, &user_config->gpio_layout.servo.channel);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for Servo GPIO");
+		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
 }
 #endif /* USE_CONFIG */

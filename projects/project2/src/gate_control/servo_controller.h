@@ -6,11 +6,11 @@
 /**
  * @brief Function to intialize servo
  *
- * @param[in] shared_info Shared variables
- * @param[in] pin GPIO pin for servo
+ * @param[in] servo_chip PWM chip
+ * @param[in] servo_channel PWM channel
  * @return void* Returns NULL
  */
-void sensor_init(global_values_t *shared_info, uint8_t pin);
+void servo_init(uint8_t servo_chip, char servo_channel);
 
 /**
  * @brief Function to raise servo
