@@ -1,6 +1,5 @@
 #include <pthread.h>
 #include <sys/utsname.h>
-#include <unistd.h>
 
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic */
@@ -168,8 +167,7 @@ static void log_system_info(void) {
 	if (result != EXIT_SUCCESS) {
 		LOG_AND_EXIT("Failed to log system info");
 	}
-	LOG("Machine name: %s", sys_info.sysname);
-	LOG("Architecture: %s", sys_info.machine);
+	LOG("System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version, sys_info.machine);
 }
 
 /* Application entrypoint */
