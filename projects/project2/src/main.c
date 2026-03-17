@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 /* Local project includes after system libraries */
@@ -155,6 +156,16 @@ static void handle_shutdown(void) {
 	exit(EXIT_SUCCESS);
 }
 
+static void log_system_info(void) {
+	struct utsname sys_info = { 0 };
+	int32_t result = uname(&sys_info);
+	if (result != EXIT_SUCCESS) {
+		LOG_AND_EXIT("Failed to log system info");
+	}
+	LOG("Machine name: %s", sys_info.sysname);
+	LOG("Architecture: %s", sys_info.machine);
+}
+
 /* Application entrypoint */
 int32_t main(void) {
 	configuration_items_t *user_config = &shared_info.config;
@@ -164,6 +175,8 @@ int32_t main(void) {
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
+
+	log_system_info();
 
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
