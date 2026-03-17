@@ -140,7 +140,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
-	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.chip, &user_config->gpio_layout.servo.channel);
+	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.servo_chip, &user_config->gpio_layout.servo.servo_channel);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
