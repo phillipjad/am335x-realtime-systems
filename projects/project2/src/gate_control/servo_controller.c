@@ -22,12 +22,11 @@
 #define GATE_RAISE (SERVO_RIGHT)
 #define GATE_LOWER (SERVO_LEFT)
 
-static global_values_t *shared_data = NULL;
 static uint8_t extracted_chip_value = 0;
 static uint8_t extracted_channel_value = 0;
 
 #ifdef NDEBUG
-void sensor_init_hw(uint8_t servo_chip, char servo_channel) {
+static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 	// Store mapped values
 	// Store chip value
 	if (servo_chip == 1) {
@@ -52,12 +51,12 @@ void sensor_init_hw(uint8_t servo_chip, char servo_channel) {
 	// Set period
 	set_pwm_period(extracted_chip_value, extracted_channel_value, SERVO_PWM_NS);
 	// Set duty cycle
-	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISED);
+	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 	// Enable output
 	enable_pwm(extracted_chip_value, extracted_channel_value, true);
 }
 #else
-void sensor_init_sw() {
+static void servo_init_sw() {
 	LOG("SW: Raising gate");
 }
 #endif /* NDEBUG */
@@ -67,9 +66,9 @@ void sensor_init_sw() {
  *--------------------------------------*/
 void servo_init(uint8_t servo_chip, char servo_channel) {
 #ifdef NDEBUG
-	sensor_init_hw(uint8_t servo_chip, char servo_channel);
+	servo_init_hw(servo_chip, servo_channel);
 #else
-	sensor_init_sw();
+	servo_init_sw();
 #endif /* NDEBUG */
 }
 
