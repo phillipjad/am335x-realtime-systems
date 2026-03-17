@@ -147,6 +147,9 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* USE_CONFIG */
 
+/**
+ * @brief Shuts down the application and handles any required cleanup
+ */
 static void handle_shutdown(void) {
 	LOG("Shutting down...");
 #ifdef NDEBUG
@@ -156,6 +159,9 @@ static void handle_shutdown(void) {
 	exit(EXIT_SUCCESS);
 }
 
+/**
+ * @brief Logs the system machine name and architecture
+ */
 static void log_system_info(void) {
 	struct utsname sys_info = { 0 };
 	int32_t result = uname(&sys_info);
