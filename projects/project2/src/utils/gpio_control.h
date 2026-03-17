@@ -3,6 +3,10 @@
 
 #include "project_types.h"
 
+/* GPIO Types */
+#define GPIO_IN ("In")
+#define GPIO_OUT ("Out")
+
 void gpio_map_init(void);
 
 void gpio_map_close(void);

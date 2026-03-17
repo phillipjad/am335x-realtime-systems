@@ -48,6 +48,7 @@ static void hardware_init(void) {
 	LOG("Initialized hardware LEDs");
 	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
+
 	// Start with lights off
 	gpio_set(user_config->gpio_layout.led_1, false);
 	gpio_set(user_config->gpio_layout.led_2, false);
@@ -179,19 +180,19 @@ int32_t main(void) {
 	/* Global params init */
 	globals_init();
 	/* Start threads */
+	pthread_t gate_control_thread = { 0 };
+	pthread_t warning_light_thread = { 0 };
 	pthread_t sensor_monitoring_thread = { 0 };
 	pthread_t supervisor_input_thread = { 0 };
-	/*
-	  int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
-	  if (result != STATUS_SUCCESS) {
-	      LOG_AND_EXIT("Failed to create gate control thread");
-	  }
-	  result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
-	  if (result != STATUS_SUCCESS) {
-	      LOG_AND_EXIT("Failed to create warning light thread");
-	  }
-	*/
-	int32_t result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
+	int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create gate control thread");
+	}
+	result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create warning light thread");
+	}
+	result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
@@ -201,16 +202,19 @@ int32_t main(void) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
 	}
 
-	/*
-	  result = pthread_join(gate_control_thread, NULL);
-	  if (result != STATUS_SUCCESS) {
-	      LOG("Failed to join gate control thread");
-	  }
-	  result = pthread_join(warning_light_thread, NULL);
-	  if (result != STATUS_SUCCESS) {
-	      LOG("Failed to join warning light thread");
-	  }
-	*/
+	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create supervisor input thread");
+	}
+
+	result = pthread_join(gate_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join gate control thread");
+	}
+	result = pthread_join(warning_light_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join warning light thread");
+	}
 	result = pthread_join(sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
