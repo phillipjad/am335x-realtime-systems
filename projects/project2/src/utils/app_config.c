@@ -80,7 +80,7 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 	} else if (strcmp(key, LED_2_GPIO_KEY) == 0) {
 		return parse_input_to_uint8(value, &config->gpio_layout.led_2);
 	} else if (strcmp(key, SERVO_GPIO_PIN) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.servo);
+		return parse_pwm_input(value, &config->gpio_layout.servo.servo_chip, &config->gpio_layout.servo.servo_channel);
 	} else {
 		LOG("Received unknown config key: %s", key);
 		return STATUS_FAIL;

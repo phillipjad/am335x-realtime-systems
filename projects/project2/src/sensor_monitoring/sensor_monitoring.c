@@ -200,7 +200,7 @@ void *sensor_monitoring_thread_entry(void *arg) {
 		}
 
 		// Failsafe initiated
-		failsafe_timout(shared_info);
+		failsafe_timeout(shared_info);
 		// sleep
 		nanosleep(&timer, NULL);
 	}

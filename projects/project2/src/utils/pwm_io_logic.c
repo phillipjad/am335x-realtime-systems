@@ -1,5 +1,7 @@
 #include "pwm_io_logic.h"
 
+#include <unistd.h>
+
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
