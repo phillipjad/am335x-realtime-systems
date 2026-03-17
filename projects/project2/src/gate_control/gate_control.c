@@ -1,7 +1,7 @@
 #include "gate_control.h"
 
 #include <pthread.h>
-#include <time.h>
+#include <unistd.h>
 
 /* Local project includes after system libraries */
 #include "logger.h"
