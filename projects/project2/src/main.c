@@ -216,17 +216,6 @@ int32_t main(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
-	result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create gate control thread");
-	}
-
-
-	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
-
 	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
@@ -244,11 +233,6 @@ int32_t main(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
 	}
-	result = pthread_join(gate_control_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join gate control thread");
-	}
-
 	result = pthread_join(supervisor_input_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join supervisor input thread");
