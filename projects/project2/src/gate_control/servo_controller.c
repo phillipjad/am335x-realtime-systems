@@ -1,14 +1,16 @@
 #include "servo_controller.h"
 
 #include <pthread.h>
+#ifdef NDEBUG
 #include <time.h>
+#endif
 
 #ifdef NDEBUG /* We only need PWM control in release */
 #include "pwm_io_logic.h"
 #endif /* NDEBUG */
-#include "../utils/project_constants.h"
-#include "../utils/project_types.h"
 #include "logger.h"
+#include "project_constants.h"
+#include "project_types.h"
 
 /* Servo Angles */
 #define SERVO_RIGHT (2000000U)
@@ -20,8 +22,10 @@
 #define GATE_RAISE (SERVO_RIGHT)
 #define GATE_LOWER (SERVO_LEFT)
 
+#ifdef NDEBUG
 static uint8_t extracted_chip_value = 0;
 static uint8_t extracted_channel_value = 0;
+#endif
 
 #ifdef NDEBUG
 static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
@@ -55,7 +59,7 @@ static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 }
 #else
 static void servo_init_sw() {
-	LOG("SW: Raising gate");
+	LOG("Servo initialized");
 }
 #endif /* NDEBUG */
 
@@ -66,6 +70,8 @@ void servo_init(uint8_t servo_chip, char servo_channel) {
 #ifdef NDEBUG
 	servo_init_hw(servo_chip, servo_channel);
 #else
+	(void)servo_chip;
+	(void)servo_channel;
 	servo_init_sw();
 #endif /* NDEBUG */
 }
@@ -78,7 +84,7 @@ void servo_raise(void) {
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 #else
-	LOG("SW: Raising gate");
+	LOG("Raising gate");
 #endif /* NDEBUG */
 }
 
@@ -90,7 +96,7 @@ void servo_lower(void) {
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
 #else
-	LOG("SW: Lowering gate");
+	LOG("Lowering gate");
 #endif /* NDEBUG */
 }
 
@@ -98,7 +104,7 @@ void servo_lower(void) {
  * Function: servo_shutdown
  *--------------------------------------*/
 void servo_shutdown(void) {
-	LOG("Shuting down gate");
+	LOG("Shutting down gate");
 #ifdef NDEBUG
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);

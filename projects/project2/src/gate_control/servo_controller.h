@@ -4,7 +4,7 @@
 #include "project_types.h"
 
 /**
- * @brief Function to intialize servo
+ * @brief Function to initialize servo
  *
  * @param[in] servo_chip PWM chip
  * @param[in] servo_channel PWM channel
