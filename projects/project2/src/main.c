@@ -184,6 +184,7 @@ int32_t main(void) {
 	/* Start threads */
 	pthread_t sensor_monitoring_thread = { 0 };
 	pthread_t supervisor_input_thread = { 0 };
+	pthread_t gate_control_thread = { 0 };
 	/*
 	  result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
 	  if (result != STATUS_SUCCESS) {

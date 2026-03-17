@@ -204,6 +204,12 @@ void *sensor_monitoring_thread_entry(void *arg) {
 		// sleep
 		nanosleep(&timer, NULL);
 	}
+	// Grab lock
+	pthread_mutex_lock(&shared_info->mutex);
+	// If shutdown detected, wake up other sleeping threads
+	pthread_cond_broadcast(&shared_info->cv);
+	// Release lock
+	pthread_mutex_unlock(&shared_info->mutex);
 	LOG("Shutting down sensor monitoring thread...");
 	return NULL;
 }

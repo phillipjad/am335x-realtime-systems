@@ -97,11 +97,17 @@ void servo_lower(void) {
 }
 
 /*--------------------------------------
- * Function: servo_lowere
+ * Function: servo_shutdown
  *--------------------------------------*/
 void servo_shutdown(void) {
 	LOG("Shuting down gate");
 #ifdef NDEBUG
+	// Set duty cycle
+	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
+	struct timespec timer = { 0 };
+	timer.tv_sec = 0;
+	timer.tv_nsec = SEC_TO_NSEC / 2;
+	nanosleep(&timer, NULL);
 	// Disable output
 	enable_pwm(extracted_chip_value, extracted_channel_value, false);
 	// Unexport
