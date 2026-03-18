@@ -2,18 +2,19 @@
 #include <sys/utsname.h>
 
 /* Local project includes after system libraries */
-#ifdef USE_CONFIG /* We only need this header if we are using config file logic */
+#if defined(USE_CONFIG) && defined(NDEBUG) /* We only need this header if we are using config file logic in release */
 #include "app_config.h"
-#else /* If we aren't using a config file then we need user input */
+#endif                                      /* USE_CONFIG && NDEBUG */
+#if !defined(USE_CONFIG) && defined(NDEBUG) /* We only need user input when not using a config file in release */
+#include "project_constants.h"
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
-#endif              /* USE_CONFIG */
+#endif              /* !USE_CONFIG && NDEBUG */
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
 #endif
 #include "gate_control.h"
 #include "logger.h"
-#include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "servo_controller.h"
@@ -87,7 +88,7 @@ static void log_mode(void) {
 #endif
 }
 
-#ifndef USE_CONFIG
+#if !defined(USE_CONFIG) && defined(NDEBUG)
 /*--------------------------------------
  * Static Function: get_user_configuration_items
  *--------------------------------------*/
@@ -146,7 +147,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
 }
-#endif /* USE_CONFIG */
+#endif /* !USE_CONFIG && NDEBUG  */
 
 /**
  * @brief Shuts down the application and handles any required cleanup
@@ -175,10 +176,13 @@ static void log_system_info(void) {
 
 /* Application entrypoint */
 int32_t main(void) {
+#ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
-#ifdef USE_CONFIG /* If we are using a config file then we load it in first */
+#endif                                     /* NDEBUG */
+#if defined(USE_CONFIG) && defined(NDEBUG) /* If we are using a config file then we load it in first */
+	/* We don't configure anything in debug */
 	load_app_config(user_config);
-#endif /* USE_CONFIG */
+#endif /* USE_CONFIG && NDEBUG */
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
@@ -188,9 +192,11 @@ int32_t main(void) {
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
 
-#ifndef USE_CONFIG /* If we are not using config we should get inputs from stdio */
+
+#if !defined(USE_CONFIG) && defined(NDEBUG)
+	/* If we are not using config and not in debug we should get inputs from stdio */
 	get_user_configuration_items(user_config);
-#endif /* USE_CONFIG */
+#endif /* !USE_CONFIG && NDEBUG */
 
 /* Hardware mmap init if we are in release mode */
 #ifdef NDEBUG
