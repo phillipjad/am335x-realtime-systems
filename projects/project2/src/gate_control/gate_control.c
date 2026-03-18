@@ -19,9 +19,9 @@ static void handle_gate_logic(void) {
 	// While state is same as initializing state, wait on cv
 	while ((current_state == last_operated_state) && (!atomic_load(&shared_info->is_shutdown_requested))) {
 		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
+		/* Grab updated state snapshot while we have the mutex */
+		current_state = shared_info->current_state;
 	}
-	/* Grab updated state snapshot while we have the mutex */
-	current_state = shared_info->current_state;
 	pthread_mutex_unlock(&shared_info->mutex);
 
 	// Check if shutdown requested or state changed from idle
@@ -41,7 +41,6 @@ static void handle_gate_logic(void) {
 			sleep(1);
 			servo_raise();
 			LOG("Waited and raising gate.");
-			// Grab lock
 			return;
 		}
 		last_operated_state = current_state;
