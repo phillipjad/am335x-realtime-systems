@@ -187,8 +187,10 @@ static void check_for_idle(global_values_t *shared_info, bool was_button_pressed
 	struct timespec curr_time = { 0 };
 	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
 
-	/* Set to idle after 1 second of clearing */
-	if ((current_state == STATE_CLEARING) && (!was_button_pressed) && ((curr_time.tv_sec - last_clearing_time.tv_sec) >= 1L)) {
+	/* Set to idle after 2 second of clearing. 1 second for warning lights and 1 secnod for gate */
+	static const time_t clear_time_offset = 2L;
+	if ((current_state == STATE_CLEARING) && (!was_button_pressed) &&
+	    ((curr_time.tv_sec - last_clearing_time.tv_sec) >= clear_time_offset)) {
 		/* Reset state machine to idle */
 		pthread_mutex_lock(&shared_info->mutex);
 		shared_info->current_state = STATE_IDLE;
