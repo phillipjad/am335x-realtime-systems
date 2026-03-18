@@ -37,11 +37,13 @@ static void handle_gate_logic(void) {
 	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t current_state = shared_info->current_state;
+	struct timespec arrival_time = shared_info->arrival_time;
 	// While state is same as initializing state, wait on cv
 	while ((current_state == last_operated_state) && (!atomic_load(&shared_info->is_shutdown_requested))) {
 		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
 		/* Grab updated state snapshot while we have the mutex */
 		current_state = shared_info->current_state;
+		arrival_time = shared_info->arrival_time;
 	}
 	pthread_mutex_unlock(&shared_info->mutex);
 
@@ -52,6 +54,9 @@ static void handle_gate_logic(void) {
 			servo_raise();
 		} else if (current_state == STATE_ACTIVE) {
 			LOG("Gate read STATE_ACTIVE state, lowering gate.");
+			struct timespec curr_time = { 0 };
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
+			log_time_difference_ms(curr_time, arrival_time, "lower gate");
 			servo_lower();
 		} else if (current_state == STATE_FAIL_SAFE) {
 			LOG("Gate read FAIL_STATE state, lowering gate.");
