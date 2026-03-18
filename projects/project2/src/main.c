@@ -2,17 +2,21 @@
 #include <sys/utsname.h>
 
 /* Local project includes after system libraries */
-#if defined(USE_CONFIG) && defined(NDEBUG) /* We only need this header if we are using config file logic in release */
+#ifdef USE_CONFIG /* We only need this header if we are using config file logic in release */
+#ifdef NDEBUG
 #include "app_config.h"
-#endif                                      /* USE_CONFIG && NDEBUG */
-#if !defined(USE_CONFIG) && defined(NDEBUG) /* We only need user input when not using a config file in release */
+#endif             /* NDEBUG */
+#endif             /* USE_CONFIG */
+#ifndef USE_CONFIG /* We only need user input when not using a config file in release */
+#ifdef NDEBUG
 #include "project_constants.h"
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
-#endif              /* !USE_CONFIG && NDEBUG */
+#endif              /* NDEBUG */
+#endif              /* !USE_CONFIG */
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
-#endif
+#endif /* NDEBUG */
 #include "gate_control.h"
 #include "logger.h"
 #include "project_types.h"
@@ -58,7 +62,7 @@ static void hardware_init(void) {
 	LOG("Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
 }
-#endif
+#endif /* NDEBUG */
 
 /*--------------------------------------
  * Static Function: globals_init
@@ -88,7 +92,8 @@ static void log_mode(void) {
 #endif
 }
 
-#if !defined(USE_CONFIG) && defined(NDEBUG)
+#ifndef USE_CONFIG
+#ifdef NDEBUG
 /*--------------------------------------
  * Static Function: get_user_configuration_items
  *--------------------------------------*/
@@ -147,7 +152,8 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
 }
-#endif /* !USE_CONFIG && NDEBUG  */
+#endif /* NDEBUG */
+#endif /* !USE_CONFIG */
 
 /**
  * @brief Shuts down the application and handles any required cleanup
@@ -158,7 +164,7 @@ static void handle_shutdown(void) {
 #ifdef NDEBUG
 	/* Hardware mmap close if we are in release mode */
 	gpio_map_close();
-#endif
+#endif /* NDEBUG */
 	exit(EXIT_SUCCESS);
 }
 
@@ -178,11 +184,13 @@ static void log_system_info(void) {
 int32_t main(void) {
 #ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
-#endif                                     /* NDEBUG */
-#if defined(USE_CONFIG) && defined(NDEBUG) /* If we are using a config file then we load it in first */
+#endif            /* NDEBUG */
+#ifdef USE_CONFIG /* If we are using a config file then we load it in first */
+#ifdef NDEBUG
 	/* We don't configure anything in debug */
 	load_app_config(user_config);
-#endif /* USE_CONFIG && NDEBUG */
+#endif /* NDEBUG */
+#endif /* USE_CONFIG */
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
@@ -192,16 +200,16 @@ int32_t main(void) {
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
 
-
-#if !defined(USE_CONFIG) && defined(NDEBUG)
-	/* If we are not using config and not in debug we should get inputs from stdio */
+#ifndef USE_CONFIG /* If we are not using config we should get inputs from stdio */
+#ifdef NDEBUG
 	get_user_configuration_items(user_config);
-#endif /* !USE_CONFIG && NDEBUG */
+#endif /* NDEBUG */
+#endif /* !USE_CONFIG */
 
 /* Hardware mmap init if we are in release mode */
 #ifdef NDEBUG
 	hardware_init();
-#endif
+#endif /* NDEBUG */
 
 	/* Global params init */
 	globals_init();

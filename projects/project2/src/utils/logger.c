@@ -25,7 +25,11 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 	const char *file_of_interest = NULL;
 	if (strrchr(filename, (int32_t)'/') != NULL) {
 		char *file_of_interest_with_slash = strrchr(filename, (int32_t)'/');
-		file_of_interest = ++file_of_interest_with_slash;
+		/* Get rid of slash */
+		++file_of_interest_with_slash;
+
+		/* Now assign */
+		file_of_interest = file_of_interest_with_slash;
 	} else {
 		file_of_interest = filename;
 	}

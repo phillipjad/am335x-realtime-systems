@@ -6,11 +6,6 @@
 #define MAX_FILE_PATH_LENGTH (4096U)
 #define USER_INPUT_MAX_LEN (1024U)
 
-/* Sleep timers */
-#define MAIN_THREAD_SLEEP_S (1U)
-#define SHUTDOWN_DELAY_S (5U)
-#define WARNING_LIGHT_THREAD_SLEEP_MS (10L)
-
 /* Warning light active duration */
 #define WARNING_LIGHT_ACTIVE_DURATION_MS (250L)
 
@@ -24,13 +19,12 @@
 #define STABLE_NEEDED (6)
 
 /* Train Timeout Time */
-#define TIMEOUT_TIME (5)
+#define TIMEOUT_TIME_F (5.0)
 
 /* Filenames */
 #define CONFIG_FILENAME ("/p2_config.cfg")
 
 /* Unit conversions */
-#define SEC_PER_MINUTE (60U)
 #define NSEC_PER_USEC (1000U)
 
 #endif /* PROJECT_CONSTANTS_H */

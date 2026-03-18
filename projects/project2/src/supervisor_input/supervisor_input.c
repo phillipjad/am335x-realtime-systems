@@ -85,6 +85,8 @@ static void handle_supervisor_input(void) {
 				handle_debug_west();
 			} else if (strcmp(input_buffer, "help\n") == 0 || strcmp(input_buffer, "h\n") == 0 || strcmp(input_buffer, "H\n") == 0) {
 				handle_debug_help();
+			} else {
+				/* MISRA requires else */
 			}
 #endif /* NDEBUG */
 		}

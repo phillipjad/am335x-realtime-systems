@@ -25,7 +25,7 @@ static void wait_for_warning_light_deactivation(void) {
 		pthread_mutex_unlock(&shared_info->mutex);
 
 		/* Sleep for 25 milliseconds between each query */
-		static const struct timespec delay_timer = { .tv_sec = 0, .tv_nsec = (25L * NSEC_PER_MSEC) };
+		static const struct timespec delay_timer = { .tv_sec = (time_t)0, .tv_nsec = (25L * NSEC_PER_MSEC) };
 		(void)nanosleep(&delay_timer, NULL);
 	} while ((last_lights_off_time.tv_sec == lights_off_time.tv_sec) && (last_lights_off_time.tv_nsec == lights_off_time.tv_nsec));
 	last_lights_off_time = lights_off_time;
@@ -67,11 +67,13 @@ static void handle_gate_logic(void) {
 			LOG("Gate read CLEARING_STATE state");
 			wait_for_warning_light_deactivation();
 			/* Once warning lights are off we want to wait for one second to pass and then raise gate */
-			static const struct timespec one_second_delay = { .tv_sec = 1, .tv_nsec = 0 };
+			static const struct timespec one_second_delay = { .tv_sec = (time_t)1, .tv_nsec = 0L };
 			(void)nanosleep(&one_second_delay, NULL);
 			servo_raise();
 			LOG("Waited and raising gate.");
 			return;
+		} else {
+			/* MISRA requires else */
 		}
 		last_operated_state = current_state;
 	} else {

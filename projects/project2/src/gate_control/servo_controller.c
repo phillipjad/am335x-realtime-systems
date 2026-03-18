@@ -35,13 +35,19 @@ static void configure_pwm_pinmux(uint8_t servo_chip, char servo_channel) {
 			pin_name = "P9_14"; /* EHRPWM1A */
 		} else if ((servo_channel == 'b') || (servo_channel == 'B')) {
 			pin_name = "P9_16"; /* EHRPWM1B */
+		} else {
+			/* MISRA requires else */
 		}
 	} else if (servo_chip == 2) {
 		if ((servo_channel == 'a') || (servo_channel == 'A')) {
 			pin_name = "P8_19"; /* EHRPWM2A */
 		} else if ((servo_channel == 'b') || (servo_channel == 'B')) {
 			pin_name = "P8_13"; /* EHRPWM2B */
+		} else {
+			/* MISRA requires else */
 		}
+	} else {
+		/* MISRA requires else */
 	}
 
 	if (pin_name == NULL) {

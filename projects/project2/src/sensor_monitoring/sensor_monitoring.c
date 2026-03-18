@@ -101,7 +101,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		// If state is still active even after potential context switch
 		if (shared_info->current_state == STATE_ACTIVE) {
 			// Check if train direction is still on the same button or has arrived to the next button
-			if (snapshot_direction == train_direction || overall_time > (float64_t)TIMEOUT_TIME) {
+			if (snapshot_direction == train_direction || overall_time > TIMEOUT_TIME_F) {
 				// Train has not moved since last button press
 				shared_info->current_state = STATE_FAIL_SAFE;
 				fail_safe_active = true;
@@ -131,6 +131,8 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 		} else {
 			LOG("CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
 		}
+	} else {
+		/* MISRA requires else */
 	}
 }
 
@@ -154,7 +156,7 @@ void failsafe_timeout(global_values_t *shared_info) {
 		float64_t overall_time = time_taken(&snapshot_arrival_time, &current_time);
 
 		// If longer than 5 seconds go to fail-safe state
-		if (overall_time > (float64_t)TIMEOUT_TIME) {
+		if (overall_time > TIMEOUT_TIME_F) {
 			// Used for log flow
 			bool fail_safe_active = false;
 			// Grab lock
@@ -172,9 +174,10 @@ void failsafe_timeout(global_values_t *shared_info) {
 			// Release lock
 			pthread_mutex_unlock(&shared_info->mutex);
 			if (fail_safe_active) {
-				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %d seconds. Awaiting supervisor \"clear\" or "
+				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %lf seconds. Awaiting supervisor \"clear\" "
+				    "or "
 				    "\"c\"...",
-				    TIMEOUT_TIME);
+				    TIMEOUT_TIME_F);
 			}
 		}
 	}
@@ -209,8 +212,8 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	global_values_t *shared_info = (global_values_t *)arg;
 	struct timespec timer = { 0 };
 	// Waiting period using debounce parameter
-	timer.tv_sec = SAMPLE_MS / MSEC_PER_SEC;
-	timer.tv_nsec = (SAMPLE_MS % MSEC_PER_SEC) * NSEC_PER_MSEC;
+	timer.tv_sec = (time_t)(SAMPLE_MS / MSEC_PER_SEC);
+	timer.tv_nsec = (int64_t)(SAMPLE_MS % MSEC_PER_SEC) * NSEC_PER_MSEC;
 
 	// Button setup
 #ifdef NDEBUG

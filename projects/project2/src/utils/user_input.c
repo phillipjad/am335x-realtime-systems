@@ -127,7 +127,7 @@ int32_t parse_pwm_input(const char *input_buffer, uint8_t *chip, char *channel) 
 
 	// Parse to find the letter after the number (either a or b)
 	char channel_char = *endptr;
-	if (channel_char != 'a' && channel_char != 'b' && channel_char != 'A' && channel_char != 'B') {
+	if ((channel_char != 'a') && (channel_char != 'b') && (channel_char != 'A') && (channel_char != 'B')) {
 		LOG("Invalid pwm channel character: %c. Should be either 'a' or 'b'.", channel_char);
 		return STATUS_FAIL;
 	}

@@ -1,5 +1,6 @@
 #include "pwm_io_logic.h"
 
+#include <stdint.h>
 #include <unistd.h>
 
 #include "logger.h"
@@ -95,7 +96,7 @@ void init_pwm_channel(uint8_t chip, uint8_t channel) {
 void export_pwm_channel(uint8_t chip, uint8_t channel) {
 	char export_path[SYSFS_PWM_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(export_path, SYSFS_PWM_MAX_BUFFER_SIZE, "%s/pwmchip%u/export", PWM_CHIP_PATH, chip);
-	write_int_to_file(export_path, channel);
+	write_int_to_file(export_path, (int64_t)channel);
 }
 
 /*--------------------------------------
@@ -118,7 +119,7 @@ void unexport_pwm_channel(uint8_t chip, uint8_t channel) {
 void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/period", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, period_ns);
+	write_int_to_file(path, (int64_t)period_ns);
 }
 
 /*--------------------------------------
@@ -127,7 +128,7 @@ void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns) {
 void set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/duty_cycle", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, duty_ns);
+	write_int_to_file(path, (int64_t)duty_ns);
 }
 
 /*--------------------------------------
