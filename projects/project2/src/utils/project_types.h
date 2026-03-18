@@ -50,6 +50,10 @@ typedef struct {
 	struct timespec arrival_time;      /**< Train arrival time */
 	struct timespec clear_time;        /**< Train clear time */
 	struct timespec lights_off_time;   /**< Last time that lights were turned off */
+#ifndef NDEBUG
+	atomic_bool debug_east_pending; /**< Debug mode: pending simulated east button press */
+	atomic_bool debug_west_pending; /**< Debug mode: pending simulated west button press */
+#endif                              /* NDEBUG */
 } global_values_t;
 
 // Button debounce variables
