@@ -1,6 +1,5 @@
 #include "supervisor_input.h"
 
-#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +54,26 @@ void *supervisor_input_thread_entry(void *args) {
 						LOG("Not in fail-safe mode, disregarding input.");
 					}
 				}
+#ifdef DEBUG
+				else if (strcmp(input_buffer, "e\n") == 0 || strcmp(input_buffer, "E\n") == 0 ||
+				    strcmp(input_buffer, "east\n") == 0 || strcmp(input_buffer, "East\n") == 0 ||
+				    strcmp(input_buffer, "EAST\n") == 0) {
+					atomic_store(&shared_info->debug_east_pending, true);
+					LOG("[DEBUG] Simulating EAST button press.");
+				} else if (strcmp(input_buffer, "w\n") == 0 || strcmp(input_buffer, "W\n") == 0 ||
+				    strcmp(input_buffer, "west\n") == 0 || strcmp(input_buffer, "West\n") == 0 ||
+				    strcmp(input_buffer, "WEST\n") == 0) {
+					atomic_store(&shared_info->debug_west_pending, true);
+					LOG("[DEBUG] Simulating WEST button press.");
+				} else if (strcmp(input_buffer, "help\n") == 0 || strcmp(input_buffer, "h\n") == 0 ||
+				    strcmp(input_buffer, "H\n") == 0) {
+					LOG("[DEBUG] Available commands:");
+					LOG("[DEBUG]   clear, c                    - Clear fail-safe state (supervisor)");
+					LOG("[DEBUG]   e, E, east, East, EAST      - Simulate EAST button press");
+					LOG("[DEBUG]   w, W, west, West, WEST      - Simulate WEST button press");
+					LOG("[DEBUG]   h, H, help                  - Show this help message");
+				}
+#endif /* DEBUG */
 			}
 		}
 	}
