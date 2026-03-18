@@ -90,6 +90,7 @@ static void warning_lights_blink_one_second(void) {
 }
 
 static void handle_light_logic(void) {
+	state_t last_state = STATE_INVALID;
 	state_t current_state = STATE_INVALID;
 	pthread_mutex_lock(&shared_info->mutex);
 	current_state = shared_info->current_state;
@@ -108,17 +109,18 @@ static void handle_light_logic(void) {
 		/* Blink lights and then loop */
 		warning_lights_blink();
 		pthread_mutex_lock(&shared_info->mutex);
+		last_state = current_state;
 		current_state = shared_info->current_state;
 		pthread_mutex_unlock(&shared_info->mutex);
 		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
 	}
 
-	/* After blinking, we should check if we are clearing which requires an additional second of blinking */
-	if (current_state == STATE_CLEARING) {
+	/* We should check if we are clearing or recovering from fail-safe. If so blink an additional second  */
+	if ((current_state == STATE_CLEARING) || (last_state == STATE_FAIL_SAFE)) {
 		warning_lights_blink_one_second();
-		/* After closing out warning lights in clearing, stamp time */
+		/* After deactivating warning lights, stamp time */
 		pthread_mutex_lock(&shared_info->mutex);
-		clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->lights_off_time);
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->lights_off_time);
 		pthread_mutex_unlock(&shared_info->mutex);
 	}
 }
