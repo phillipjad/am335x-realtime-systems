@@ -68,9 +68,9 @@ static bool is_pwm_exported(uint8_t chip, uint8_t channel) {
 /*--------------------------------------
  * Static Function: write_int__to_file
  *--------------------------------------*/
-static void write_int_to_file(const char *path, int64_t value) {
+static void write_int_to_file(const char *path, uint32_t value) {
 	char value_as_string[SYSFS_PWM_MAX_BUFFER_SIZE + 1U] = { 0 };
-	(void)snprintf(value_as_string, SYSFS_PWM_MAX_BUFFER_SIZE, "%" PRId64, value);
+	(void)snprintf(value_as_string, SYSFS_PWM_MAX_BUFFER_SIZE, "%" PRIu32, value);
 	write_to_file(path, value_as_string);
 }
 
@@ -96,7 +96,7 @@ void init_pwm_channel(uint8_t chip, uint8_t channel) {
 void export_pwm_channel(uint8_t chip, uint8_t channel) {
 	char export_path[SYSFS_PWM_MAX_BUFFER_SIZE + 1U] = { 0 };
 	(void)snprintf(export_path, SYSFS_PWM_MAX_BUFFER_SIZE, "%s/pwmchip%u/export", PWM_CHIP_PATH, chip);
-	write_int_to_file(export_path, (int64_t)channel);
+	write_int_to_file(export_path, channel);
 }
 
 /*--------------------------------------
@@ -119,7 +119,7 @@ void unexport_pwm_channel(uint8_t chip, uint8_t channel) {
 void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/period", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, (int64_t)period_ns);
+	write_int_to_file(path, period_ns);
 }
 
 /*--------------------------------------
@@ -128,7 +128,7 @@ void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns) {
 void set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/duty_cycle", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, (int64_t)duty_ns);
+	write_int_to_file(path, duty_ns);
 }
 
 /*--------------------------------------
@@ -137,5 +137,5 @@ void set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns) {
 void enable_pwm(uint8_t chip, uint8_t channel, bool enable) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/enable", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, enable ? 1 : 0);
+	write_int_to_file(path, enable ? 1U : 0U);
 }

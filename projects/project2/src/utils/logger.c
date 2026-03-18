@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -21,9 +22,9 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 		exit(EXIT_FAILURE);
 	}
 	int64_t microseconds = curr_time.tv_nsec / NSEC_PER_USEC;
-	int32_t used = snprintf(output_buffer, MAX_LOG_LEN, "%" PRId64 ".%.6" PRId64, (int64_t)curr_time.tv_sec, microseconds);
+	int32_t used = snprintf(output_buffer, MAX_LOG_LEN, "%" PRIdMAX ".%.6" PRId64, (intmax_t)curr_time.tv_sec, microseconds);
 	const char *file_of_interest = NULL;
-	if (strrchr(filename, (int32_t)'/') != NULL) {
+	if (strrchr(filename, '/') != NULL) {
 		char *file_of_interest_with_slash = strrchr(filename, (int32_t)'/');
 		/* Get rid of slash */
 		++file_of_interest_with_slash;

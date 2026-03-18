@@ -1,6 +1,8 @@
 #include "sensor_monitoring.h"
 
 #include <pthread.h>
+#include <stdint.h>
+#include <time.h>
 
 /* Local project includes after system libraries */
 #ifdef NDEBUG
@@ -45,9 +47,11 @@ static bool read_with_debounce(button_debounce_t *d) {
  * Function: time_taken
  *------------------------*/
 static float64_t time_taken(struct timespec *start, struct timespec *end) {
-	float64_t seconds = (float64_t)end->tv_sec - start->tv_sec;
-	float64_t nseconds = (float64_t)(end->tv_nsec - start->tv_nsec) / SEC_TO_NSEC;
-	return seconds + nseconds;
+	time_t seconds = end->tv_sec - start->tv_sec;
+	int64_t nanoseconds = (end->tv_nsec - start->tv_nsec) / (int64_t)SEC_TO_NSEC;
+	float64_t seconds_as_float = (float64_t)seconds;
+	float64_t nseconds_as_float = (float64_t)nanoseconds;
+	return seconds_as_float + nseconds_as_float;
 }
 
 /*-----------------------------
@@ -212,8 +216,8 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	global_values_t *shared_info = (global_values_t *)arg;
 	struct timespec timer = { 0 };
 	// Waiting period using debounce parameter
-	timer.tv_sec = (time_t)(SAMPLE_MS / MSEC_PER_SEC);
-	timer.tv_nsec = (int64_t)(SAMPLE_MS % MSEC_PER_SEC) * NSEC_PER_MSEC;
+	timer.tv_sec = (time_t)SAMPLE_MS / (time_t)MSEC_PER_SEC;
+	timer.tv_nsec = (__syscall_slong_t)SAMPLE_MS % (__syscall_slong_t)MSEC_PER_SEC * (__syscall_slong_t)NSEC_PER_MSEC;
 
 	// Button setup
 #ifdef NDEBUG

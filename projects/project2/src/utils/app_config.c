@@ -45,10 +45,12 @@ static void read_config_file_contents(const char *config_path, char *file_conten
 	size_t bytes_read = fread((void *)file_content_buffer, 1U, file_content_buffer_len, cfg_file);
 	/* Check if we got data */
 	if (bytes_read == 0U) {
+		(void)fclose(cfg_file);
 		LOG_AND_EXIT("Read 0 bytes from configuration file at %s", config_path);
 	}
 	/* Check if we had a read error */
 	if (ferror(cfg_file) != 0) {
+		(void)fclose(cfg_file);
 		LOG_AND_EXIT("Failed to read config file at %s", config_path);
 	}
 
