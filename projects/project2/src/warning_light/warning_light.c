@@ -95,7 +95,7 @@ static void handle_light_logic(void) {
 	pthread_mutex_lock(&shared_info->mutex);
 	current_state = shared_info->current_state;
 	bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
-	while (!light_should_be_active) {
+	while ((!light_should_be_active) && (!atomic_load(&shared_info->is_shutdown_requested))) {
 		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
 		/* Update state while we have the mutex */
 		current_state = shared_info->current_state;
