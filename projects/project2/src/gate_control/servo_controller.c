@@ -21,9 +21,50 @@
 #ifdef NDEBUG
 static uint8_t extracted_chip_value = 0;
 static uint8_t extracted_channel_value = 0;
-#endif
 
-#ifdef NDEBUG
+/**
+ * @brief This function ensures that the pin is muxxed for pwm to prevent having to manually run config-pin on the BBB
+ *
+ * @param[in] servo_chip The servo chip passed in by user input/config
+ * @param[in] servo_channel The servo channel passed in by user input/config
+ */
+static void configure_pwm_pinmux(uint8_t servo_chip, char servo_channel) {
+	const char *pin_name = NULL;
+	if (servo_chip == 1) {
+		if ((servo_channel == 'a') || (servo_channel == 'A')) {
+			pin_name = "P9_14"; /* EHRPWM1A */
+		} else if ((servo_channel == 'b') || (servo_channel == 'B')) {
+			pin_name = "P9_16"; /* EHRPWM1B */
+		}
+	} else if (servo_chip == 2) {
+		if ((servo_channel == 'a') || (servo_channel == 'A')) {
+			pin_name = "P8_19"; /* EHRPWM2A */
+		} else if ((servo_channel == 'b') || (servo_channel == 'B')) {
+			pin_name = "P8_13"; /* EHRPWM2B */
+		}
+	}
+
+	if (pin_name == NULL) {
+		LOG_AND_EXIT("ERROR: Could not resolve BBB pin for chip %d channel %c", servo_chip, servo_channel);
+		return;
+	}
+
+	char path[MAX_FILENAME_LENGTH + 1U] = { 0 };
+	(void)snprintf(path, MAX_FILENAME_LENGTH, "/sys/devices/platform/ocp/ocp:%s_pinmux/state", pin_name);
+
+	FILE *pinmux_file = fopen(path, "w");
+	if (pinmux_file == NULL) {
+		LOG_AND_EXIT("ERROR: Failed to open pinmux state file: %s", path);
+		return;
+	}
+	if (fprintf(pinmux_file, "pwm") < 0) {
+		(void)fclose(pinmux_file);
+		LOG_AND_EXIT("ERROR: Failed to write pwm to pinmux state file: %s", path);
+		return;
+	}
+	(void)fclose(pinmux_file);
+}
+
 static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 	// Store mapped values
 	// Store chip value
@@ -44,6 +85,8 @@ static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 		LOG_AND_EXIT("ERROR: Invalid EHRPWM channel value given in hardware init.");
 		return;
 	}
+	// Configure pin mux before accessing PWM sysfs
+	configure_pwm_pinmux(servo_chip, servo_channel);
 	// Export the PWM channel
 	init_pwm_channel(extracted_chip_value, extracted_channel_value);
 	// Set period
