@@ -90,40 +90,48 @@ static void warning_lights_blink_one_second(void) {
 	} while (sub_result > 0.0); /* sub_result being greater than 0.0 means that stop is still in the future */
 }
 
+static void handle_light_logic(void) {
+	state_t current_state = STATE_INVALID;
+	pthread_mutex_lock(&shared_info->mutex);
+	current_state = shared_info->current_state;
+	bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	while (!light_should_be_active) {
+		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
+		/* Update state while we have the mutex */
+		current_state = shared_info->current_state;
+		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	}
+	pthread_mutex_unlock(&shared_info->mutex);
+
+	/* While in states of interest, we'll make lights blink */
+	// Make sure timeout is not requested while we are blinking
+	while (light_should_be_active && (!atomic_load(&shared_info->is_shutdown_requested))) {
+		/* Blink lights and then loop */
+		warning_lights_blink();
+		pthread_mutex_lock(&shared_info->mutex);
+		current_state = shared_info->current_state;
+		pthread_mutex_unlock(&shared_info->mutex);
+		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	}
+
+	/* After blinking, we should check if we are clearing which requires an additional second of blinking */
+	if (current_state == STATE_CLEARING) {
+		warning_lights_blink_one_second();
+		/* After closing out warning lights in clearing, stamp time */
+		pthread_mutex_lock(&shared_info->mutex);
+		clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->lights_off_time);
+		pthread_mutex_unlock(&shared_info->mutex);
+	}
+}
+
 /*--------------------------------------
  * Function: warning_light_thread_entry
  *--------------------------------------*/
 void *warning_light_thread_entry(void *arg) {
 	LOG("Starting warning light thread!");
 	shared_info = (global_values_t *)arg;
-	/* This thread must activate within 200ms of a button press so sleep is only 10ms. Each cycle is minimal */
-	struct timespec timer = { 0 };
-	timer.tv_nsec = WARNING_LIGHT_THREAD_SLEEP_MS * NSEC_PER_MSEC;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		state_t current_state = STATE_INVALID;
-		pthread_mutex_lock(&shared_info->mutex);
-		current_state = shared_info->current_state;
-		pthread_mutex_unlock(&shared_info->mutex);
-		bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
-
-		/* While in states of interest, we'll make lights blink */
-		// Make sure timeout is not requested while we are blinking
-		while (light_should_be_active && (!atomic_load(&shared_info->is_shutdown_requested))) {
-			/* Blink lights and then loop */
-			warning_lights_blink();
-			pthread_mutex_lock(&shared_info->mutex);
-			current_state = shared_info->current_state;
-			pthread_mutex_unlock(&shared_info->mutex);
-			light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
-		}
-
-		/* After blinking, we should check if we are clearing which requires an additional second of blinking */
-		if (current_state == STATE_CLEARING) {
-			warning_lights_blink_one_second();
-		}
-
-
-		(void)nanosleep(&timer, NULL);
+		handle_light_logic();
 	}
 
 	LOG("Shutting down warning light thread");

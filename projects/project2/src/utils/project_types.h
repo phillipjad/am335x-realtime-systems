@@ -49,6 +49,7 @@ typedef struct {
 	direction_t current_direction;     /**< Train direction */
 	struct timespec arrival_time;      /**< Train arrival time */
 	struct timespec clear_time;        /**< Train clear time */
+	struct timespec lights_off_time;   /**< Last time that lights were turned off */
 } global_values_t;
 
 // Button debounce variables
