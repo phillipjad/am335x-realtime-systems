@@ -39,4 +39,14 @@ int32_t parse_input_to_uint16(const char *input_buffer, uint16_t *output);
  */
 int32_t parse_input_to_float64(const char *input_buffer, float64_t *output);
 
+/**
+ * @brief Parses the string in \p input_buffer into a float64_t and stores in \p output
+ *
+ * @param[in] input_buffer A buffer to save the user response into
+ * @param[out] chip A uint8_t value to store the parsed int value of \p input_bufer
+ * @param[out] channel A char value to store the parsed int value of \p input_bufer
+ * @return int32_t Returns STATUS_SUCCESS on success and STATUS_FAIL on failure
+ */
+int32_t parse_pwm_input(const char *input_buffer, uint8_t *chip, char *channel);
+
 #endif /* USER_INPUT_H */

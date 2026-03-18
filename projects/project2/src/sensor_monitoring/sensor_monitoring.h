@@ -26,6 +26,6 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
  * @param[in] shared_info Shared variables
  * @return void
  */
-void failsafe_timout(global_values_t *shared_info);
+void failsafe_timeout(global_values_t *shared_info);
 
 #endif /* SENSOR_MONITORING_H */

@@ -97,3 +97,42 @@ int32_t parse_input_to_float64(const char *input_buffer, double *output) {
 
 	return STATUS_SUCCESS;
 }
+
+/*--------------------------------------
+ * Function: parse_pwm_input
+ *--------------------------------------*/
+int32_t parse_pwm_input(const char *input_buffer, uint8_t *chip, char *channel) {
+	// Parsing uint8_t value
+	char *endptr = NULL;
+	errno = 0;
+
+	// Parse chip value
+	int64_t value = strtol(input_buffer, &endptr, BASE_DEC);
+	/* Check for errno */
+	if (errno != 0) {
+		LOG("Experienced error while parsing pwm chip input value to uint8_t: %s", strerror(errno));
+		return STATUS_FAIL;
+	}
+	/* Check that input was actually parsed */
+	if (endptr == input_buffer) {
+		LOG("Failed to parse input: %s", input_buffer);
+		return STATUS_FAIL;
+	}
+
+	// Check if value is either 1 or 2 for EHRPWM[1, 2][a, b]
+	if ((value != 1) && (value != 2)) {
+		LOG("Parsed chip value %" PRId64 " is out of bounds range 1 <= X <= 2", value);
+		return STATUS_FAIL;
+	}
+
+	// Parse to find the letter after the number (either a or b)
+	char channel_char = *endptr;
+	if (channel_char != 'a' && channel_char != 'b' && channel_char != 'A' && channel_char != 'B') {
+		LOG("Invalid pwm channel character: %c. Should be either 'a' or 'b'.", channel_char);
+		return STATUS_FAIL;
+	}
+
+	*chip = (uint8_t)value;
+	*channel = channel_char;
+	return STATUS_SUCCESS;
+}

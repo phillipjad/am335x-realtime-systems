@@ -1,13 +1,14 @@
 #include "sensor_monitoring.h"
 
 #include <pthread.h>
-#include <time.h>
 
 /* Local project includes after system libraries */
 #include "gpio_control.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+
+static struct timespec last_clearing_time = { 0 };
 
 /*--------------------------------------
  * Function: read_with_debounce
@@ -105,6 +106,8 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 			} else {
 				// Set state to clear and clear global variables
 				shared_info->current_state = STATE_CLEARING;
+				/* Save time where we reached clearing state so that we can reset after 1 second */
+				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &last_clearing_time);
 				shared_info->current_direction = DIRECTION_NONE;
 				// Not clearing end time for servo activation after 1 second
 				shared_info->arrival_time = (struct timespec){ 0 };
@@ -128,9 +131,9 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 }
 
 /*-----------------------------
- * Function: sensor_monitoring
+ * Function: failsafe_timeout
  *-----------------------------*/
-void failsafe_timout(global_values_t *shared_info) {
+void failsafe_timeout(global_values_t *shared_info) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
@@ -173,6 +176,27 @@ void failsafe_timout(global_values_t *shared_info) {
 	}
 }
 
+static void check_for_idle(global_values_t *shared_info, bool was_button_pressed) {
+	/* Get current state */
+	pthread_mutex_lock(&shared_info->mutex);
+	state_t current_state = shared_info->current_state;
+	pthread_mutex_unlock(&shared_info->mutex);
+
+	/* Get current sys time */
+	struct timespec curr_time = { 0 };
+	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
+
+	/* Set to idle after 2 second of clearing. 1 second for warning lights and 1 secnod for gate */
+	static const time_t clear_time_offset = 2L;
+	if ((current_state == STATE_CLEARING) && (!was_button_pressed) &&
+	    ((curr_time.tv_sec - last_clearing_time.tv_sec) >= clear_time_offset)) {
+		/* Reset state machine to idle */
+		pthread_mutex_lock(&shared_info->mutex);
+		shared_info->current_state = STATE_IDLE;
+		pthread_mutex_unlock(&shared_info->mutex);
+	}
+}
+
 /*------------------------------------------
  * Function: sensor_monitoring_thread_entry
  *------------------------------------------*/
@@ -190,20 +214,32 @@ void *sensor_monitoring_thread_entry(void *arg) {
 
 	// Check for button press
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
+		bool button_pressed = false;
 		// Check west approach button
 		if (read_with_debounce(&west_button)) {
 			sensor_monitoring(shared_info, DIRECTION_WEST);
+			button_pressed = true;
 		}
 
 		if (read_with_debounce(&east_button)) {
 			sensor_monitoring(shared_info, DIRECTION_EAST);
+			button_pressed = true;
 		}
 
+		/* Check if we should revert back to idle. This will **NOT** interrupt failsafe logic */
+		check_for_idle(shared_info, button_pressed);
+
 		// Failsafe initiated
-		failsafe_timout(shared_info);
+		failsafe_timeout(shared_info);
 		// sleep
 		nanosleep(&timer, NULL);
 	}
+	// Grab lock
+	pthread_mutex_lock(&shared_info->mutex);
+	// If shutdown detected, wake up other sleeping threads
+	pthread_cond_broadcast(&shared_info->cv);
+	// Release lock
+	pthread_mutex_unlock(&shared_info->mutex);
 	LOG("Shutting down sensor monitoring thread...");
 	return NULL;
 }

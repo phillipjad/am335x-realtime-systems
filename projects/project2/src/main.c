@@ -16,6 +16,7 @@
 #include "project_constants.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
+#include "servo_controller.h"
 #include "signal_handler.h"
 #include "supervisor_input.h"
 #include "warning_light.h"
@@ -53,7 +54,8 @@ static void hardware_init(void) {
 	gpio_set(user_config->gpio_layout.led_1, false);
 	gpio_set(user_config->gpio_layout.led_2, false);
 
-	// TODO: NEED TO SETUP SERVO STILL
+	LOG("Initialized servo");
+	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
 }
 #endif
 
@@ -135,13 +137,13 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo");
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo (ex: 2b for EHRPWM2B)");
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.servo);
+	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.servo_chip, &user_config->gpio_layout.servo.servo_channel);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for Servo GPIO");
+		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
 }
 #endif /* USE_CONFIG */
@@ -151,6 +153,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
  */
 static void handle_shutdown(void) {
 	LOG("Shutting down...");
+	servo_shutdown();
 #ifdef NDEBUG
 	/* Hardware mmap close if we are in release mode */
 	gpio_map_close();
@@ -213,12 +216,6 @@ int32_t main(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
-
-	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
-
 	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
@@ -236,7 +233,6 @@ int32_t main(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
 	}
-
 	result = pthread_join(supervisor_input_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join supervisor input thread");
