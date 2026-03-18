@@ -1,7 +1,6 @@
 #include "sensor_monitoring.h"
 
 #include <pthread.h>
-#include <time.h>
 
 /* Local project includes after system libraries */
 #include "gpio_control.h"

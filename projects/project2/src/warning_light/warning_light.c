@@ -1,7 +1,6 @@
 #include "warning_light.h"
 
 #include <pthread.h>
-#include <time.h>
 
 /* Local project includes after system libraries */
 #ifdef NDEBUG /* We only need GPIO control in release */

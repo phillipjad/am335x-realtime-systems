@@ -1,6 +1,5 @@
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 
 /* Local project includes after system libraries */
 #include "logger.h"
