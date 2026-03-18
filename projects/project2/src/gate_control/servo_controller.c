@@ -20,7 +20,7 @@
 /* Servo Constants */
 #define SERVO_PWM_NS (20000000U)
 #define GATE_RAISE (SERVO_RIGHT)
-#define GATE_LOWER (SERVO_LEFT)
+#define GATE_LOWER (SERVO_CENTER)
 
 #ifdef NDEBUG
 static uint8_t extracted_chip_value = 0;
