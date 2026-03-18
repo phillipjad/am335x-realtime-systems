@@ -1,6 +1,7 @@
 #include "warning_light.h"
 
 #include <pthread.h>
+#include <time.h>
 
 /* Local project includes after system libraries */
 #ifdef NDEBUG /* We only need GPIO control in release */
@@ -92,28 +93,41 @@ static void warning_lights_blink_one_second(void) {
 static void handle_light_logic(void) {
 	state_t last_state = STATE_INVALID;
 	state_t current_state = STATE_INVALID;
+	struct timespec arrival_time = { 0 };
 	pthread_mutex_lock(&shared_info->mutex);
 	current_state = shared_info->current_state;
+	arrival_time = shared_info->arrival_time;
 	bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
 	while ((!light_should_be_active) && (!atomic_load(&shared_info->is_shutdown_requested))) {
 		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
 		/* Update state while we have the mutex */
 		current_state = shared_info->current_state;
+		arrival_time = shared_info->arrival_time;
 		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
 	}
 	pthread_mutex_unlock(&shared_info->mutex);
 
 	/* While in states of interest, we'll make lights blink */
 	// Make sure timeout is not requested while we are blinking
+	static bool logged_time_diff = false;
 	while (light_should_be_active && (!atomic_load(&shared_info->is_shutdown_requested))) {
+		if ((current_state == STATE_ACTIVE) && (!logged_time_diff)) {
+			/* Get current time to see the time delay between active state and light activation */
+			struct timespec curr_time = { 0 };
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
+			log_time_difference_ms(curr_time, arrival_time, "blink lights");
+			logged_time_diff = true;
+		}
 		/* Blink lights and then loop */
 		warning_lights_blink();
 		pthread_mutex_lock(&shared_info->mutex);
 		last_state = current_state;
 		current_state = shared_info->current_state;
+		arrival_time = shared_info->arrival_time;
 		pthread_mutex_unlock(&shared_info->mutex);
 		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
 	}
+	logged_time_diff = false;
 
 	/* We should check if we are clearing or recovering from fail-safe. If so blink an additional second  */
 	if ((current_state == STATE_CLEARING) || (last_state == STATE_FAIL_SAFE)) {

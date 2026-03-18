@@ -51,4 +51,13 @@ void project_log(FILE *stream, bool include_newline, const char *filename, uint3
     /* GCC format attribute for printf-style format checking */
     __attribute__((format(printf, 5, 6)));
 
+/**
+ * @brief Logs the time difference between \p t1 and \p t2 to do \p action
+ *
+ * @param[in] t1 The minuend of the difference
+ * @param[in] t2 The subtrahend of the difference
+ * @param[in] action The action that time is being diffed from. Should be a present-tense verb phrase
+ */
+void log_time_difference_ms(struct timespec t1, struct timespec t2, const char *action);
+
 #endif /* LOGGER_H */
