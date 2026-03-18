@@ -1,0 +1,87 @@
+Script started on 2020-04-07 08:01:35+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="105" LINES="50"]
+root@trn-beagle:/home/debian# exit./p2 sudo reboot now[10P./p2
+1586246502.442056[main.c:88]: RELEASE MODE ENABLED
+1586246502.443739[main.c:180]: System information: Linux, 4.19.94-ti-r42, #1buster SMP PREEMPT Tue Mar 31 19:38:29 UTC 2020, armv7l
+1586246502.444805[main.c:39]: Initialized application
+1586246502.445961[main.c:103]: Prompting user for configuration items
+1586246502.446934[user_input.c:16]: What pin should be used for East Button: 66
+1586246505.362617[user_input.c:16]: What pin should be used for West Button: 69
+1586246507.948976[user_input.c:16]: What pin should be used for LED 1: 45
+1586246510.653733[user_input.c:16]: What pin should be used for LED 2: 67
+1586246513.336604[user_input.c:16]: What pin should be used for Servo (ex: 2b for EHRPWM2B): 2b
+1586246515.726060[main.c:47]: Initializing mmap
+1586246515.726390[main.c:49]: Initialized hardware buttons
+1586246515.726444[main.c:54]: Initialized hardware LEDs
+1586246515.726470[main.c:62]: Initialized servo
+1586246515.731547[main.c:71]: Initializing global states
+1586246515.735281[supervisor_input.c:100]: Supervisor thread started.
+1586246515.737753[sensor_monitoring.c:215]: Starting sensor_monitoring!
+1586246515.738709[warning_light.c:136]: Starting warning light thread!
+1586246515.740125[gate_control.c:88]: Starting gate control thread
+1586246515.740892[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246534.285104[logger.c:64]: It took 0ms to blink lights
+1586246534.286193[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246534.287975[logger.c:64]: It took 3ms to lower gate
+1586246534.289536[sensor_monitoring.c:89]: Train arriving from the WEST
+1586246537.781909[gate_control.c:67]: Gate read CLEARING_STATE state
+1586246537.783371[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1586246539.837686[gate_control.c:73]: Waited and raising gate.
+1586246539.839227[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246542.597123[logger.c:64]: It took 0ms to blink lights
+1586246542.597929[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246542.599786[logger.c:64]: It took 3ms to lower gate
+1586246542.601174[sensor_monitoring.c:89]: Train arriving from the WEST
+1586246544.611268[gate_control.c:67]: Gate read CLEARING_STATE state
+1586246544.612853[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1586246547.144040[gate_control.c:73]: Waited and raising gate.
+1586246547.145840[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246549.594260[logger.c:64]: It took 0ms to blink lights
+1586246549.595075[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246549.596976[logger.c:64]: It took 3ms to lower gate
+1586246549.598535[sensor_monitoring.c:89]: Train arriving from the WEST
+1586246555.543349[gate_control.c:62]: Gate read FAIL_STATE state, lowering gate.
+1586246555.544970[sensor_monitoring.c:181]: FAILSAFE TIMEOUT ACTIVE: Train did not arrive within 5.000000 seconds. Awaiting supervisor "clear" or "c"...
+c
+1586246569.179726[supervisor_input.c:30]: Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...
+1586246570.647866[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246574.267907[logger.c:64]: It took 0ms to blink lights
+1586246574.268680[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246574.270737[logger.c:64]: It took 3ms to lower gate
+1586246574.272102[sensor_monitoring.c:89]: Train arriving from the EAST
+1586246575.817644[gate_control.c:67]: Gate read CLEARING_STATE state
+1586246575.819110[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1586246578.300111[gate_control.c:73]: Waited and raising gate.
+1586246578.302008[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246581.050659[logger.c:64]: It took 0ms to blink lights
+1586246581.051473[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246581.053484[logger.c:64]: It took 3ms to lower gate
+1586246581.054934[sensor_monitoring.c:89]: Train arriving from the EAST
+1586246582.646496[gate_control.c:67]: Gate read CLEARING_STATE state
+1586246582.648048[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1586246585.103582[gate_control.c:73]: Waited and raising gate.
+1586246585.105200[gate_control.c:53]: Gate read IDLE state, raising gate.
+1586246587.914210[logger.c:64]: It took 0ms to blink lights
+1586246587.914972[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1586246587.916962[logger.c:64]: It took 3ms to lower gate
+1586246587.918512[sensor_monitoring.c:89]: Train arriving from the EAST
+1586246593.546399[gate_control.c:62]: Gate read FAIL_STATE state, lowering gate.
+1586246593.547948[sensor_monitoring.c:181]: FAILSAFE TIMEOUT ACTIVE: Train did not arrive within 5.000000 seconds. Awaiting supervisor "clear" or "c"...
+a
+e
+w
+khfxjkryxjcx
+c
+1586246607.605859[supervisor_input.c:30]: Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...
+1586246608.954138[gate_control.c:53]: Gate read IDLE state, raising gate.
+^C1586246619.777051[signal_handler.c:19]: Setting shutdown flag!
+1586246619.779705[warning_light.c:142]: Shutting down warning light thread
+1586246619.780403[gate_control.c:94]: Shutting down gate control thread
+1586246619.782934[sensor_monitoring.c:268]: Shutting down sensor monitoring thread...
+1586246619.824112[supervisor_input.c:111]: Shutting down supervisor thread...
+1586246619.825835[main.c:255]: Starting application shutdown sequence...
+1586246619.826708[main.c:162]: Shutting down...
+1586246619.826963[servo_controller.c:152]: Shutting down gate
+root@trn-beagle:/home/debian# exit
+exit
+
+Script done on 2020-04-07 08:03:45+00:00 [COMMAND_EXIT_CODE="0"]
