@@ -42,3 +42,19 @@ inline void project_log(FILE *stream, bool include_newline, const char *filename
 	printf("%s", output_buffer);
 	(void)fflush(stream);
 }
+
+/*--------------------------------------
+ * Function: log_time_difference_ms
+ *--------------------------------------*/
+void log_time_difference_ms(struct timespec t1, struct timespec t2, const char *action) {
+	time_t t1_as_ms = 0L;
+	t1_as_ms += t1.tv_sec * MSEC_PER_SEC;
+	t1_as_ms += t1.tv_nsec / NSEC_PER_MSEC;
+
+	time_t t2_as_ms = 0L;
+	t2_as_ms += t2.tv_sec * MSEC_PER_SEC;
+	t2_as_ms += t2.tv_nsec / NSEC_PER_MSEC;
+
+	time_t time_diff = t1_as_ms - t2_as_ms;
+	LOG("It took %" PRIdMAX "ms to %s", (intmax_t)time_diff, action);
+}
