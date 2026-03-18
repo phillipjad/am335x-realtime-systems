@@ -3,7 +3,9 @@
 #include <pthread.h>
 
 /* Local project includes after system libraries */
+#ifdef NDEBUG
 #include "gpio_control.h"
+#endif
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -13,6 +15,7 @@ static struct timespec last_clearing_time = { 0 };
 /*--------------------------------------
  * Function: read_with_debounce
  *--------------------------------------*/
+#ifdef NDEBUG
 static bool read_with_debounce(button_debounce_t *d) {
 	uint8_t raw = gpio_read(d->pin_id);
 	bool pressed = false;
@@ -36,6 +39,7 @@ static bool read_with_debounce(button_debounce_t *d) {
 	}
 	return pressed;
 }
+#endif /* NDEBUG */
 
 /*------------------------
  * Function: time_taken
@@ -209,12 +213,15 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	timer.tv_nsec = (SAMPLE_MS % MSEC_PER_SEC) * NSEC_PER_MSEC;
 
 	// Button setup
+#ifdef NDEBUG
 	button_debounce_t east_button = { shared_info->config.gpio_layout.east_button, 0, 0, 0, 0 };
 	button_debounce_t west_button = { shared_info->config.gpio_layout.west_button, 0, 0, 0, 0 };
+#endif /* NDEBUG */
 
 	// Check for button press
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		bool button_pressed = false;
+#ifdef NDEBUG
 		// Check west approach button
 		if (read_with_debounce(&west_button)) {
 			sensor_monitoring(shared_info, DIRECTION_WEST);
@@ -225,6 +232,17 @@ void *sensor_monitoring_thread_entry(void *arg) {
 			sensor_monitoring(shared_info, DIRECTION_EAST);
 			button_pressed = true;
 		}
+#else
+		// In debug mode, gpio_map is not initialized — use supervisor-injected atomic flags instead
+		if (atomic_exchange(&shared_info->debug_east_pending, false)) {
+			sensor_monitoring(shared_info, DIRECTION_EAST);
+			button_pressed = true;
+		}
+		if (atomic_exchange(&shared_info->debug_west_pending, false)) {
+			sensor_monitoring(shared_info, DIRECTION_WEST);
+			button_pressed = true;
+		}
+#endif /* NDEBUG */
 
 		/* Check if we should revert back to idle. This will **NOT** interrupt failsafe logic */
 		check_for_idle(shared_info, button_pressed);
