@@ -1,0 +1,344 @@
+Script started on 2026-03-18 16:49:43-04:00 [TERM="xterm-256color" TTY="/dev/pts/2" COLUMNS="255" LINES="19"]
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660/showcases/p2[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660/showcases/p2[00m$ cd ../..
+[?2004l[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ cd ../..[4Pexitcd -file build/p2 ./build.sh -t p2 --debug --arch powerpc -c[K-l[Kclear
+[?2004lClearing build directory: /home/phillipjam/Documents/swe660/build
+Building project 2
+Build Type: Debug
+-- Target is PowerPC 32-bit
+-- Target is PowerPC 32-bit
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/powerpc-linux-gnu-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Global Build Mode: DEBUG
+-- Passing compile options:
+	-Wall
+	-Wextra
+	-Wpedantic
+	-Werror
+	-Wformat=2
+	-Wformat-security
+	-Wshadow
+	-Wundef
+	-Wmissing-prototypes
+	-Wmissing-declarations
+	-Wstrict-prototypes
+	-Wcast-qual
+	-Wcast-align
+	-Wvla
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/phillipjam/Documents/swe660/build
+[  7%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/gate_control/gate_control.c.o[0m
+[ 15%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/gate_control/servo_controller.c.o[0m
+[ 23%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/main.c.o[0m
+[ 30%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/sensor_monitoring/sensor_monitoring.c.o[0m
+[ 38%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/supervisor_input/supervisor_input.c.o[0m
+[ 46%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/app_config.c.o[0m
+[ 53%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/gpio_control.c.o[0m
+[ 61%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/logger.c.o[0m
+[ 69%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/pwm_io_logic.c.o[0m
+[ 76%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/signal_handler.c.o[0m
+[ 84%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/utils/user_input.c.o[0m
+[ 92%] [32mBuilding C object CMakeFiles/p2.dir/projects/project2/src/warning_light/warning_light.c.o[0m
+[100%] [32m[1mLinking C executable p2[0m
+[100%] Built target p2
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ file build/p2
+[?2004lbuild/p2: ELF 32-bit MSB executable, PowerPC or cisco 4500, version 1 (SYSV), statically linked, BuildID[sha1]=88e925083a97cfa60506afe559a6f1085f26f29c, for GNU/Linux 3.2.0, with debug_info, not stripped
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ ./build/p2
+[?2004l1773867002.453781[main.c:85]: DEBUG MODE ENABLED
+1773867002.455687[main.c:180]: System information: Linux, 6.18.7-76061807-generic, #202601231045~1769703228~24.04~cb87b5b SMP PREEMPT_DYNAMIC Thu J, ppc
+1773867002.456419[main.c:39]: Initialized application
+1773867002.456475[main.c:71]: Initializing global states
+1773867002.461029[gate_control.c:88]: Starting gate control thread
+1773867002.463886[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867002.464346[servo_controller.c:132]: Raising gate
+1773867002.465094[supervisor_input.c:100]: Supervisor thread started.
+1773867002.465189[sensor_monitoring.c:215]: Starting sensor_monitoring!
+1773867002.465281[supervisor_input.c:57]: [DEBUG] Available commands:
+1773867002.464650[warning_light.c:136]: Starting warning light thread!
+1773867002.465645[supervisor_input.c:58]: [DEBUG]   clear, c                    - Clear fail-safe state (supervisor)
+1773867002.465993[supervisor_input.c:59]: [DEBUG]   e, E, east, East, EAST      - Simulate EAST button press
+1773867002.466033[supervisor_input.c:60]: [DEBUG]   w, W, west, West, WEST      - Simulate WEST button press
+1773867002.466048[supervisor_input.c:61]: [DEBUG]   h, H, help                  - Show this help message
+c
+1773867016.890088[supervisor_input.c:32]: Not in fail-safe mode, disregarding input.
+h
+1773867019.681591[supervisor_input.c:57]: [DEBUG] Available commands:
+1773867019.681693[supervisor_input.c:58]: [DEBUG]   clear, c                    - Clear fail-safe state (supervisor)
+1773867019.681712[supervisor_input.c:59]: [DEBUG]   e, E, east, East, EAST      - Simulate EAST button press
+1773867019.681725[supervisor_input.c:60]: [DEBUG]   w, W, west, West, WEST      - Simulate WEST button press
+1773867019.681737[supervisor_input.c:61]: [DEBUG]   h, H, help                  - Show this help message
+clear
+1773867021.571580[supervisor_input.c:32]: Not in fail-safe mode, disregarding input.
+help
+1773867022.273277[supervisor_input.c:57]: [DEBUG] Available commands:
+1773867022.273356[supervisor_input.c:58]: [DEBUG]   clear, c                    - Clear fail-safe state (supervisor)
+1773867022.273370[supervisor_input.c:59]: [DEBUG]   e, E, east, East, EAST      - Simulate EAST button press
+1773867022.273380[supervisor_input.c:60]: [DEBUG]   w, W, west, West, WEST      - Simulate WEST button press
+1773867022.273390[supervisor_input.c:61]: [DEBUG]   h, H, help                  - Show this help message
+e
+1773867029.416924[supervisor_input.c:42]: [DEBUG] Simulating EAST button press.
+1773867029.418453[sensor_monitoring.c:89]: Train arriving from the EAST
+1773867029.419816[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1773867029.420017[logger.c:64]: It took 2ms to blink lights
+1773867029.420049[logger.c:64]: It took 2ms to lower gate
+1773867029.420168[warning_light.c:46]: Warning light 1 on
+1773867029.420213[servo_controller.c:144]: Lowering gate
+1773867029.670391[warning_light.c:48]: Warning light 1 off
+1773867029.670502[warning_light.c:49]: Warning light 2 on
+1773867029.921041[warning_light.c:51]: Warning light 2 off
+1773867029.921243[warning_light.c:46]: Warning light 1 on
+1773867030.171312[warning_light.c:48]: Warning light 1 off
+1773867030.171397[warning_light.c:49]: Warning light 2 on
+1773867030.421471[warning_light.c:51]: Warning light 2 off
+1773867030.421562[warning_light.c:46]: Warning light 1 on
+1773867030.671666[warning_light.c:48]: Warning light 1 off
+1773867030.671751[warning_light.c:49]: Warning light 2 on
+1773867030.921831[warning_light.c:51]: Warning light 2 off
+1773867030.921987[warning_light.c:46]: Warning light 1 on
+w
+1773867031.098134[supervisor_input.c:50]: [DEBUG] Simulating WEST button press.
+1773867031.100157[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1773867031.100665[gate_control.c:67]: Gate read CLEARING_STATE state
+1773867031.172089[warning_light.c:48]: Warning light 1 off
+1773867031.172160[warning_light.c:49]: Warning light 2 on
+1773867031.422253[warning_light.c:51]: Warning light 2 off
+1773867031.422509[warning_light.c:46]: Warning light 1 on
+1773867031.672671[warning_light.c:48]: Warning light 1 off
+1773867031.672774[warning_light.c:49]: Warning light 2 on
+1773867031.922891[warning_light.c:51]: Warning light 2 off
+1773867031.923126[warning_light.c:46]: Warning light 1 on
+1773867032.173222[warning_light.c:48]: Warning light 1 off
+1773867032.173305[warning_light.c:49]: Warning light 2 on
+1773867032.423408[warning_light.c:51]: Warning light 2 off
+1773867033.474661[servo_controller.c:132]: Raising gate
+1773867033.474817[gate_control.c:73]: Waited and raising gate.
+1773867033.474856[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867033.474911[servo_controller.c:132]: Raising gate
+e
+1773867044.799000[supervisor_input.c:42]: [DEBUG] Simulating EAST button press.
+1773867044.802512[sensor_monitoring.c:89]: Train arriving from the EAST
+1773867044.802614[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1773867044.802558[logger.c:64]: It took 0ms to blink lights
+1773867044.802740[logger.c:64]: It took 1ms to lower gate
+1773867044.802761[servo_controller.c:144]: Lowering gate
+1773867044.802776[warning_light.c:46]: Warning light 1 on
+1773867045.052936[warning_light.c:48]: Warning light 1 off
+1773867045.053038[warning_light.c:49]: Warning light 2 on
+1773867045.303168[warning_light.c:51]: Warning light 2 off
+1773867045.303273[warning_light.c:46]: Warning light 1 on
+1773867045.553377[warning_light.c:48]: Warning light 1 off
+1773867045.553463[warning_light.c:49]: Warning light 2 on
+1773867045.803534[warning_light.c:51]: Warning light 2 off
+1773867045.803630[warning_light.c:46]: Warning light 1 on
+e1773867046.053728[warning_light.c:48]: Warning light 1 off
+1773867046.053814[warning_light.c:49]: Warning light 2 on
+
+1773867046.178219[supervisor_input.c:42]: [DEBUG] Simulating EAST button press.
+1773867046.181619[sensor_monitoring.c:132]: FAILSAFE STATE ACTIVE: Train has not moved from the EAST. Lowering gate and warning lights blinking. Awaiting supervisor "clear" or "c"...
+1773867046.181808[gate_control.c:62]: Gate read FAIL_STATE state, lowering gate.
+1773867046.303909[warning_light.c:51]: Warning light 2 off
+1773867046.304007[warning_light.c:46]: Warning light 1 on
+1773867046.554090[warning_light.c:48]: Warning light 1 off
+1773867046.554164[warning_light.c:49]: Warning light 2 on
+1773867046.804300[warning_light.c:51]: Warning light 2 off
+1773867046.804403[warning_light.c:46]: Warning light 1 on
+1773867047.054510[warning_light.c:48]: Warning light 1 off
+1773867047.054600[warning_light.c:49]: Warning light 2 on
+1773867047.304740[warning_light.c:51]: Warning light 2 off
+1773867047.304844[warning_light.c:46]: Warning light 1 on
+1773867047.554956[warning_light.c:48]: Warning light 1 off
+1773867047.555031[warning_light.c:49]: Warning light 2 on
+1773867047.805177[warning_light.c:51]: Warning light 2 off
+1773867047.805283[warning_light.c:46]: Warning light 1 on
+1773867048.055423[warning_light.c:48]: Warning light 1 off
+1773867048.055526[warning_light.c:49]: Warning light 2 on
+1773867048.305617[warning_light.c:51]: Warning light 2 off
+1773867048.305707[warning_light.c:46]: Warning light 1 on
+1773867048.555799[warning_light.c:48]: Warning light 1 off
+1773867048.555897[warning_light.c:49]: Warning light 2 on
+1773867048.806000[warning_light.c:51]: Warning light 2 off
+1773867048.806088[warning_light.c:46]: Warning light 1 on
+1773867049.056193[warning_light.c:48]: Warning light 1 off
+1773867049.056291[warning_light.c:49]: Warning light 2 on
+c
+1773867049.288004[supervisor_input.c:30]: Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...
+1773867049.306372[warning_light.c:51]: Warning light 2 off
+1773867049.306498[warning_light.c:46]: Warning light 1 on
+1773867049.556643[warning_light.c:48]: Warning light 1 off
+1773867049.556741[warning_light.c:49]: Warning light 2 on
+1773867049.806848[warning_light.c:51]: Warning light 2 off
+1773867049.806950[warning_light.c:46]: Warning light 1 on
+1773867050.057053[warning_light.c:48]: Warning light 1 off
+1773867050.057149[warning_light.c:49]: Warning light 2 on
+1773867050.307249[warning_light.c:51]: Warning light 2 off
+1773867050.338949[servo_controller.c:144]: Lowering gate
+1773867050.339040[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867050.339053[servo_controller.c:132]: Raising gate
+w
+1773867053.134372[supervisor_input.c:50]: [DEBUG] Simulating WEST button press.
+1773867053.136229[sensor_monitoring.c:89]: Train arriving from the WEST
+1773867053.136321[logger.c:64]: It took 0ms to blink lights
+1773867053.136231[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1773867053.136379[warning_light.c:46]: Warning light 1 on
+1773867053.136399[logger.c:64]: It took 0ms to lower gate
+1773867053.136433[servo_controller.c:144]: Lowering gate
+1773867053.386543[warning_light.c:48]: Warning light 1 off
+1773867053.386638[warning_light.c:49]: Warning light 2 on
+1773867053.636747[warning_light.c:51]: Warning light 2 off
+1773867053.636840[warning_light.c:46]: Warning light 1 on
+1773867053.886904[warning_light.c:48]: Warning light 1 off
+1773867053.886989[warning_light.c:49]: Warning light 2 on
+1773867054.137076[warning_light.c:51]: Warning light 2 off
+1773867054.137183[warning_light.c:46]: Warning light 1 on
+1773867054.387288[warning_light.c:48]: Warning light 1 off
+1773867054.387372[warning_light.c:49]: Warning light 2 on
+e
+1773867054.575668[supervisor_input.c:42]: [DEBUG] Simulating EAST button press.
+1773867054.578401[gate_control.c:67]: Gate read CLEARING_STATE state
+1773867054.578385[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1773867054.637447[warning_light.c:51]: Warning light 2 off
+1773867054.637520[warning_light.c:46]: Warning light 1 on
+1773867054.887616[warning_light.c:48]: Warning light 1 off
+1773867054.887699[warning_light.c:49]: Warning light 2 on
+1773867055.137800[warning_light.c:51]: Warning light 2 off
+1773867055.137945[warning_light.c:46]: Warning light 1 on
+1773867055.388084[warning_light.c:48]: Warning light 1 off
+1773867055.388171[warning_light.c:49]: Warning light 2 on
+1773867055.638282[warning_light.c:51]: Warning light 2 off
+1773867056.682739[servo_controller.c:132]: Raising gate
+1773867056.682823[gate_control.c:73]: Waited and raising gate.
+1773867056.682839[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867056.682850[servo_controller.c:132]: Raising gate
+w
+1773867059.759131[supervisor_input.c:50]: [DEBUG] Simulating WEST button press.
+1773867059.762265[sensor_monitoring.c:89]: Train arriving from the WEST
+1773867059.762305[logger.c:64]: It took 0ms to blink lights
+1773867059.762291[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1773867059.762416[warning_light.c:46]: Warning light 1 on
+1773867059.762454[logger.c:64]: It took 1ms to lower gate
+1773867059.762473[servo_controller.c:144]: Lowering gate
+1773867060.012535[warning_light.c:48]: Warning light 1 off
+1773867060.012624[warning_light.c:49]: Warning light 2 on
+1773867060.262729[warning_light.c:51]: Warning light 2 off
+1773867060.262822[warning_light.c:46]: Warning light 1 on
+1773867060.512921[warning_light.c:48]: Warning light 1 off
+1773867060.513009[warning_light.c:49]: Warning light 2 on
+1773867060.763114[warning_light.c:51]: Warning light 2 off
+1773867060.763208[warning_light.c:46]: Warning light 1 on
+w1773867061.013311[warning_light.c:48]: Warning light 1 off
+1773867061.013398[warning_light.c:49]: Warning light 2 on
+
+1773867061.035068[supervisor_input.c:50]: [DEBUG] Simulating WEST button press.
+1773867061.035670[gate_control.c:62]: Gate read FAIL_STATE state, lowering gate.
+1773867061.035698[sensor_monitoring.c:132]: FAILSAFE STATE ACTIVE: Train has not moved from the WEST. Lowering gate and warning lights blinking. Awaiting supervisor "clear" or "c"...
+1773867061.264245[warning_light.c:51]: Warning light 2 off
+1773867061.264352[warning_light.c:46]: Warning light 1 on
+1773867061.514456[warning_light.c:48]: Warning light 1 off
+1773867061.514542[warning_light.c:49]: Warning light 2 on
+1773867061.764646[warning_light.c:51]: Warning light 2 off
+1773867061.764738[warning_light.c:46]: Warning light 1 on
+1773867062.014879[warning_light.c:48]: Warning light 1 off
+1773867062.014978[warning_light.c:49]: Warning light 2 on
+1773867062.265127[warning_light.c:51]: Warning light 2 off
+1773867062.265231[warning_light.c:46]: Warning light 1 on
+1773867062.515338[warning_light.c:48]: Warning light 1 off
+1773867062.515425[warning_light.c:49]: Warning light 2 on
+1773867062.765548[warning_light.c:51]: Warning light 2 off
+1773867062.765649[warning_light.c:46]: Warning light 1 on
+1773867063.015769[warning_light.c:48]: Warning light 1 off
+1773867063.015870[warning_light.c:49]: Warning light 2 on
+1773867063.266015[warning_light.c:51]: Warning light 2 off
+1773867063.266114[warning_light.c:46]: Warning light 1 on
+1773867063.516219[warning_light.c:48]: Warning light 1 off
+1773867063.516305[warning_light.c:49]: Warning light 2 on
+1773867063.766456[warning_light.c:51]: Warning light 2 off
+1773867063.766562[warning_light.c:46]: Warning light 1 on
+1773867064.016653[warning_light.c:48]: Warning light 1 off
+1773867064.016743[warning_light.c:49]: Warning light 2 on
+1773867064.266847[warning_light.c:51]: Warning light 2 off
+1773867064.266943[warning_light.c:46]: Warning light 1 on
+1773867064.517046[warning_light.c:48]: Warning light 1 off
+1773867064.517132[warning_light.c:49]: Warning light 2 on
+1773867064.767269[warning_light.c:51]: Warning light 2 off
+1773867064.767374[warning_light.c:46]: Warning light 1 on
+1773867065.017460[warning_light.c:48]: Warning light 1 off
+1773867065.017545[warning_light.c:49]: Warning light 2 on
+1773867065.267659[warning_light.c:51]: Warning light 2 off
+1773867065.267751[warning_light.c:46]: Warning light 1 on
+cl1773867065.517852[warning_light.c:48]: Warning light 1 off
+1773867065.517954[warning_light.c:49]: Warning light 2 on
+ear1773867065.768065[warning_light.c:51]: Warning light 2 off
+1773867065.768160[warning_light.c:46]: Warning light 1 on
+
+1773867065.873274[supervisor_input.c:30]: Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...
+1773867066.018270[warning_light.c:48]: Warning light 1 off
+1773867066.018370[warning_light.c:49]: Warning light 2 on
+1773867066.268488[warning_light.c:51]: Warning light 2 off
+1773867066.268590[warning_light.c:46]: Warning light 1 on
+1773867066.518685[warning_light.c:48]: Warning light 1 off
+1773867066.518757[warning_light.c:49]: Warning light 2 on
+1773867066.768839[warning_light.c:51]: Warning light 2 off
+1773867066.768951[warning_light.c:46]: Warning light 1 on
+1773867067.019067[warning_light.c:48]: Warning light 1 off
+1773867067.019165[warning_light.c:49]: Warning light 2 on
+1773867067.269266[warning_light.c:51]: Warning light 2 off
+1773867067.306291[servo_controller.c:144]: Lowering gate
+1773867067.306362[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867067.306368[servo_controller.c:132]: Raising gate
+east
+1773867070.782482[supervisor_input.c:42]: [DEBUG] Simulating EAST button press.
+1773867070.786415[sensor_monitoring.c:89]: Train arriving from the EAST
+1773867070.786457[gate_control.c:56]: Gate read STATE_ACTIVE state, lowering gate.
+1773867070.786547[logger.c:64]: It took 0ms to lower gate
+1773867070.786548[logger.c:64]: It took 0ms to blink lights
+1773867070.786571[servo_controller.c:144]: Lowering gate
+1773867070.786592[warning_light.c:46]: Warning light 1 on
+1773867071.036682[warning_light.c:48]: Warning light 1 off
+1773867071.036771[warning_light.c:49]: Warning light 2 on
+1773867071.286911[warning_light.c:51]: Warning light 2 off
+1773867071.287015[warning_light.c:46]: Warning light 1 on
+1773867071.537131[warning_light.c:48]: Warning light 1 off
+1773867071.537220[warning_light.c:49]: Warning light 2 on
+we1773867071.787319[warning_light.c:51]: Warning light 2 off
+1773867071.787412[warning_light.c:46]: Warning light 1 on
+s1773867072.037478[warning_light.c:48]: Warning light 1 off
+1773867072.037564[warning_light.c:49]: Warning light 2 on
+t
+1773867072.185742[supervisor_input.c:50]: [DEBUG] Simulating WEST button press.
+1773867072.189309[sensor_monitoring.c:136]: CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.
+1773867072.189355[gate_control.c:67]: Gate read CLEARING_STATE state
+1773867072.287651[warning_light.c:51]: Warning light 2 off
+1773867072.287742[warning_light.c:46]: Warning light 1 on
+1773867072.537842[warning_light.c:48]: Warning light 1 off
+1773867072.538022[warning_light.c:49]: Warning light 2 on
+1773867072.788141[warning_light.c:51]: Warning light 2 off
+1773867072.788234[warning_light.c:46]: Warning light 1 on
+1773867073.038320[warning_light.c:48]: Warning light 1 off
+1773867073.038411[warning_light.c:49]: Warning light 2 on
+1773867073.288527[warning_light.c:51]: Warning light 2 off
+1773867074.318164[servo_controller.c:132]: Raising gate
+1773867074.318246[gate_control.c:73]: Waited and raising gate.
+1773867074.318263[gate_control.c:53]: Gate read IDLE state, raising gate.
+1773867074.318273[servo_controller.c:132]: Raising gate
+^C1773867083.778184[signal_handler.c:19]: Setting shutdown flag!
+1773867083.780344[sensor_monitoring.c:268]: Shutting down sensor monitoring thread...
+1773867083.780533[gate_control.c:94]: Shutting down gate control thread
+1773867083.780583[warning_light.c:142]: Shutting down warning light thread
+1773867083.850735[supervisor_input.c:111]: Shutting down supervisor thread...
+1773867083.851789[main.c:255]: Starting application shutdown sequence...
+1773867083.851886[main.c:162]: Shutting down...
+1773867083.851919[servo_controller.c:152]: Shutting down gate
+[?2004h]0;phillipjam@trn-pop-os: ~/Documents/swe660[01;32mphillipjam@trn-pop-os[00m:[01;34m~/Documents/swe660[00m$ exit
+[?2004lexit
+
+Script done on 2026-03-18 16:51:27-04:00 [COMMAND_EXIT_CODE="0"]
