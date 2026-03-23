@@ -1,4 +1,4 @@
-#include "gate_control.h"
+#include "vent_control.h"
 
 #include <pthread.h>
 #include <unistd.h>
@@ -31,7 +31,7 @@ static void wait_for_warning_light_deactivation(void) {
 	last_lights_off_time = lights_off_time;
 }
 
-static void handle_gate_logic(void) {
+static void handle_vent_logic(void) {
 	/* We want to track what the last state we acted on is */
 	static state_t last_operated_state = STATE_INVALID;
 	/* Grab state snapshot */
@@ -50,27 +50,27 @@ static void handle_gate_logic(void) {
 	// Check if shutdown requested or state changed from idle
 	if (!atomic_load(&shared_info->is_shutdown_requested)) {
 		if (current_state == STATE_IDLE) {
-			LOG("Gate read IDLE state, raising gate.");
+			LOG("vent read IDLE state, raising vent.");
 			servo_raise();
 		} else if (current_state == STATE_ACTIVE) {
-			LOG("Gate read STATE_ACTIVE state, lowering gate.");
+			LOG("vent read STATE_ACTIVE state, lowering vent.");
 			struct timespec curr_time = { 0 };
 			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
-			log_time_difference_ms(curr_time, arrival_time, "lower gate");
+			log_time_difference_ms(curr_time, arrival_time, "lower vent");
 			servo_lower();
 		} else if (current_state == STATE_FAIL_SAFE) {
-			LOG("Gate read FAIL_STATE state, lowering gate.");
-			/* Once warning lights are off we want to wait for one second to pass and then re-lower gate */
+			LOG("vent read FAIL_STATE state, lowering vent.");
+			/* Once warning lights are off we want to wait for one second to pass and then re-lower vent */
 			wait_for_warning_light_deactivation();
 			servo_lower();
 		} else if (current_state == STATE_CLEARING) {
-			LOG("Gate read CLEARING_STATE state");
+			LOG("vent read CLEARING_STATE state");
 			wait_for_warning_light_deactivation();
-			/* Once warning lights are off we want to wait for one second to pass and then raise gate */
+			/* Once warning lights are off we want to wait for one second to pass and then raise vent */
 			static const struct timespec one_second_delay = { .tv_sec = (time_t)1, .tv_nsec = 0L };
 			(void)nanosleep(&one_second_delay, NULL);
 			servo_raise();
-			LOG("Waited and raising gate.");
+			LOG("Waited and raising vent.");
 			return;
 		} else {
 			/* MISRA requires else */
@@ -82,15 +82,15 @@ static void handle_gate_logic(void) {
 }
 
 /*--------------------------------------
- * Function: gate_control_thread_entry
+ * Function: vent_control_thread_entry
  *--------------------------------------*/
-void *gate_control_thread_entry(void *arg) {
-	LOG("Starting gate control thread");
+void *vent_control_thread_entry(void *arg) {
+	LOG("Starting vent control thread");
 	shared_info = (global_values_t *)arg;
 	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		handle_gate_logic();
+		handle_vent_logic();
 	}
-	LOG("Shutting down gate control thread");
+	LOG("Shutting down vent control thread");
 	return NULL;
 }
