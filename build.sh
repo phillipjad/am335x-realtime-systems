@@ -92,6 +92,10 @@ case $TARGET in
 	echo "Building project 2"
 	CMAKE_ARGS+=("-DTARGET=P2")
 	;;
+"t" | "term" | "term-project" | "tp")
+	echo "Building term project"
+	CMAKE_ARGS+=("-DTARGET=TP")
+	;;
 *)
 	echo "Error: Unknown target '$TARGET' provided" >&2
 	exit 1
