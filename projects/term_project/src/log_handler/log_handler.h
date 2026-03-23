@@ -7,6 +7,6 @@
  * @param[in] arg Thread arguments
  * @return void* Returns NULL
  */
-void *warning_light_thread_entry(void *arg);
+void *log_handler_thread_entry(void *arg);
 
 #endif /* WARNING_LIGHT_H */
