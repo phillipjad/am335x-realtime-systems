@@ -1,9 +1,9 @@
 #include "log_handler.h"
-#include <unistd.h>
-#include "project_types.h"
 #include "logger.h"
+#include "project_types.h"
+#include <unistd.h>
 
-global_values_t *shared_info = NULL;
+static global_values_t *shared_info = NULL;
 
 /*--------------------------------------
  * Function: log_handler_thread_entry

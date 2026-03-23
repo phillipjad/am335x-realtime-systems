@@ -32,6 +32,14 @@ static void wait_for_warning_light_deactivation(void) {
 }
 
 static void handle_vent_logic(void) {
+	while (!atomic_load(&shared_info->is_shutdown_requested)) {
+		sleep(2U);
+	}
+
+	if (atomic_load(&shared_info->is_shutdown_requested)) {
+		return;
+	}
+
 	/* We want to track what the last state we acted on is */
 	static state_t last_operated_state = STATE_INVALID;
 	/* Grab state snapshot */

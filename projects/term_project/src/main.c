@@ -1,3 +1,4 @@
+#include "vent_control/vent_control.h"
 #include <pthread.h>
 #include <sys/utsname.h>
 
@@ -17,14 +18,14 @@
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
 #endif /* NDEBUG */
-#include "gate_control.h"
+#include "log_handler.h"
 #include "logger.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "servo_controller.h"
 #include "signal_handler.h"
 #include "supervisor_input.h"
-#include "warning_light.h"
+#include "vent_control.h"
 
 global_values_t shared_info = { 0 };
 
@@ -214,15 +215,15 @@ int32_t main(void) {
 	/* Global params init */
 	globals_init();
 	/* Start threads */
-	pthread_t gate_control_thread = { 0 };
-	pthread_t warning_light_thread = { 0 };
+	pthread_t vent_control_thread = { 0 };
+	pthread_t log_handler_thread = { 0 };
 	pthread_t sensor_monitoring_thread = { 0 };
 	pthread_t supervisor_input_thread = { 0 };
-	int32_t result = pthread_create(&gate_control_thread, NULL, &gate_control_thread_entry, (void *)&shared_info);
+	int32_t result = pthread_create(&vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create gate control thread");
 	}
-	result = pthread_create(&warning_light_thread, NULL, &warning_light_thread_entry, (void *)&shared_info);
+	result = pthread_create(&log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create warning light thread");
 	}
@@ -235,11 +236,11 @@ int32_t main(void) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
 	}
 
-	result = pthread_join(gate_control_thread, NULL);
+	result = pthread_join(vent_control_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join gate control thread");
 	}
-	result = pthread_join(warning_light_thread, NULL);
+	result = pthread_join(log_handler_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join warning light thread");
 	}
