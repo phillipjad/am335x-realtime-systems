@@ -1,0 +1,144 @@
+#include "warning_light.h"
+
+#include <pthread.h>
+#include <time.h>
+
+/* Local project includes after system libraries */
+#ifdef NDEBUG /* We only need GPIO control in release */
+#include "gpio_control.h"
+#endif /* NDEBUG */
+#include "logger.h"
+#include "project_constants.h"
+#include "project_types.h"
+
+/** Variable to point to shared global struct in this TU */
+static global_values_t *shared_info = NULL;
+/** Timespec describing how long a warning light blink should be active for */
+static const struct timespec blink_period = { .tv_sec = 0, .tv_nsec = WARNING_LIGHT_ACTIVE_DURATION_MS * NSEC_PER_MSEC };
+
+#ifdef NDEBUG
+/**
+ * @brief Blinks the warning lights using actual GPIO pins
+ */
+static void warning_lights_blink_hw(void) {
+	uint8_t led1_gpio = shared_info->config.gpio_layout.led_1;
+	uint8_t led2_gpio = shared_info->config.gpio_layout.led_2;
+
+
+	/* LED1 on, LED2 off */
+	gpio_set(led1_gpio, true);
+	gpio_clear(led2_gpio);
+	(void)nanosleep(&blink_period, NULL);
+
+	/* LED1 off, LED2 on */
+	gpio_clear(led1_gpio);
+	gpio_set(led2_gpio, true);
+	(void)nanosleep(&blink_period, NULL);
+
+	/* LED1 off, LED2 off */
+	gpio_clear(led2_gpio);
+}
+#else
+/**
+ * @brief Blinks the warning lights virtually through logs
+ */
+static void warning_lights_blink_sw(void) {
+	LOG("Warning light 1 on");
+	(void)nanosleep(&blink_period, NULL);
+	LOG("Warning light 1 off");
+	LOG("Warning light 2 on");
+	(void)nanosleep(&blink_period, NULL);
+	LOG("Warning light 2 off");
+}
+#endif /* NDEBUG */
+
+/**
+ * @brief Blinks the warning lights, determining whether software of hardware logic will be used at compile time
+ */
+static void warning_lights_blink(void) {
+#ifdef NDEBUG
+	warning_lights_blink_hw();
+#else
+	warning_lights_blink_sw();
+#endif /* NDEBUG */
+}
+
+/**
+ * @brief This function will continuously blink the warning lights for one second
+ */
+static void warning_lights_blink_one_second(void) {
+	/* Set stop time one second in the future */
+	struct timespec stop = { 0 };
+	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &stop);
+	++stop.tv_sec;
+
+	/* We're going to blink on a loop until we reach stop */
+	struct timespec now = { 0 };
+	do {
+		warning_lights_blink();
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	} while ((stop.tv_sec > now.tv_sec) || ((stop.tv_sec == now.tv_sec) && (stop.tv_nsec > now.tv_nsec)));
+}
+
+static void handle_light_logic(void) {
+	state_t last_state = STATE_INVALID;
+	state_t current_state = STATE_INVALID;
+	struct timespec arrival_time = { 0 };
+	pthread_mutex_lock(&shared_info->mutex);
+	current_state = shared_info->current_state;
+	arrival_time = shared_info->arrival_time;
+	bool light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	while ((!light_should_be_active) && (!atomic_load(&shared_info->is_shutdown_requested))) {
+		pthread_cond_wait(&shared_info->cv, &shared_info->mutex);
+		/* Update state while we have the mutex */
+		current_state = shared_info->current_state;
+		arrival_time = shared_info->arrival_time;
+		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	}
+	pthread_mutex_unlock(&shared_info->mutex);
+
+	/* While in states of interest, we'll make lights blink */
+	// Make sure timeout is not requested while we are blinking
+	static bool logged_time_diff = false;
+	while (light_should_be_active && (!atomic_load(&shared_info->is_shutdown_requested))) {
+		if ((current_state == STATE_ACTIVE) && (!logged_time_diff)) {
+			/* Get current time to see the time delay between active state and light activation */
+			struct timespec curr_time = { 0 };
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
+			log_time_difference_ms(curr_time, arrival_time, "blink lights");
+			logged_time_diff = true;
+		}
+		/* Blink lights and then loop */
+		warning_lights_blink();
+		pthread_mutex_lock(&shared_info->mutex);
+		last_state = current_state;
+		current_state = shared_info->current_state;
+		arrival_time = shared_info->arrival_time;
+		pthread_mutex_unlock(&shared_info->mutex);
+		light_should_be_active = (current_state == STATE_ACTIVE) || (current_state == STATE_FAIL_SAFE);
+	}
+	logged_time_diff = false;
+
+	/* We should check if we are clearing or recovering from fail-safe. If so blink an additional second  */
+	if ((current_state == STATE_CLEARING) || (last_state == STATE_FAIL_SAFE)) {
+		warning_lights_blink_one_second();
+		/* After deactivating warning lights, stamp time */
+		pthread_mutex_lock(&shared_info->mutex);
+		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->lights_off_time);
+		pthread_mutex_unlock(&shared_info->mutex);
+	}
+}
+
+/*--------------------------------------
+ * Function: warning_light_thread_entry
+ *--------------------------------------*/
+void *warning_light_thread_entry(void *arg) {
+	LOG("Starting warning light thread!");
+	shared_info = (global_values_t *)arg;
+	while (!atomic_load(&shared_info->is_shutdown_requested)) {
+		handle_light_logic();
+	}
+
+	LOG("Shutting down warning light thread");
+	return NULL;
+}
