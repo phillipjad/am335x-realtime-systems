@@ -1,5 +1,5 @@
-#ifndef WARNING_LIGHT_H
-#define WARNING_LIGHT_H
+#ifndef LOG_HANDLER_H
+#define LOG_HANDLER_H
 
 /**
  * @brief Thread entry point for the warning light module
@@ -9,4 +9,4 @@
  */
 void *log_handler_thread_entry(void *arg);
 
-#endif /* WARNING_LIGHT_H */
+#endif /* LOG_HANDLER_H */

@@ -22,7 +22,7 @@
 #define TIMEOUT_TIME_F (5.0)
 
 /* Filenames */
-#define CONFIG_FILENAME ("/p2_config.cfg")
+#define CONFIG_FILENAME ("/tp_config.cfg")
 
 /* Unit conversions */
 #define NSEC_PER_USEC (1000U)
