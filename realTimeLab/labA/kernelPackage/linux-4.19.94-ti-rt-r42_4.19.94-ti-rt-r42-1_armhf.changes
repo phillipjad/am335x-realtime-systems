@@ -1,0 +1,33 @@
+Format: 1.8
+Date: Fri, 03 Apr 2026 21:31:02 +0000
+Source: linux-4.19.94-ti-rt-r42
+Binary: linux-headers-4.19.94-ti-rt-r42 linux-image-4.19.94-ti-rt-r42 linux-libc-dev
+Architecture: armhf
+Version: 4.19.94-ti-rt-r42-1
+Distribution: buster
+Urgency: low
+Maintainer: debian <debian@beaglebone.localdomain>
+Changed-By: debian <debian@beaglebone.localdomain>
+Description:
+ linux-headers-4.19.94-ti-rt-r42 - Linux kernel headers for 4.19.94-ti-rt-r42 on armhf
+ linux-image-4.19.94-ti-rt-r42 - Linux kernel, version 4.19.94-ti-rt-r42
+ linux-libc-dev - Linux support headers for userspace development
+Changes:
+ linux-4.19.94-ti-rt-r42 (4.19.94-ti-rt-r42-1) buster; urgency=low
+ .
+   * Custom built Linux kernel.
+Checksums-Sha1:
+ b97cb7de2deda5b6bb02727ae248d01a3f629fc6 4755 linux-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.buildinfo
+ b1535a85c7efeaa55c1f68bbc4d51a969eaec9ee 11006768 linux-headers-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ 0445cebf7e751cf93fd95a2799ccbb9fd60544f7 28455808 linux-image-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ 7304f9fc08db5e21f97a8d926e3ef9aca392687f 1005528 linux-libc-dev_4.19.94-ti-rt-r42-1_armhf.deb
+Checksums-Sha256:
+ ca35f9094a0ef37a2c3b5f0e62ba52590877e6fe7926a00ccbb1431bddc6faff 4755 linux-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.buildinfo
+ 57e4ba2d2cba0cebd91048375212d8171876f2d0771e12802ece723e01ea929a 11006768 linux-headers-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ dccbe76aeb248fadaddd779fb1b5cd3f11f6f8afc4cd96ccfeb22c95487a1560 28455808 linux-image-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ 76579b4a16ef2509a9a61681aaf265061913ebce56b729a2565e86b1e67288e1 1005528 linux-libc-dev_4.19.94-ti-rt-r42-1_armhf.deb
+Files:
+ 969158554ab825e421eb1b19fb68c7b6 4755 kernel optional linux-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.buildinfo
+ 796e923ffb0cca2379c596657e454dec 11006768 kernel optional linux-headers-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ b76f5f41d2c254ce9c17c8ee7e094ac8 28455808 kernel optional linux-image-4.19.94-ti-rt-r42_4.19.94-ti-rt-r42-1_armhf.deb
+ 3ede9aab636c05a35c857c3fcd8062cc 1005528 devel optional linux-libc-dev_4.19.94-ti-rt-r42-1_armhf.deb
