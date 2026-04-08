@@ -38,18 +38,18 @@ typedef double float64_t;
 #define STATUS_SUCCESS (0)
 #define STATUS_FAIL (-1)
 
-#define CSV_HEADER "thread_id,iteration,scheduled_ns,actual_ns,jitter_ns,work_ns\n"
-
-/* ── Types ────────────────────────────────────────────────────────────────── */
+#define CSV_HEADER "thread_id,iteration,period_ns,scheduled_ns,actual_ns,jitter_ns,work_ns,deadline_missed\n"
 
 /* One activation measurement row */
 typedef struct {
 	uint32_t thread_id;
 	uint64_t iteration;
-	int64_t scheduled_ns; /* intended release time */
-	int64_t actual_ns;    /* actual start time */
-	int64_t jitter_ns;    /* lateness = actual - scheduled */
-	int64_t work_ns;      /* measured work duration for this activation */
+	int64_t  period_ns;        /* thread period — makes CSV self-describing */
+	int64_t  scheduled_ns;     /* intended release time */
+	int64_t  actual_ns;        /* actual start time */
+	int64_t  jitter_ns;        /* lateness = actual - scheduled */
+	int64_t  work_ns;          /* measured work duration for this activation */
+	uint32_t deadline_missed;  /* 1 if job finished after next release, else 0 */
 } sample_t;
 
 /* Immutable per-thread configuration, passed by value into thread_args_t */

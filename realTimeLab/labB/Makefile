@@ -15,7 +15,7 @@ CFLAGS := \
 CFLAGS_RELEASE := -O2
 CFLAGS_DEBUG   := -g -O0 -DDEBUG
 
-LDFLAGS := -lpthread -lrt
+LDFLAGS := -static -lpthread -lrt
 
 SRCS := labB.c
 HDRS := labB.h
