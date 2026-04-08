@@ -255,9 +255,7 @@ int main(int32_t argc, char *argv[]) {
 	/* Launch threads with scheduling policy applied before first instruction */
 	for (uint32_t ii = 0U; ii < THREAD_COUNT; ++ii) {
 		struct sched_param sp = {
-			.sched_priority = (app_cfg.sched_policy == SCHED_FIFO)
-			                  ? args[ii].config.fifo_priority
-			                  : 0,
+			.sched_priority = (app_cfg.sched_policy == SCHED_FIFO) ? args[ii].config.fifo_priority : 0,
 		};
 
 		pthread_attr_t attr;
