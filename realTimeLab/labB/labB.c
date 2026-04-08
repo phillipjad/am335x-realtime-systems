@@ -30,6 +30,22 @@ static int64_t timespec_diff_ns(const struct timespec *a, const struct timespec 
 	return timespec_to_ns(a) - timespec_to_ns(b);
 }
 
+/*
+ * Time-bounded busy work: spin calling clock_gettime until work_duration_ns
+ * of wall time has elapsed. Returns the actual measured work duration in nanoseconds.
+ */
+static int64_t do_work(int64_t work_duration_ns) {
+	struct timespec start = { 0 };
+	struct timespec now = { 0 };
+	struct timespec deadline = { 0 };
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	deadline = start;
+	timespec_add_ns(&deadline, work_duration_ns);
+	do {
+		clock_gettime(CLOCK_MONOTONIC, &now);
+	} while (timespec_diff_ns(&now, &deadline) < 0);
+	return timespec_to_ns(&now) - timespec_to_ns(&start);
+}
 
 static void signal_handler(int32_t signum) {
 	(void)signum;
@@ -42,9 +58,11 @@ void *periodic_thread_entry(void *arg) {
 	thread_stats_t stats = {
 		.jitter_min_ns = INT64_MAX,
 		.jitter_max_ns = INT64_MIN,
+		.work_min_ns = INT64_MAX,
+		.work_max_ns = INT64_MIN,
 	};
 
-	/* Establish the first absolute deadline: now + 1 period */
+	/* Establish the first absolute release time: now + 1 period */
 	struct timespec next_wakeup = { 0 };
 	clock_gettime(CLOCK_MONOTONIC, &next_wakeup);
 	timespec_add_ns(&next_wakeup, cfg.period_ns);
@@ -58,8 +76,12 @@ void *periodic_thread_entry(void *arg) {
 
 		int64_t scheduled_ns = timespec_to_ns(&next_wakeup);
 
-		/* Absolute sleep — EINTR safe */
-		int32_t ret;
+		/*
+		 * Sleep until the absolute release time
+		 * TIMER_ABSTIME ensures the release grid is fixed at t0 + k*period;
+		 * jitter in one period cannot accumulate into future periods.
+		 */
+		int32_t ret = 0;
 		do {
 			ret = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_wakeup, NULL);
 		} while (ret == EINTR && !atomic_load(cfg.shutdown));
@@ -68,25 +90,24 @@ void *periodic_thread_entry(void *arg) {
 			break;
 		}
 
-		/* Record actual wakeup on the same clock used for sleep */
+		/* Record actual start time on the same clock used for sleep */
 		struct timespec actual_ts = { 0 };
 		clock_gettime(CLOCK_MONOTONIC, &actual_ts);
 		int64_t actual_ns = timespec_to_ns(&actual_ts);
+		int64_t jitter_ns = actual_ns - scheduled_ns; /* lateness; >= 0 with ABSTIME */
+
+		/* Do bounded work and measure its actual duration */
+		int64_t work_ns = do_work(cfg.work_duration_ns);
 
 		/*
-		 * Jitter: always >= 0 because clock_nanosleep(TIMER_ABSTIME) wakes
-		 * at or after the target.  CLOCK_MONOTONIC_RAW is not used here:
-		 * clock_nanosleep does not support it, and mixing clocks would
-		 * introduce NTP-slew error into every jitter measurement.
+		 * Missed deadline: the job finishes after its next release time.
+		 * This covers both a late start (jitter > period) and a work overrun.
 		 */
-		int64_t jitter_ns = actual_ns - scheduled_ns;
-
-		/* Missed deadline: woke up past the next activation point */
-		if (jitter_ns > cfg.period_ns) {
+		if (actual_ns + work_ns > scheduled_ns + cfg.period_ns) {
 			stats.missed_deadlines++;
 		}
 
-		/* Update running stats */
+		/* Update lateness stats */
 		if (jitter_ns < stats.jitter_min_ns) {
 			stats.jitter_min_ns = jitter_ns;
 		}
@@ -95,6 +116,15 @@ void *periodic_thread_entry(void *arg) {
 		}
 		stats.jitter_sum_ns += jitter_ns;
 
+		/* Update work duration stats */
+		if (work_ns < stats.work_min_ns) {
+			stats.work_min_ns = work_ns;
+		}
+		if (work_ns > stats.work_max_ns) {
+			stats.work_max_ns = work_ns;
+		}
+		stats.work_sum_ns += work_ns;
+
 		/* Store sample — no I/O in the hot loop */
 		stats.samples[stats.sample_count] = (sample_t){
 			.thread_id = cfg.thread_id,
@@ -102,6 +132,7 @@ void *periodic_thread_entry(void *arg) {
 			.scheduled_ns = scheduled_ns,
 			.actual_ns = actual_ns,
 			.jitter_ns = jitter_ns,
+			.work_ns = work_ns,
 		};
 		stats.sample_count++;
 
@@ -112,15 +143,16 @@ void *periodic_thread_entry(void *arg) {
 
 		/*
 		 * Advance from the SCHEDULED time, not actual_ts.
-		 * If we overran, next_wakeup is already in the past and
+		 * If the job overran, next_wakeup is already in the past and
 		 * clock_nanosleep returns immediately, self-correcting to the grid.
 		 */
 		timespec_add_ns(&next_wakeup, cfg.period_ns);
 	}
 
-	/* Finalize average */
+	/* Finalize averages */
 	if (stats.sample_count > 0U) {
 		stats.jitter_avg_ns = (float64_t)stats.jitter_sum_ns / (float64_t)stats.sample_count;
+		stats.work_avg_ns = (float64_t)stats.work_sum_ns / (float64_t)stats.sample_count;
 	}
 
 	/* Write back to main's pre-allocated array */
@@ -133,8 +165,8 @@ static void write_csv(FILE *f, const thread_stats_t *stats, uint32_t nthreads) {
 	for (uint32_t t = 0U; t < nthreads; ++t) {
 		for (uint64_t ii = 0U; ii < stats[t].sample_count; ++ii) {
 			const sample_t *s = &stats[t].samples[ii];
-			fprintf(f, "%" PRIu32 ",%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 "\n", s->thread_id, s->iteration,
-			    s->scheduled_ns, s->actual_ns, s->jitter_ns);
+			fprintf(f, "%" PRIu32 ",%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 "\n", s->thread_id,
+			    s->iteration, s->scheduled_ns, s->actual_ns, s->jitter_ns, s->work_ns);
 		}
 	}
 }
@@ -142,29 +174,30 @@ static void write_csv(FILE *f, const thread_stats_t *stats, uint32_t nthreads) {
 static void print_summary(const thread_stats_t stats[THREAD_COUNT], const thread_config_t cfgs[THREAD_COUNT], int32_t sched_policy) {
 	const char *policy_name = (sched_policy == SCHED_FIFO) ? "SCHED_FIFO" : "SCHED_OTHER";
 	printf("Policy : %s\n\n", policy_name);
-	printf("%s %s %s %s %s %s %s\n", "Thread", "Period(ms)", "Samples", "Missed", "Jitter_Min(ns)", "Jitter_Max(ns)", "Jitter_Avg(ns)");
+	printf("%s %s %s %s %s %s %s %s\n", "Thread", "Period(ms)", "Samples", "Missed", "Jitter_Max(us)", "Jitter_Avg(us)",
+	    "Work_Avg(us)", "Work_Max(us)");
 
 	for (uint32_t ii = 0U; ii < THREAD_COUNT; ++ii) {
-		int64_t period_ms = cfgs[ii].period_ns / (NSEC_PER_SEC / 1000LL);
-		printf("T%" PRIu32 " %" PRId64 " %" PRIu64 " %" PRIu64 " %" PRId64 " %" PRId64 " %.2f\n", cfgs[ii].thread_id,
-		    period_ms, stats[ii].sample_count, stats[ii].missed_deadlines,
-		    (stats[ii].sample_count > 0U) ? stats[ii].jitter_min_ns : (int64_t)0,
-		    (stats[ii].sample_count > 0U) ? stats[ii].jitter_max_ns : (int64_t)0, stats[ii].jitter_avg_ns);
+		int64_t period_ms = cfgs[ii].period_ns / NSEC_PER_MSEC;
+		printf("T%" PRIu32 " %" PRId64 " %" PRIu64 " %" PRIu64 " %.1f %.1f %.1f %.1f\n", cfgs[ii].thread_id, period_ms,
+		    stats[ii].sample_count, stats[ii].missed_deadlines,
+		    (stats[ii].sample_count > 0U) ? (float64_t)stats[ii].jitter_max_ns / 1000.0 : 0.0, stats[ii].jitter_avg_ns / 1000.0,
+		    stats[ii].work_avg_ns / 1000.0, (stats[ii].sample_count > 0U) ? (float64_t)stats[ii].work_max_ns / 1000.0 : 0.0);
 	}
 }
 
 static void print_usage(const char *prog) {
 	fprintf(stderr,
-	    "Usage: %s [--sched-other | --sched-fifo] [duration_sec] [csv_path]\n"
+	    "Usage: %s [--sched-other | --sched-fifo] [--duration <sec>] [--output <path>]\n"
 	    "\n"
-	    "  --sched-other   Use SCHED_OTHER / CFS (default, no root required)\n"
-	    "  --sched-fifo    Use SCHED_FIFO with RMS priorities (requires root)\n"
-	    "  duration_sec    Run duration in seconds (default: %u)\n"
-	    "  csv_path        Path for raw CSV output (optional)\n"
+	    "  --sched-other        Use SCHED_OTHER / CFS (default, no root required)\n"
+	    "  --sched-fifo         Use SCHED_FIFO with RMS priorities (requires root)\n"
+	    "  --duration <sec>     Run duration in seconds (default: %u)\n"
+	    "  --output <path>      Path for raw CSV output (optional)\n"
 	    "\n"
 	    "Examples:\n"
-	    "  %s --sched-fifo 30 /tmp/fifo_idle.csv\n"
-	    "  %s --sched-other 10\n",
+	    "  %s --sched-fifo --duration 30 --output /tmp/fifo_idle.csv\n"
+	    "  %s --sched-other --duration 10\n",
 	    prog, DEFAULT_DURATION_SEC, prog, prog);
 }
 
@@ -173,7 +206,6 @@ static int32_t parse_args(int32_t argc, char *argv[], app_config_t *out) {
 	out->duration_sec = DEFAULT_DURATION_SEC;
 	out->csv_path[0] = '\0';
 
-	int32_t positional = 0;
 	for (int32_t ii = 1; ii < argc; ++ii) {
 		if (strcmp(argv[ii], "--sched-other") == 0) {
 			out->sched_policy = SCHED_OTHER;
@@ -182,8 +214,13 @@ static int32_t parse_args(int32_t argc, char *argv[], app_config_t *out) {
 		} else if (strcmp(argv[ii], "--help") == 0 || strcmp(argv[ii], "-h") == 0) {
 			print_usage(argv[0]);
 			exit(EXIT_SUCCESS);
-		} else if (positional == 0) {
-			/* First positional: duration */
+		} else if (strcmp(argv[ii], "--duration") == 0) {
+			if (ii + 1 >= argc) {
+				fprintf(stderr, "error: --duration requires an argument\n");
+				print_usage(argv[0]);
+				return STATUS_FAIL;
+			}
+			++ii;
 			char *end = NULL;
 			uint64_t val = (uint64_t)strtoull(argv[ii], &end, 10);
 			if (*end != '\0' || val == 0U) {
@@ -191,15 +228,18 @@ static int32_t parse_args(int32_t argc, char *argv[], app_config_t *out) {
 				print_usage(argv[0]);
 				return STATUS_FAIL;
 			}
-			out->duration_sec = (uint64_t)val;
-			positional++;
-		} else if (positional == 1) {
-			/* Second positional: csv path */
+			out->duration_sec = val;
+		} else if (strcmp(argv[ii], "--output") == 0) {
+			if (ii + 1 >= argc) {
+				fprintf(stderr, "error: --output requires an argument\n");
+				print_usage(argv[0]);
+				return STATUS_FAIL;
+			}
+			++ii;
 			strncpy(out->csv_path, argv[ii], MAX_CSV_PATH_LEN);
 			out->csv_path[MAX_CSV_PATH_LEN] = '\0';
-			positional++;
 		} else {
-			fprintf(stderr, "error: unexpected argument '%s'\n", argv[ii]);
+			fprintf(stderr, "error: unknown flag '%s'\n", argv[ii]);
 			print_usage(argv[0]);
 			return STATUS_FAIL;
 		}
@@ -235,14 +275,14 @@ int main(int32_t argc, char *argv[]) {
 
 	/* Thread configuration templates */
 	static const thread_config_t THREAD_TEMPLATES[THREAD_COUNT] = {
-		{ .thread_id = 1U, .period_ns = T1_PERIOD_NS, .fifo_priority = T1_FIFO_PRIO },
-		{ .thread_id = 2U, .period_ns = T2_PERIOD_NS, .fifo_priority = T2_FIFO_PRIO },
-		{ .thread_id = 3U, .period_ns = T3_PERIOD_NS, .fifo_priority = T3_FIFO_PRIO },
+		{ .thread_id = 1U, .period_ns = T1_PERIOD_NS, .work_duration_ns = T1_WORK_NS, .fifo_priority = T1_FIFO_PRIO },
+		{ .thread_id = 2U, .period_ns = T2_PERIOD_NS, .work_duration_ns = T2_WORK_NS, .fifo_priority = T2_FIFO_PRIO },
+		{ .thread_id = 3U, .period_ns = T3_PERIOD_NS, .work_duration_ns = T3_WORK_NS, .fifo_priority = T3_FIFO_PRIO },
 	};
 
 	thread_stats_t stats[THREAD_COUNT] = { 0 };
 	thread_args_t args[THREAD_COUNT] = { 0 };
-	pthread_t threads[THREAD_COUNT];
+	pthread_t threads[THREAD_COUNT] = { 0 };
 
 	for (uint32_t ii = 0U; ii < THREAD_COUNT; ++ii) {
 		args[ii].config = THREAD_TEMPLATES[ii];
@@ -258,9 +298,9 @@ int main(int32_t argc, char *argv[]) {
 			.sched_priority = (app_cfg.sched_policy == SCHED_FIFO) ? args[ii].config.fifo_priority : 0,
 		};
 
-		pthread_attr_t attr;
+		pthread_attr_t attr = { 0 };
 		pthread_attr_init(&attr);
-		pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED); /* must set or policy/prio are ignored */
+		pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
 		pthread_attr_setschedpolicy(&attr, app_cfg.sched_policy);
 		pthread_attr_setschedparam(&attr, &sp);
 
@@ -288,8 +328,8 @@ int main(int32_t argc, char *argv[]) {
 		pthread_join(threads[ii], NULL);
 	}
 
-	/* Extract configs for summary (policy/priority already copied into args) */
-	thread_config_t cfgs[THREAD_COUNT];
+	/* Extract configs for summary */
+	thread_config_t cfgs[THREAD_COUNT] = { 0 };
 	for (uint32_t ii = 0U; ii < THREAD_COUNT; ++ii) {
 		cfgs[ii] = args[ii].config;
 	}
