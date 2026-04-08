@@ -126,13 +126,13 @@ void *periodic_thread_entry(void *arg) {
 
 		/* Store sample — no I/O in the hot loop */
 		stats.samples[stats.sample_count] = (sample_t){
-			.thread_id       = cfg.thread_id,
-			.iteration       = stats.sample_count,
-			.period_ns       = cfg.period_ns,
-			.scheduled_ns    = scheduled_ns,
-			.actual_ns       = actual_ns,
-			.jitter_ns       = jitter_ns,
-			.work_ns         = work_ns,
+			.thread_id = cfg.thread_id,
+			.iteration = stats.sample_count,
+			.period_ns = cfg.period_ns,
+			.scheduled_ns = scheduled_ns,
+			.actual_ns = actual_ns,
+			.jitter_ns = jitter_ns,
+			.work_ns = work_ns,
 			.deadline_missed = deadline_missed,
 		};
 		stats.sample_count++;
@@ -167,8 +167,8 @@ static void write_csv(FILE *f, const thread_stats_t *stats, uint32_t nthreads) {
 		for (uint64_t ii = 0U; ii < stats[t].sample_count; ++ii) {
 			const sample_t *s = &stats[t].samples[ii];
 			fprintf(f, "%" PRIu32 ",%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRIu32 "\n",
-			    s->thread_id, s->iteration + 1U, s->period_ns,
-			    s->scheduled_ns, s->actual_ns, s->jitter_ns, s->work_ns, s->deadline_missed);
+			    s->thread_id, s->iteration + 1U, s->period_ns, s->scheduled_ns, s->actual_ns, s->jitter_ns, s->work_ns,
+			    s->deadline_missed);
 		}
 	}
 }
