@@ -18,13 +18,18 @@
 #ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
 #endif /* NDEBUG */
+#include "lcd_screen.h"
+#include "led.h"
 #include "log_handler.h"
 #include "logger.h"
+#include "potentiometer.h"
 #include "project_types.h"
 #include "sensor_monitoring.h"
 #include "servo_controller.h"
 #include "signal_handler.h"
+#include "state_management.h"
 #include "supervisor_input.h"
+#include "temperature_sensor.h"
 #include "vent_control.h"
 
 global_values_t shared_info = { 0 };
@@ -213,23 +218,23 @@ static void start_project_threads(project_threads_t *threads) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create supervisor input thread");
 	}
-	result = pthread_create(&threads->lcd_screen_thread, NULL, NULL, (void *)&shared_info);
+	result = pthread_create(&threads->lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create LCD screen thread");
 	}
-	result = pthread_create(&threads->temperature_sensor_thread, NULL, NULL, (void *)&shared_info);
+	result = pthread_create(&threads->temperature_sensor_thread, NULL, &temperature_sensor_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create temperature sensor thread");
 	}
-	result = pthread_create(&threads->led_thread, NULL, NULL, (void *)&shared_info);
+	result = pthread_create(&threads->led_thread, NULL, &led_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create LED thread");
 	}
-	result = pthread_create(&threads->potentiometer_thread, NULL, NULL, (void *)&shared_info);
+	result = pthread_create(&threads->potentiometer_thread, NULL, &potentiometer_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create potentiometer thread");
 	}
-	result = pthread_create(&threads->state_management_thread, NULL, NULL, (void *)&shared_info);
+	result = pthread_create(&threads->state_management_thread, NULL, &state_management_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create state management thread");
 	}
