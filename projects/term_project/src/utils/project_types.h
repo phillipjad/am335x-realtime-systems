@@ -35,6 +35,19 @@ typedef struct {
 	gpio_layout_t gpio_layout;
 } configuration_items_t;
 
+typedef enum {
+	VENT_CONTROL,
+	LOG_HANDLER,
+	SENSOR_MONITORING,
+	SUPERVISOR_INPUT,
+	LCD_SCREEN,
+	TEMP_SENSOR,
+	LED,
+	POTENTIOMETER,
+	STATE_MANAGEMENT,
+	NUM_THREADS
+} thread_index_e;
+
 /**
  * @brief Global struct used to share values across various threads
  */
@@ -49,6 +62,7 @@ typedef struct {
 	bool servo_health;                 /**< Servo health */
 	bool temperature_health;           /**< Temperature health */
 	bool relay_health;           	   /**< Relay health */
+	uint64_t heartbeats[NUM_THREADS];
 #ifndef NDEBUG
 #endif                              /* NDEBUG */
 } global_values_t;

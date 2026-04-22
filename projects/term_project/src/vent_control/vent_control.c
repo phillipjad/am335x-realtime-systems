@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
+#include "heartbeat.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -98,6 +99,7 @@ void *vent_control_thread_entry(void *arg) {
 	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_vent_logic();
+		increment_heartbeat(shared_info, VENT_CONTROL);
 	}
 	LOG("Shutting down vent control thread");
 	return NULL;
