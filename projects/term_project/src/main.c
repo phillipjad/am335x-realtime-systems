@@ -287,6 +287,8 @@ static void check_heartbeats() {
 			LOG("%s thread missed heartbeat %u time(s) in a row", thread_names[ii], num_missed_heartbeats[ii]);
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
 				// TODO: IMPLEMENT REAL DEADLOCK/STALL HANDLING LOGIC
+				LOG("%s thread has stalled or deadlocked. Heartbeat missed %u times in a row", thread_names[ii],
+				    num_missed_heartbeats[ii]);
 				exit(1);
 			}
 		}
