@@ -37,6 +37,19 @@ typedef struct {
 	gpio_layout_t gpio_layout;
 } configuration_items_t;
 
+typedef enum {
+	VENT_CONTROL,
+	LOG_HANDLER,
+	SENSOR_MONITORING,
+	SUPERVISOR_INPUT,
+	LCD_SCREEN,
+	TEMP_SENSOR,
+	LED,
+	POTENTIOMETER,
+	STATE_MANAGEMENT,
+	NUM_THREADS
+} thread_index_e;
+
 /**
  * @brief Global struct used to share values across various threads
  */
@@ -50,6 +63,7 @@ typedef struct {
 	struct timespec arrival_time;      /**< Train arrival time */
 	struct timespec clear_time;        /**< Train clear time */
 	struct timespec lights_off_time;   /**< Last time that lights were turned off */
+	uint64_t heartbeats[NUM_THREADS];
 #ifndef NDEBUG
 	atomic_bool debug_east_pending; /**< Debug mode: pending simulated east button press */
 	atomic_bool debug_west_pending; /**< Debug mode: pending simulated west button press */
