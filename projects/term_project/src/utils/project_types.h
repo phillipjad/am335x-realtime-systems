@@ -15,7 +15,7 @@
 typedef double float64_t;
 
 /** State Machine States */
-typedef enum { FAIL, AUTO } state_t;
+typedef enum { STATE_FAIL, STATE_FAIL_SAFE , STATE_AUTO } state_t;
 
 typedef struct {
 	uint8_t servo_chip; /**< chip number for servo */
