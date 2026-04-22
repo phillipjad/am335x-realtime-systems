@@ -27,4 +27,8 @@
 /* Unit conversions */
 #define NSEC_PER_USEC (1000U)
 
+/* System states */
+#define FAIL ("Fail")
+#define AUTO ("Auto")
+
 #endif /* PROJECT_CONSTANTS_H */
