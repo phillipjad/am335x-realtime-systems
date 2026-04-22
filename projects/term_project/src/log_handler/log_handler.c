@@ -1,4 +1,5 @@
 #include "log_handler.h"
+#include "heartbeat.h"
 #include "logger.h"
 #include "project_types.h"
 #include <unistd.h>
@@ -13,6 +14,7 @@ void *log_handler_thread_entry(void *arg) {
 	LOG("Starting log handler thread!");
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		sleep(2U);
+		increment_heartbeat(shared_info, LOG_HANDLER);
 	}
 
 	LOG("Shutting down log handler thread");

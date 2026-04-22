@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
+#include "heartbeat.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
@@ -106,6 +107,7 @@ void *supervisor_input_thread_entry(void *args) {
 
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_supervisor_input();
+		increment_heartbeat(shared_info, SUPERVISOR_INPUT);
 	}
 
 	LOG("Shutting down supervisor thread...");

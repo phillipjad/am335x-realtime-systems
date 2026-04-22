@@ -1,4 +1,3 @@
-#include "vent_control/vent_control.h"
 #include <pthread.h>
 #include <sys/utsname.h>
 
@@ -45,9 +44,6 @@ typedef struct {
 	pthread_t potentiometer_thread;
 	pthread_t state_management_thread;
 } project_threads_t;
-
-static void start_project_threads(project_threads_t *threads);
-static void join_project_threads(project_threads_t *threads);
 
 /*--------------------------------------
  * Static Function: application_init
@@ -279,6 +275,24 @@ static void join_project_threads(project_threads_t *threads) {
 	}
 }
 
+static void check_heartbeats() {
+	uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
+	uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
+	char *thread_names[NUM_THREADS] = { "Vent controller", "Log handler", "Sensor monitoring", "Supervisor input",
+		"LCD screen", "Temp sensor", "LED", "Potentiometer", "State management" };
+	static const uint8_t MAX_MISSED_HEARTBEATS = 5U;
+	for (uint8_t ii = 0U; ii < NUM_THREADS; ++ii) {
+		if (shared_info.heartbeats[ii] <= prev_heartbeats[ii]) {
+			++num_missed_heartbeats[ii];
+			LOG("%s thread missed heartbeat %u time(s) in a row", thread_names[ii], num_missed_heartbeats[ii]);
+			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
+				// TODO: IMPLEMENT REAL DEADLOCK/STALL HANDLING LOGIC
+				exit(1);
+			}
+		}
+	}
+}
+
 
 /* Application entrypoint */
 int32_t main(void) {
@@ -316,6 +330,11 @@ int32_t main(void) {
 
 	project_threads_t threads = { 0 };
 	start_project_threads(&threads);
+	while (!atomic_load(&shared_info.is_shutdown_requested)) {
+		struct timespec heartbeat_check_ticker = { .tv_sec = 5L, .tv_nsec = 0L };
+		nanosleep(&heartbeat_check_ticker, NULL);
+		check_heartbeats();
+	}
 	join_project_threads(&threads);
 
 	LOG("Starting application shutdown sequence...");

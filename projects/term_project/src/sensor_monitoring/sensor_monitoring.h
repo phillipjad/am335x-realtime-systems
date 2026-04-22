@@ -14,18 +14,16 @@ void *sensor_monitoring_thread_entry(void *arg);
 /**
  * @brief Handler for when button event is detected
  *
- * @param[in] shared_info Shared variables
- * @param[in] direction Incoming train direction
+ * @param[in] train_direction Incoming train direction
  * @return void
  */
-void sensor_monitoring(global_values_t *shared_info, direction_t train_direction);
+void sensor_monitoring(direction_t train_direction);
 
 /**
  * @brief Fail-safe for train buttons
  *
- * @param[in] shared_info Shared variables
  * @return void
  */
-void failsafe_timeout(global_values_t *shared_info);
+void failsafe_timeout(void);
 
 #endif /* SENSOR_MONITORING_H */

@@ -8,10 +8,12 @@
 #ifdef NDEBUG
 #include "gpio_control.h"
 #endif
+#include "heartbeat.h"
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
 
+static global_values_t *shared_info = NULL;
 static struct timespec last_clearing_time = { 0 };
 
 /*--------------------------------------
@@ -57,7 +59,7 @@ static float64_t time_taken(struct timespec *start, struct timespec *end) {
 /*-----------------------------
  * Function: sensor_monitoring
  *-----------------------------*/
-void sensor_monitoring(global_values_t *shared_info, direction_t train_direction) {
+void sensor_monitoring(direction_t train_direction) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
@@ -143,7 +145,7 @@ void sensor_monitoring(global_values_t *shared_info, direction_t train_direction
 /*-----------------------------
  * Function: failsafe_timeout
  *-----------------------------*/
-void failsafe_timeout(global_values_t *shared_info) {
+void failsafe_timeout(void) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
@@ -187,7 +189,7 @@ void failsafe_timeout(global_values_t *shared_info) {
 	}
 }
 
-static void check_for_idle(global_values_t *shared_info, bool was_button_pressed) {
+static void check_for_idle(bool was_button_pressed) {
 	/* Get current state */
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t current_state = shared_info->current_state;
@@ -213,7 +215,7 @@ static void check_for_idle(global_values_t *shared_info, bool was_button_pressed
  *------------------------------------------*/
 void *sensor_monitoring_thread_entry(void *arg) {
 	LOG("Starting sensor_monitoring!");
-	global_values_t *shared_info = (global_values_t *)arg;
+	shared_info = (global_values_t *)arg;
 	struct timespec timer = { 0 };
 	// Waiting period using debounce parameter
 	timer.tv_sec = (time_t)SAMPLE_MS / (time_t)MSEC_PER_SEC;
@@ -231,33 +233,34 @@ void *sensor_monitoring_thread_entry(void *arg) {
 #ifdef NDEBUG
 		// Check west approach button
 		if (read_with_debounce(&west_button)) {
-			sensor_monitoring(shared_info, DIRECTION_WEST);
+			sensor_monitoring(DIRECTION_WEST);
 			button_pressed = true;
 		}
 
 		if (read_with_debounce(&east_button)) {
-			sensor_monitoring(shared_info, DIRECTION_EAST);
+			sensor_monitoring(DIRECTION_EAST);
 			button_pressed = true;
 		}
 #else
 		// In debug mode, gpio_map is not initialized — use supervisor-injected atomic flags instead
 		if (atomic_exchange(&shared_info->debug_east_pending, false)) {
-			sensor_monitoring(shared_info, DIRECTION_EAST);
+			sensor_monitoring(DIRECTION_EAST);
 			button_pressed = true;
 		}
 		if (atomic_exchange(&shared_info->debug_west_pending, false)) {
-			sensor_monitoring(shared_info, DIRECTION_WEST);
+			sensor_monitoring(DIRECTION_WEST);
 			button_pressed = true;
 		}
 #endif /* NDEBUG */
 
 		/* Check if we should revert back to idle. This will **NOT** interrupt failsafe logic */
-		check_for_idle(shared_info, button_pressed);
+		check_for_idle(button_pressed);
 
 		// Failsafe initiated
-		failsafe_timeout(shared_info);
+		failsafe_timeout();
 		// sleep
 		nanosleep(&timer, NULL);
+		increment_heartbeat(shared_info, SENSOR_MONITORING);
 	}
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
