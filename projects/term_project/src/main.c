@@ -29,6 +29,21 @@
 
 global_values_t shared_info = { 0 };
 
+typedef struct {
+	pthread_t vent_control_thread;
+	pthread_t log_handler_thread;
+	pthread_t sensor_monitoring_thread;
+	pthread_t supervisor_input_thread;
+	pthread_t lcd_screen_thread;
+	pthread_t temperature_sensor_thread;
+	pthread_t led_thread;
+	pthread_t potentiometer_thread;
+	pthread_t state_management_thread;
+} project_threads_t;
+
+static void start_project_threads(project_threads_t *threads);
+static void join_project_threads(project_threads_t *threads);
+
 /*--------------------------------------
  * Static Function: application_init
  *--------------------------------------*/
@@ -181,6 +196,85 @@ static void log_system_info(void) {
 	LOG("System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version, sys_info.machine);
 }
 
+static void start_project_threads(project_threads_t *threads) {
+	int32_t result = pthread_create(&threads->vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create vent control thread");
+	}
+	result = pthread_create(&threads->log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create log handler thread");
+	}
+	result = pthread_create(&threads->sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create sensor monitoring thread");
+	}
+	result = pthread_create(&threads->supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create supervisor input thread");
+	}
+	result = pthread_create(&threads->lcd_screen_thread, NULL, NULL, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create LCD screen thread");
+	}
+	result = pthread_create(&threads->temperature_sensor_thread, NULL, NULL, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create temperature sensor thread");
+	}
+	result = pthread_create(&threads->led_thread, NULL, NULL, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create LED thread");
+	}
+	result = pthread_create(&threads->potentiometer_thread, NULL, NULL, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create potentiometer thread");
+	}
+	result = pthread_create(&threads->state_management_thread, NULL, NULL, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create state management thread");
+	}
+}
+
+static void join_project_threads(project_threads_t *threads) {
+	int32_t result = pthread_join(threads->vent_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join vent control thread");
+	}
+	result = pthread_join(threads->log_handler_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join log handler thread");
+	}
+	result = pthread_join(threads->sensor_monitoring_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join sensor monitoring thread");
+	}
+	result = pthread_join(threads->supervisor_input_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join supervisor input thread");
+	}
+	result = pthread_join(threads->lcd_screen_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join LCD screen thread");
+	}
+	result = pthread_join(threads->temperature_sensor_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join temperature sensor thread");
+	}
+	result = pthread_join(threads->led_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join LED thread");
+	}
+	result = pthread_join(threads->potentiometer_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join potentiometer thread");
+	}
+	result = pthread_join(threads->state_management_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG("Failed to join state management thread");
+	}
+}
+
+
 /* Application entrypoint */
 int32_t main(void) {
 #ifdef NDEBUG /* Only need this in release */
@@ -214,44 +308,10 @@ int32_t main(void) {
 
 	/* Global params init */
 	globals_init();
-	/* Start threads */
-	pthread_t vent_control_thread = { 0 };
-	pthread_t log_handler_thread = { 0 };
-	pthread_t sensor_monitoring_thread = { 0 };
-	pthread_t supervisor_input_thread = { 0 };
-	int32_t result = pthread_create(&vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create gate control thread");
-	}
-	result = pthread_create(&log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create warning light thread");
-	}
-	result = pthread_create(&sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create sensor monitoring thread");
-	}
-	result = pthread_create(&supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
 
-	result = pthread_join(vent_control_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join gate control thread");
-	}
-	result = pthread_join(log_handler_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join warning light thread");
-	}
-	result = pthread_join(sensor_monitoring_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join sensor monitoring thread");
-	}
-	result = pthread_join(supervisor_input_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join supervisor input thread");
-	}
+	project_threads_t threads = { 0 };
+	start_project_threads(&threads);
+	join_project_threads(&threads);
 
 	LOG("Starting application shutdown sequence...");
 
