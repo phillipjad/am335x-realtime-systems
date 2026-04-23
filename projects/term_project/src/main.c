@@ -63,28 +63,24 @@ static void application_init(void) {
 static void hardware_init(void) {
 	LOG("Initializing mmap");
 	gpio_map_init();
-	LOG("Initialized hardware buttons");
-	configuration_items_t *user_config = &shared_info.config;
-	gpio_set_direction(user_config->gpio_layout.east_button, GPIO_IN);
-	gpio_set_direction(user_config->gpio_layout.west_button, GPIO_IN);
 
 	LOG("Initialized hardware LEDs");
-	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
-	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
 
-	// Start with lights off
-	gpio_set(user_config->gpio_layout.led_1, false);
-	gpio_set(user_config->gpio_layout.led_2, false);
+	// Start with target reached off and system ok on
+	gpio_set(user_config->gpio_layout.target_temp_led, false);
+	gpio_set(user_config->gpio_layout.system_ok_led, true);
 
 	LOG("Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
-}
 
 	LOG("Initialized LCD");
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
 	(void)snprintf(i2c_path, MAX_FILE_PATH_LENGTH, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+}
 #endif /* NDEBUG */
 
 /*--------------------------------------
@@ -125,26 +121,6 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 
 	LOG("Prompting user for configuration items");
 
-	/* East Button Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for East Button");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for East Button pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.east_button);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for East Button GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* West Button Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for West Button");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for West Button pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.west_button);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for West Button GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Led 1 Pin */
 	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
 	if (result != STATUS_SUCCESS) {
@@ -182,7 +158,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	}
 	parse_input_to_uint8(input_buffer, &user_config->gpio_layout.lcd_i2c_bus);
 	// Use I2C-2
-	if(user_config->gpio_layout.lcd_i2c_bus != 2U) {
+	if (user_config->gpio_layout.lcd_i2c_bus != 2U) {
 		LOG_AND_EXIT("Please use the I2C-2 bus");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
