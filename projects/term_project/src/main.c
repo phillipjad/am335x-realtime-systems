@@ -79,6 +79,12 @@ static void hardware_init(void) {
 	LOG("Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
 }
+
+	LOG("Initialized LCD");
+	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
+	(void)snprintf(i2c_path, MAX_FILE_PATH_LENGTH, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
+	// Only i2c-# value allowed is 2, so address will be 0x27
+	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 #endif /* NDEBUG */
 
 /*--------------------------------------
@@ -168,6 +174,19 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
+
+	/* LCD Setup */
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What I2C bus should be used for the LCD? (Ex: '2')");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for LCD bus");
+	}
+	parse_input_to_uint8(input_buffer, &user_config->gpio_layout.lcd_i2c_bus);
+	// Use I2C-2
+	if(user_config->gpio_layout.lcd_i2c_bus != 2U) {
+		LOG_AND_EXIT("Please use the I2C-2 bus");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* Servo Pin */
 }
 #endif /* NDEBUG */
 #endif /* !USE_CONFIG */

@@ -15,7 +15,7 @@
 typedef double float64_t;
 
 /** State Machine States */
-typedef enum { STATE_FAIL, STATE_FAIL_SAFE , STATE_AUTO } state_t;
+typedef enum { STATE_FAIL, STATE_FAIL_SAFE , STATE_RUNNING } state_t;
 
 typedef struct {
 	uint8_t servo_chip; /**< chip number for servo */
@@ -26,7 +26,8 @@ typedef struct {
 	uint8_t target_temp_led;       /**< Pin for target_temp_led */
 	uint8_t system_ok_led;         /**< Pin for system_ok_led */
 	uint8_t system_fail_led;       /**< Pin for system_fail_led */
-	uint8_t lcd; 		       /**< Pin for LCD screen */
+	uint8_t lcd_i2c_bus;	       /**< Bus for LCD screen */
+	int lcd_fd; 		       /**< file descriptor for LCD screen */
 	uint8_t potentiometer; 	       /**< Pin for potentiometer */
 	servo_t servo;       	       /**< Pin for servo */
 } gpio_layout_t;
