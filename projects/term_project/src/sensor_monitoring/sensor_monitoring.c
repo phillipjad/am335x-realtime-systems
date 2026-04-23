@@ -59,6 +59,8 @@ static float64_t time_taken(struct timespec *start, struct timespec *end) {
 /*-----------------------------
  * Function: sensor_monitoring
  *-----------------------------*/
+/*
+// Commenting out in case needed later
 void sensor_monitoring(direction_t train_direction) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
@@ -116,7 +118,7 @@ void sensor_monitoring(direction_t train_direction) {
 			} else {
 				// Set state to clear and clear global variables
 				shared_info->current_state = STATE_CLEARING;
-				/* Save time where we reached clearing state so that we can reset after 1 second */
+				// Save time where we reached clearing state so that we can reset after 1 second
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &last_clearing_time);
 				shared_info->current_direction = DIRECTION_NONE;
 				// Not clearing end time for servo activation after 1 second
@@ -138,9 +140,10 @@ void sensor_monitoring(direction_t train_direction) {
 			LOG("CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
 		}
 	} else {
-		/* MISRA requires else */
+		//MISRA requires else
 	}
 }
+*/
 
 /*-----------------------------
  * Function: failsafe_timeout

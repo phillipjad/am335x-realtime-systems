@@ -63,7 +63,7 @@ static void application_init(void) {
 static void hardware_init(void) {
 	LOG("Initializing mmap");
 	gpio_map_init();
-
+	configuration_items_t *user_config = &shared_info.config;
 	LOG("Initialized hardware LEDs");
 	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
@@ -91,10 +91,7 @@ static void globals_init(void) {
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
-	shared_info.current_direction = DIRECTION_NONE;
-	shared_info.arrival_time = (struct timespec){ 0 };
-	shared_info.clear_time = (struct timespec){ 0 };
-}
+	}
 
 /*--------------------------------------
  * Static Function: log_mode

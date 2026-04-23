@@ -17,7 +17,7 @@ void *sensor_monitoring_thread_entry(void *arg);
  * @param[in] train_direction Incoming train direction
  * @return void
  */
-void sensor_monitoring(direction_t train_direction);
+//void sensor_monitoring(direction_t train_direction);
 
 /**
  * @brief Fail-safe for train buttons
