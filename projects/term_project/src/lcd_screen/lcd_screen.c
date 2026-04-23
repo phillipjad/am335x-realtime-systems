@@ -6,6 +6,7 @@
 #include "heartbeat.h"
 #include "logger.h"
 #include "project_types.h"
+#include "project_constants.h"
 
 #ifdef NDEBUG /* Use LCD packages for release mode */
 #include <fcntl.h>
@@ -156,7 +157,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	shared_info = (global_values_t *)arg;
 
 	// Setup internal values
-	int fd = shared_info.config.gpio_layout.lcd_fd;
+	int fd = shared_info->config.gpio_layout.lcd_fd;
 	float64_t latest_target_temp = 0;
 	float64_t latest_target_temp_timestamp = 0;
 

@@ -121,24 +121,24 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 
 	LOG("Prompting user for configuration items");
 
-	/* Led 1 Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
+	/* target temperature status LED Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for target temperature status LED");
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for LED 1 pin");
+		LOG_AND_EXIT("Failed to get user input for target temperature status pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_1);
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.target_temp_led);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for LED 1 GPIO");
+		LOG_AND_EXIT("Failed to parse user input for target temperature status LED GPIO");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* Led 2 Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 2");
+	/* system health LED Pin */
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for system health LED");
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for LED 2 pin");
+		LOG_AND_EXIT("Failed to get user input for system health LED pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_2);
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.system_ok_led);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for LED 2 GPIO");
+		LOG_AND_EXIT("Failed to parse user input for system health LED GPIO");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
