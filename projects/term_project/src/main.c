@@ -27,7 +27,6 @@
 #include "servo_controller.h"
 #include "signal_handler.h"
 #include "state_management.h"
-#include "supervisor_input.h"
 #include "temperature_sensor.h"
 #include "vent_control.h"
 
@@ -77,7 +76,7 @@ static void hardware_init(void) {
 
 	LOG("Initialized LCD");
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
-	(void)snprintf(i2c_path, MAX_FILE_PATH_LENGTH, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
+	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 }
@@ -91,6 +90,8 @@ static void globals_init(void) {
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
+	shared_info.servo_activation_time = (struct timespec){ 0 };
+	shared_info.servo_health = true;
 	}
 
 /*--------------------------------------
@@ -202,10 +203,6 @@ static void start_project_threads(project_threads_t *threads) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
-	result = pthread_create(&threads->supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
 	result = pthread_create(&threads->lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create LCD screen thread");
@@ -240,10 +237,6 @@ static void join_project_threads(project_threads_t *threads) {
 	result = pthread_join(threads->sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG("Failed to join sensor monitoring thread");
-	}
-	result = pthread_join(threads->supervisor_input_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join supervisor input thread");
 	}
 	result = pthread_join(threads->lcd_screen_thread, NULL);
 	if (result != STATUS_SUCCESS) {

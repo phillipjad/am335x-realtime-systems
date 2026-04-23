@@ -5,11 +5,12 @@
 #include "project_types.h"
 
 /* Config file key definitions */
-#define EAST_BUTTON_GPIO_KEY ("EAST_BUTTON_GPIO")
-#define WEST_BUTTON_GPIO_KEY ("WEST_BUTTON_GPIO")
-#define LED_1_GPIO_KEY ("LED_1_GPIO")
-#define LED_2_GPIO_KEY ("LED_2_GPIO")
+#define TARGET_TEMP_LED_GPIO_KEY ("TARGET_TEMP_LED_GPIO")
+#define SYSTEM_OK_LED_GPIO_KEY ("SYSTEM_OK_LED_GPIO")
+#define SYSTEM_FAIL_LED_GPIO_KEY ("SYSTEM_FAIL_LED_GPIO")
+#define LCD_IC2_NUMBER_KEY ("LCD_IC2_NUMBER")
 #define SERVO_GPIO_PIN ("SERVO_GPIO")
+#define POTENTIOMETER_GPIO_PIN ("POTENTIOMETER_GPIO")
 
 /* Config file key definitions */
 

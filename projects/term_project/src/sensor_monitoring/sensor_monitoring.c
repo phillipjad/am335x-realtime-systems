@@ -14,11 +14,11 @@
 #include "project_types.h"
 
 static global_values_t *shared_info = NULL;
-static struct timespec last_clearing_time = { 0 };
 
 /*--------------------------------------
  * Function: read_with_debounce
  *--------------------------------------*/
+/*
 #ifdef NDEBUG
 static bool read_with_debounce(button_debounce_t *d) {
 	uint8_t raw = gpio_read(d->pin_id);
@@ -43,7 +43,8 @@ static bool read_with_debounce(button_debounce_t *d) {
 	}
 	return pressed;
 }
-#endif /* NDEBUG */
+#endif  NDEBUG
+*/
 
 /*------------------------
  * Function: time_taken
@@ -67,7 +68,7 @@ void sensor_monitoring(direction_t train_direction) {
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t snapshot_state = shared_info->current_state;
 	direction_t snapshot_direction = shared_info->current_direction;
-	struct timespec snapshot_arrival_time = shared_info->arrival_time;
+	struct timespec snapshot_activation_time = shared_info->servo_activation_time;
 	// Release lock
 	pthread_mutex_unlock(&shared_info->mutex);
 
@@ -83,7 +84,7 @@ void sensor_monitoring(direction_t train_direction) {
 			// Store direction_t
 			shared_info->current_direction = train_direction;
 			// 5 second timer - log current time
-			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->arrival_time);
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &shared_info->servo_activation_time);
 			// Wake up lights and servo threads
 			pthread_cond_broadcast(&shared_info->cv);
 		}
@@ -100,7 +101,7 @@ void sensor_monitoring(direction_t train_direction) {
 		// End 5 second timer - log current time
 		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &second_button_time);
 		// Calculate time taken
-		float64_t overall_time = time_taken(&snapshot_arrival_time, &second_button_time);
+		float64_t overall_time = time_taken(&snapshot_activation_time, &second_button_time);
 		// Used for log flow
 		bool fail_safe_active = false;
 
@@ -109,7 +110,7 @@ void sensor_monitoring(direction_t train_direction) {
 		// If state is still active even after potential context switch
 		if (shared_info->current_state == STATE_ACTIVE) {
 			// Check if train direction is still on the same button or has arrived to the next button
-			if (snapshot_direction == train_direction || overall_time > TIMEOUT_TIME_F) {
+			if (snapshot_direction == train_direction || overall_time > SERVO_TIMEOUT_MS_TIME_F) {
 				// Train has not moved since last button press
 				shared_info->current_state = STATE_FAIL_SAFE;
 				fail_safe_active = true;
@@ -122,7 +123,7 @@ void sensor_monitoring(direction_t train_direction) {
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &last_clearing_time);
 				shared_info->current_direction = DIRECTION_NONE;
 				// Not clearing end time for servo activation after 1 second
-				shared_info->arrival_time = (struct timespec){ 0 };
+				shared_info->servo_activation_time = (struct timespec){ 0 };
 				// Set clear time
 				shared_info->clear_time = second_button_time;
 			}
@@ -153,26 +154,26 @@ void failsafe_timeout(void) {
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t snapshot_state = shared_info->current_state;
-	struct timespec snapshot_arrival_time = shared_info->arrival_time;
+	struct timespec snapshot_activation_time = shared_info->servo_activation_time;
 	// Release lock
 	pthread_mutex_unlock(&shared_info->mutex);
 
 	// Check if in active state and longer than 5 seconds
-	if (snapshot_state == STATE_ACTIVE) {
+	if (snapshot_state == STATE_RUNNING) {
 		struct timespec current_time = { 0 };
 		// Grab current amount of time passed
 		(void)clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
-		float64_t overall_time = time_taken(&snapshot_arrival_time, &current_time);
+		float64_t overall_time = time_taken(&snapshot_activation_time, &current_time);
 
-		// If longer than 5 seconds go to fail-safe state
-		if (overall_time > TIMEOUT_TIME_F) {
+		// If longer than 200ms go to fail-safe state
+		if (overall_time > SERVO_TIMEOUT_MS_TIME_F) {
 			// Used for log flow
 			bool fail_safe_active = false;
 			// Grab lock
 			pthread_mutex_lock(&shared_info->mutex);
 
 			// If state is still active even after potential context switch
-			if (shared_info->current_state == STATE_ACTIVE) {
+			if (shared_info->current_state == STATE_RUNNING) {
 				// Enter fail-safe state
 				shared_info->current_state = STATE_FAIL_SAFE;
 				// Set fail_safe_active to true
@@ -183,35 +184,34 @@ void failsafe_timeout(void) {
 			// Release lock
 			pthread_mutex_unlock(&shared_info->mutex);
 			if (fail_safe_active) {
-				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %lf seconds. Awaiting supervisor \"clear\" "
-				    "or "
-				    "\"c\"...",
-				    TIMEOUT_TIME_F);
+				LOG("FAILSAFE TIMEOUT ACTIVE: Vent did move within %u seconds.", SERVO_TIMEOUT_MS_TIME_F);
 			}
 		}
 	}
 }
 
+/*
 static void check_for_idle(bool was_button_pressed) {
-	/* Get current state */
+	// Get current state
 	pthread_mutex_lock(&shared_info->mutex);
 	state_t current_state = shared_info->current_state;
 	pthread_mutex_unlock(&shared_info->mutex);
 
-	/* Get current sys time */
+	//Get current sys time
 	struct timespec curr_time = { 0 };
 	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
 
-	/* Set to idle after 2 second of clearing. 1 second for warning lights and 1 secnod for gate */
+	// Set to idle after 2 second of clearing. 1 second for warning lights and 1 secnod for gate
 	static const time_t clear_time_offset = 2L;
 	if ((current_state == STATE_CLEARING) && (!was_button_pressed) &&
 	    ((curr_time.tv_sec - last_clearing_time.tv_sec) >= clear_time_offset)) {
-		/* Reset state machine to idle */
+		// Reset state machine to idle
 		pthread_mutex_lock(&shared_info->mutex);
 		shared_info->current_state = STATE_IDLE;
 		pthread_mutex_unlock(&shared_info->mutex);
 	}
 }
+*/
 
 /*------------------------------------------
  * Function: sensor_monitoring_thread_entry
@@ -224,40 +224,16 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	timer.tv_sec = (time_t)SAMPLE_MS / (time_t)MSEC_PER_SEC;
 	timer.tv_nsec = (__syscall_slong_t)SAMPLE_MS % (__syscall_slong_t)MSEC_PER_SEC * (__syscall_slong_t)NSEC_PER_MSEC;
 
-	// Button setup
-#ifdef NDEBUG
-	button_debounce_t east_button = { shared_info->config.gpio_layout.east_button, 0, 0, 0, 0 };
-	button_debounce_t west_button = { shared_info->config.gpio_layout.west_button, 0, 0, 0, 0 };
-#endif /* NDEBUG */
-
-	// Check for button press
+	// Check for servo events based on temperature
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		bool button_pressed = false;
 #ifdef NDEBUG
 		// Check west approach button
-		if (read_with_debounce(&west_button)) {
-			sensor_monitoring(DIRECTION_WEST);
-			button_pressed = true;
-		}
-
-		if (read_with_debounce(&east_button)) {
-			sensor_monitoring(DIRECTION_EAST);
-			button_pressed = true;
-		}
 #else
 		// In debug mode, gpio_map is not initialized — use supervisor-injected atomic flags instead
-		if (atomic_exchange(&shared_info->debug_east_pending, false)) {
-			sensor_monitoring(DIRECTION_EAST);
-			button_pressed = true;
-		}
-		if (atomic_exchange(&shared_info->debug_west_pending, false)) {
-			sensor_monitoring(DIRECTION_WEST);
-			button_pressed = true;
-		}
 #endif /* NDEBUG */
 
 		/* Check if we should revert back to idle. This will **NOT** interrupt failsafe logic */
-		check_for_idle(button_pressed);
+		//check_for_idle(button_pressed);
 
 		// Failsafe initiated
 		failsafe_timeout();

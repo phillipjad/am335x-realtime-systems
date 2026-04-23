@@ -73,16 +73,18 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return STATUS_FAIL;
 	}
 
-	if (strcmp(key, EAST_BUTTON_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.east_button);
-	} else if (strcmp(key, WEST_BUTTON_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.west_button);
-	} else if (strcmp(key, LED_1_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.led_1);
-	} else if (strcmp(key, LED_2_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.led_2);
+	if (strcmp(key, TARGET_TEMP_LED_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.target_temp_led);
+	} else if (strcmp(key, SYSTEM_OK_LED_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.system_ok_led);
+	} else if (strcmp(key, SYSTEM_FAIL_LED_GPIO_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.system_fail_led);
 	} else if (strcmp(key, SERVO_GPIO_PIN) == 0) {
 		return parse_pwm_input(value, &config->gpio_layout.servo.servo_chip, &config->gpio_layout.servo.servo_channel);
+	} else if (strcmp(key, LCD_IC2_NUMBER_KEY) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.lcd_i2c_bus);
+	} else if (strcmp(key, POTENTIOMETER_GPIO_PIN) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.potentiometer);
 	} else {
 		LOG("Received unknown config key: %s", key);
 		return STATUS_FAIL;

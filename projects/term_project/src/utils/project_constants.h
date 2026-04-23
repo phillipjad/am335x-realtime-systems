@@ -18,8 +18,8 @@
 #define SAMPLE_MS (5)
 #define STABLE_NEEDED (6)
 
-/* Train Timeout Time */
-#define TIMEOUT_TIME_F (5.0)
+/* Timeout Times */
+#define SERVO_TIMEOUT_MS_TIME_F (200U)
 
 /* Filenames */
 #define CONFIG_FILENAME ("/tp_config.cfg")

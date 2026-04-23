@@ -61,6 +61,7 @@ typedef struct {
 	float64_t current_temp;            /**< Current temperature */
 	float64_t target_temp;             /**< Target temperature */
 	bool servo_health;                 /**< Servo health */
+	struct timespec servo_activation_time;      /**< Train arrival time */
 	bool temperature_health;           /**< Temperature health */
 	bool relay_health;           	   /**< Relay health */
 	uint64_t heartbeats[NUM_THREADS];
