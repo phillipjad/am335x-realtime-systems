@@ -84,7 +84,7 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 	} else if (strcmp(key, SERVO_GPIO_PIN) == 0) {
 		return parse_pwm_input(value, &config->gpio_layout.servo.servo_chip, &config->gpio_layout.servo.servo_channel);
 	} else {
-		LOG("Received unknown config key: %s", key);
+		LOG(NUM_THREADS, "Received unknown config key: %s", key);
 		return STATUS_FAIL;
 	}
 }
@@ -119,7 +119,7 @@ void load_app_config(configuration_items_t *config) {
 	char config_path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	char config_content[CONFIG_CONTENT_MAX_LENGTH + 1U] = { 0 };
 	get_config_file_path(config_path, MAX_FILE_PATH_LENGTH);
-	LOG("Reading application configuration from %s", config_path);
+	LOG(NUM_THREADS, "Reading application configuration from %s", config_path);
 	read_config_file_contents(config_path, config_content, CONFIG_CONTENT_MAX_LENGTH);
 	parse_config_file_contents(config_content, config);
 }
