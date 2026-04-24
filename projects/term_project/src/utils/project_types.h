@@ -16,11 +16,8 @@
 
 typedef double float64_t;
 
-/** Train Directions */
-typedef enum { DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NONE, DIRECTION_UNKOWN } direction_t;
-
 /** State Machine States */
-typedef enum { STATE_IDLE, STATE_ACTIVE, STATE_CLEARING, STATE_FAIL_SAFE, STATE_INVALID } state_t;
+typedef enum { STATE_FAIL, STATE_FAIL_SAFE, STATE_RUNNING, STATE_IDLE } state_t;
 
 typedef struct {
 	uint8_t servo_chip; /**< chip number for servo */
@@ -28,11 +25,13 @@ typedef struct {
 } servo_t;
 
 typedef struct {
-	uint8_t east_button; /**< Pin for east button */
-	uint8_t west_button; /**< Pin for west button */
-	uint8_t led_1;       /**< Pin for led_1 */
-	uint8_t led_2;       /**< Pin for led_2 */
-	servo_t servo;       /**< Pin for servo */
+	uint8_t target_temp_led; /**< Pin for target_temp_led */
+	uint8_t system_ok_led;   /**< Pin for system_ok_led */
+	uint8_t system_fail_led; /**< Pin for system_fail_led */
+	uint8_t lcd_i2c_bus;     /**< Bus for LCD screen */
+	int lcd_fd;              /**< file descriptor for LCD screen */
+	uint8_t potentiometer;   /**< Pin for potentiometer */
+	servo_t servo;           /**< Pin for servo */
 } gpio_layout_t;
 
 typedef struct {
@@ -88,21 +87,22 @@ typedef struct {
  * @brief Global struct used to share values across various threads
  */
 typedef struct {
-	pthread_mutex_t mutex;             /**< Mutex for protected access */
-	pthread_cond_t cv;                 /**< Condition variable to control threads */
-	atomic_bool is_shutdown_requested; /**< atomic_bool to determine if we should shutdown the application */
-	configuration_items_t config;      /**< Configuration items used throughout application */
-	state_t current_state;             /**< System state */
-	direction_t current_direction;     /**< Train direction */
-	struct timespec arrival_time;      /**< Train arrival time */
-	struct timespec clear_time;        /**< Train clear time */
-	struct timespec lights_off_time;   /**< Last time that lights were turned off */
-	uint64_t heartbeats[NUM_THREADS];  /**< Tracks thread heartbeats */
-	log_queue_t logger;                /**< Application logger */
+	pthread_mutex_t mutex;                 /**< Mutex for protected access */
+	pthread_cond_t cv;                     /**< Condition variable to control threads */
+	atomic_bool is_shutdown_requested;     /**< atomic_bool to determine if we should shutdown the application */
+	configuration_items_t config;          /**< Configuration items used throughout application */
+	state_t current_state;                 /**< System state */
+	float64_t current_temp;                /**< Current temperature */
+	float64_t target_temp;                 /**< Target temperature */
+	bool servo_health;                     /**< Servo health */
+	struct timespec servo_activation_time; /**< Train arrival time */
+	bool temperature_health;               /**< Temperature health */
+	bool relay_health;                     /**< Relay health */
+	uint64_t heartbeats[NUM_THREADS];
+	log_queue_t logger; /**< Application logger */
 #ifndef NDEBUG
-	atomic_bool debug_east_pending; /**< Debug mode: pending simulated east button press */
-	atomic_bool debug_west_pending; /**< Debug mode: pending simulated west button press */
-#endif                              /* NDEBUG */
+#endif /* NDEBUG */
 } global_values_t;
+
 
 #endif /* PROJECT_TYPES_H */

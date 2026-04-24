@@ -6,11 +6,11 @@
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic in release */
 #ifdef NDEBUG
 #include "app_config.h"
-#endif             /* NDEBUG */
-#endif             /* USE_CONFIG */
+#endif /* NDEBUG */
+#endif /* USE_CONFIG */
+#include "project_constants.h"
 #ifndef USE_CONFIG /* We only need user input when not using a config file in release */
 #ifdef NDEBUG
-#include "project_constants.h"
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
 #endif              /* NDEBUG */
@@ -28,7 +28,6 @@
 #include "servo_controller.h"
 #include "signal_handler.h"
 #include "state_management.h"
-#include "supervisor_input.h"
 #include "temperature_sensor.h"
 #include "vent_control.h"
 
@@ -66,21 +65,23 @@ static void application_init(void) {
 static void hardware_init(void) {
 	LOG(NUM_THREADS, "Initializing mmap");
 	gpio_map_init();
-	LOG(NUM_THREADS, "Initialized hardware buttons");
 	configuration_items_t *user_config = &shared_info.config;
-	gpio_set_direction(user_config->gpio_layout.east_button, GPIO_IN);
-	gpio_set_direction(user_config->gpio_layout.west_button, GPIO_IN);
-
 	LOG(NUM_THREADS, "Initialized hardware LEDs");
-	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
-	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
+	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
 
-	// Start with lights off
-	gpio_set(user_config->gpio_layout.led_1, false);
-	gpio_set(user_config->gpio_layout.led_2, false);
+	// Start with target reached off and system ok on
+	gpio_set(user_config->gpio_layout.target_temp_led, false);
+	gpio_set(user_config->gpio_layout.system_ok_led, true);
 
 	LOG(NUM_THREADS, "Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
+
+	LOG(NUM_THREADS, "Initialized LCD");
+	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
+	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
+	// Only i2c-# value allowed is 2, so address will be 0x27
+	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 }
 #endif /* NDEBUG */
 
@@ -92,9 +93,8 @@ static void globals_init(void) {
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
-	shared_info.current_direction = DIRECTION_NONE;
-	shared_info.arrival_time = (struct timespec){ 0 };
-	shared_info.clear_time = (struct timespec){ 0 };
+	shared_info.servo_activation_time = (struct timespec){ 0 };
+	shared_info.servo_health = true;
 }
 
 /*--------------------------------------
@@ -122,44 +122,24 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 
 	LOG(NUM_THREADS, "Prompting user for configuration items");
 
-	/* East Button Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for East Button");
+	/* target temperature status LED Pin */
+	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for target temperature status LED");
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for East Button pin");
+		LOG_AND_EXIT("Failed to get user input for target temperature status pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.east_button);
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.target_temp_led);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for East Button GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* West Button Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for West Button");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for West Button pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.west_button);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for West Button GPIO");
+		LOG_AND_EXIT("Failed to parse user input for target temperature status LED GPIO");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* Led 1 Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 1");
+	/* system health LED Pin */
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for system health LED");
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for LED 1 pin");
+		LOG_AND_EXIT("Failed to get user input for system health LED pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_1);
+	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.system_ok_led);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for LED 1 GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* Led 2 Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for LED 2");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for LED 2 pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.led_2);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for LED 2 GPIO");
+		LOG_AND_EXIT("Failed to parse user input for system health LED GPIO");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
@@ -171,6 +151,19 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
+
+	/* LCD Setup */
+	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What I2C bus should be used for the LCD? (Ex: '2')");
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to get user input for LCD bus");
+	}
+	parse_input_to_uint8(input_buffer, &user_config->gpio_layout.lcd_i2c_bus);
+	// Use I2C-2
+	if (user_config->gpio_layout.lcd_i2c_bus != 2U) {
+		LOG_AND_EXIT("Please use the I2C-2 bus");
+	}
+	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
+	/* Servo Pin */
 }
 #endif /* NDEBUG */
 #endif /* !USE_CONFIG */
@@ -184,14 +177,11 @@ static void start_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create log handler thread");
 	}
-	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create sensor monitoring thread");
+	/* Not currently used
+	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void
+	*)&shared_info); if (result != STATUS_SUCCESS) { LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
-	result = pthread_create(&threads.supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
+	*/
 	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create LCD screen thread");
@@ -220,14 +210,12 @@ static void join_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join vent control thread");
 	}
+	/* Not currently used
 	result = pthread_join(threads.sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
-		LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
+	    LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
 	}
-	result = pthread_join(threads.supervisor_input_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG(NUM_THREADS, "Failed to join supervisor input thread");
-	}
+	*/
 	result = pthread_join(threads.lcd_screen_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join LCD screen thread");
@@ -320,6 +308,9 @@ static void verify_sudo(void) {
 
 /* Application entrypoint */
 int32_t main(void) {
+	/* Initialize the system logger */
+	init_log_handler(&shared_info);
+
 	verify_sudo();
 #ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
@@ -330,9 +321,6 @@ int32_t main(void) {
 	load_app_config(user_config);
 #endif /* NDEBUG */
 #endif /* USE_CONFIG */
-
-	/* Initialize the system logger */
-	init_log_handler(&shared_info);
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
