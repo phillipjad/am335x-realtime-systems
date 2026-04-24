@@ -13,23 +13,18 @@
 static global_values_t *shared_info = NULL;
 static bool vent_open = false;
 
-/*------------------------
- * Function: time_taken
- *------------------------*/
+/*---------------------------
+ * Function: time_taken in ms
+ *---------------------------*/
 static float64_t time_taken(struct timespec *start, struct timespec *end) {
-	time_t seconds = end->tv_sec - start->tv_sec;
-	int64_t nanoseconds = (end->tv_nsec - start->tv_nsec) / (int64_t)SEC_TO_NSEC;
-	float64_t seconds_as_float = (float64_t)seconds;
+	time_t milliseconds = (end->tv_sec - start->tv_sec);
+	int64_t nanoseconds = (end->tv_nsec - start->tv_nsec) / (int64_t)NSEC_PER_MSEC;
+	float64_t milliseconds_as_float = ((float64_t)milliseconds) * ((float64_t)MSEC_PER_SEC);
 	float64_t nseconds_as_float = (float64_t)nanoseconds;
-	return seconds_as_float + nseconds_as_float;
+	return milliseconds_as_float + nseconds_as_float;
 }
 
 static void handle_vent_logic(void) {
-	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		increment_heartbeat(shared_info, VENT_CONTROL);
-		sleep(2U);
-	}
-
 	if (atomic_load(&shared_info->is_shutdown_requested)) {
 		return;
 	}
@@ -37,6 +32,7 @@ static void handle_vent_logic(void) {
 	bool state_updated = false;
 	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
+	increment_heartbeat(shared_info, VENT_CONTROL);
 	state_t current_state = shared_info->current_state;
 	float64_t current_temp = shared_info->current_temp;
 	float64_t target_temp = shared_info->target_temp;
@@ -100,6 +96,7 @@ void *vent_control_thread_entry(void *arg) {
 	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_vent_logic();
+		sleep(2U);
 	}
 	LOG(VENT_CONTROL, "Shutting down vent control thread");
 	return NULL;

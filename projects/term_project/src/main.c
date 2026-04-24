@@ -309,6 +309,9 @@ static void verify_sudo(void) {
 
 /* Application entrypoint */
 int32_t main(void) {
+	/* Initialize the system logger */
+	init_log_handler(&shared_info);
+
 	verify_sudo();
 #ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
@@ -319,9 +322,6 @@ int32_t main(void) {
 	load_app_config(user_config);
 #endif /* NDEBUG */
 #endif /* USE_CONFIG */
-
-	/* Initialize the system logger */
-	init_log_handler(&shared_info);
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
