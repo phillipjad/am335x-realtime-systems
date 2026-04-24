@@ -148,10 +148,9 @@ static float64_t get_current_time() {
 	return t.tv_sec + ((float64_t)t.tv_nsec / SEC_TO_NSEC);
 }
 
-static bool update_lcd(float64_t read_time, state_t last_state, state_t current_state) {
-	float64_t current_time = get_current_time();
+static bool update_lcd(float64_t read_time, float64_t current_time, state_t last_state, state_t current_state) {
 	bool update = false;
-	if (read_time != 0 && current_time + LCD_TARGET_SHOW_TIME > current_time) {
+	if (read_time != 0 && (current_time - read_time) < LCD_TARGET_SHOW_TIME) {
 		update = true;
 	} else if (last_state != current_state) {
 		update = true;
@@ -168,7 +167,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	timer.tv_nsec = QUARTER_SECOND_AS_NSEC;
 	init_timer.tv_nsec = HALF_SECOND_AS_NSEC;
 	shared_info = (global_values_t *)arg;
-	bool update_lcd = true;
+	bool render_lcd = true;
 
 	// Setup internal values
 	int fd = shared_info->config.gpio_layout.lcd_fd;
@@ -189,6 +188,12 @@ void *lcd_screen_thread_entry(void *arg) {
 	// Turn on screen
 	lcd_send_byte(fd, 0x0C, LCD_COMMAND);
 
+	// Starting text
+	lcd_clear(fd);
+	lcd_set_cursor(fd, 0, 0);
+	lcd_print(fd, "Starting LCD...");
+	render_lcd = false;
+
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		// Lock thread
 		pthread_mutex_lock(&shared_info->mutex);
@@ -200,39 +205,39 @@ void *lcd_screen_thread_entry(void *arg) {
 		pthread_mutex_unlock(&shared_info->mutex);
 
 		// Check if target temp changed
+		float64_t current_time = get_current_time();
 		if (latest_target_temp != target_temp) {
 			latest_target_temp = target_temp;
 			latest_target_temp_timestamp = get_current_time();
-			update_lcd = update_lcd(latest_target_temp_timestamp, last_read_state, state_snapshot);
+			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		} else if (last_read_state != state_snapshot) {
-			update_lcd = update_lcd(latest_target_temp_timestamp, last_read_state, state_snapshot);
+			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		}
-
 		if (state_snapshot == STATE_RUNNING) {
 			// Buffer of temp before updating so we don't spam updates
 			// Show target for first 2 sec then current temp
-			if (update_lcd && last_read_state != state_snapshot) {
+			if (render_lcd && last_read_state != state_snapshot && ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME)) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Target Temp:");
+				lcd_print(fd, "Target Temp (F):");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, target_temp);
 				LOG(LCD_SCREEN, "Target Temp: %lf", target_temp);
-				update_lcd = false;
-			} else if (update_lcd && last_read_state != state_snapshot) {
+				render_lcd = false;
+			} else if (render_lcd && last_read_state != state_snapshot) {
 				// Print on LCD - Current temperature: ###
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Current Temp:");
+				lcd_print(fd, "Current Temp (F):");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, current_temp);
 				LOG(LCD_SCREEN, "Current Temp: %lf", current_temp);
-				update_lcd = false;
+				render_lcd = false;
 			} else {
 				/* MISRA requires else */
 			}
-		} else if (update_lcd && state_snapshot == STATE_FAIL_SAFE) {
+		} else if (render_lcd && state_snapshot == STATE_FAIL_SAFE) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
@@ -240,8 +245,8 @@ void *lcd_screen_thread_entry(void *arg) {
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL-SAFE STATE");
 			LOG(LCD_SCREEN, "Entered state: FAIL-SAFE");
-			update_lcd = false;
-		} else if (update_lcd && state_snapshot == STATE_FAIL) {
+			render_lcd = false;
+		} else if (render_lcd && state_snapshot == STATE_FAIL) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
@@ -249,7 +254,7 @@ void *lcd_screen_thread_entry(void *arg) {
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL STATE");
 			LOG(LCD_SCREEN, "Entered state: FAIL");
-			update_lcd = false;
+			render_lcd = false;
 		} else {
 			/* MISRA requires else */
 		}
