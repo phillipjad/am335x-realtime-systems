@@ -76,7 +76,7 @@ static void handle_vent_logic(void) {
 		} else {
 			/* MISRA requires else */
 		}
-		if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated)  {
+		if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
 			pthread_mutex_lock(&shared_info->mutex);
 			shared_info->current_state = STATE_FAIL;
 			shared_info->servo_health = false;

@@ -6,8 +6,8 @@
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic in release */
 #ifdef NDEBUG
 #include "app_config.h"
-#endif             /* NDEBUG */
-#endif             /* USE_CONFIG */
+#endif /* NDEBUG */
+#endif /* USE_CONFIG */
 #include "project_constants.h"
 #ifndef USE_CONFIG /* We only need user input when not using a config file in release */
 #ifdef NDEBUG
@@ -95,7 +95,7 @@ static void globals_init(void) {
 	shared_info.current_state = STATE_IDLE;
 	shared_info.servo_activation_time = (struct timespec){ 0 };
 	shared_info.servo_health = true;
-	}
+}
 
 /*--------------------------------------
  * Static Function: log_mode
@@ -178,9 +178,8 @@ static void start_project_threads() {
 		LOG_AND_EXIT("Failed to create log handler thread");
 	}
 	/* Not currently used
-	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create sensor monitoring thread");
+	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void
+	*)&shared_info); if (result != STATUS_SUCCESS) { LOG_AND_EXIT("Failed to create sensor monitoring thread");
 	}
 	*/
 	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
@@ -214,7 +213,7 @@ static void join_project_threads() {
 	/* Not currently used
 	result = pthread_join(threads.sensor_monitoring_thread, NULL);
 	if (result != STATUS_SUCCESS) {
-		LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
+	    LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
 	}
 	*/
 	result = pthread_join(threads.lcd_screen_thread, NULL);
