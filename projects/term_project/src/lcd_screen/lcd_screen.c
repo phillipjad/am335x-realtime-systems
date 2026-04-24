@@ -52,7 +52,7 @@ static int lcd_init_hw(const char *i2c_path, uint8_t lcd_addr) {
 }
 #else
 static void lcd_init_sw() {
-	LOG("LCD initialized");
+	LOG(LCD_SCREEN, "initialized");
 }
 #endif /* NDEBUG */
 
@@ -71,10 +71,10 @@ static void lcd_write_data(int fd, uint8_t data) {
 #ifdef NDEBUG
 	int result = write(fd, &data, 1);
 	if (result < 0) {
-		LOG("LCD - Failed to write: %u to fd: %d", data, fd);
+		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
 	}
 #else
-	LOG("LCD - Writing: %u", data);
+	LOG(LCD_SCREEN, "Writing: %u", data);
 #endif /* NDEBUG */
 }
 
@@ -90,7 +90,7 @@ static void lcd_pulse(int fd, uint8_t data) {
 	lcd_write_data(fd, data & ~LCD_ENABLE_OFFSET);
 	nanosleep(&timer, NULL);
 #else
-	LOG("LCD - Pulsing data: %u", data);
+	LOG(LCD_SCREEN, "Pulsing data: %u", data);
 #endif /* NDEBUG */
 }
 
@@ -99,7 +99,7 @@ static void lcd_send_byte(int fd, uint8_t data, uint8_t register_select_mode) {
 	lcd_pulse(fd, (data & 0xF0) | register_select_mode | LCD_BACKLIGHT_OFFSET);
 	lcd_pulse(fd, ((data << 4) & 0xF0) | register_select_mode | LCD_BACKLIGHT_OFFSET);
 #else
-	LOG("LCD - Send byte: %u", data);
+	LOG(LCD_SCREEN, "Send byte: %u", data);
 #endif /* NDEBUG */
 }
 
@@ -107,7 +107,7 @@ void lcd_clear(int fd) {
 #ifdef NDEBUG
 	lcd_send_byte(fd, LCD_CLEAR, LCD_COMMAND);
 #else
-	LOG("LCD - Clearing screen");
+	LOG(LCD_SCREEN, "Clearing screen");
 #endif /* NDEBUG */
 }
 
@@ -149,7 +149,7 @@ static float64_t get_current_time() {
 static global_values_t *shared_info = NULL;
 
 void *lcd_screen_thread_entry(void *arg) {
-	LOG("Starting LCD screen thread");
+	LOG(LCD_SCREEN, "Starting LCD screen thread");
 	struct timespec timer = { 0 };
 	struct timespec init_timer = { 0 };
 	timer.tv_nsec = QUARTER_SECOND_AS_NSEC;
@@ -160,6 +160,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	int fd = shared_info->config.gpio_layout.lcd_fd;
 	float64_t latest_target_temp = 0;
 	float64_t latest_target_temp_timestamp = 0;
+	state_t last_read_state = STATE_IDLE;
 
 	// Wake up display
 	for (int i = 0; i < 3; ++i) {
@@ -192,39 +193,49 @@ void *lcd_screen_thread_entry(void *arg) {
 
 		if (state_snapshot == STATE_RUNNING) {
 			float64_t current_time = get_current_time();
-
-			if ((current_time - latest_target_temp_timestamp) <= 2.00) {
+			// Buffer of temp before updating so we don't spam updates
+			if ((current_time - latest_target_temp_timestamp) <= 2.00 && last_read_state != state_snapshot) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
 				lcd_print(fd, "Target Temp:");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, target_temp);
-			} else {
+				LOG(LCD_SCREEN, "Target Temp: %lf", target_temp);
+			} else if (last_read_state != state_snapshot) {
 				// Print on LCD - Current temperature: ###
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
 				lcd_print(fd, "Current Temp:");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, current_temp);
+				LOG(LCD_SCREEN, "Current Temp: %lf", current_temp);
+			} else {
+				/* MISRA requires else */
 			}
-		} else if (state_snapshot == STATE_FAIL_SAFE) {
+		} else if (state_snapshot == STATE_FAIL_SAFE && last_read_state != state_snapshot) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
 			lcd_print(fd, "ERROR:");
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL-SAFE STATE");
-		} else {
+			LOG(LCD_SCREEN, "Entered state: FAIL-SAFE");
+		} else if (state_snapshot == STATE_FAIL && last_read_state != state_snapshot) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
 			lcd_print(fd, "ERROR:");
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL STATE");
+			LOG(LCD_SCREEN, "Entered state: FAIL");
+		} else {
+			/* MISRA requires else */
 		}
 		nanosleep(&timer, NULL);
+		// Update last read state
+		last_read_state = state_snapshot;
 	}
-	LOG("Shutting down LCD screen thread");
+	LOG(LCD_SCREEN, "Shutting down LCD screen thread");
 	return NULL;
 }

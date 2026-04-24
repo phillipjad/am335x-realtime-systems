@@ -27,11 +27,14 @@
 /* Unit conversions */
 #define NSEC_PER_USEC (1000U)
 
-/* System states */
-#define FAIL ("Fail")
-#define AUTO ("Auto")
-
 /* Temp Buffer (+or- range) */
 #define TEMP_BUFFER (0.5)
+
+/* Logger Constants */
+#define LOG_PARENT_DIR ("/opt/smart_vent")
+#define LOG_BASE_DIR ("/opt/smart_vent/logs")
+#define MAX_LOG_LEN (1000U)
+#define MAX_LINENO_LEN (10U)
+#define MAX_LOG_QUEUE_CAPACITY (1000U)
 
 #endif /* PROJECT_CONSTANTS_H */

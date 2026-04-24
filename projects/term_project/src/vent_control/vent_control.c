@@ -26,6 +26,7 @@ static float64_t time_taken(struct timespec *start, struct timespec *end) {
 
 static void handle_vent_logic(void) {
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
+		increment_heartbeat(shared_info, VENT_CONTROL);
 		sleep(2U);
 	}
 
@@ -45,6 +46,7 @@ static void handle_vent_logic(void) {
 
 	// Check if shutdown requested or state changed from idle
 	if (!atomic_load(&shared_info->is_shutdown_requested)) {
+<<<<<<< HEAD
 		// If operating automatically
 		if (current_state == STATE_RUNNING) {
 			// Check if temp changed and vent needs to be opened/closed
@@ -76,6 +78,31 @@ static void handle_vent_logic(void) {
 		} else if (current_state == STATE_FAIL) {
 			// Send message to queue and wait for it to finish
 			LOG_AND_EXIT("vent read STATE_FAIL, shutting down");
+=======
+		if (current_state == STATE_IDLE) {
+			LOG(VENT_CONTROL, "vent read IDLE state, raising vent.");
+			servo_raise();
+		} else if (current_state == STATE_ACTIVE) {
+			LOG(VENT_CONTROL, "vent read STATE_ACTIVE state, lowering vent.");
+			struct timespec curr_time = { 0 };
+			(void)clock_gettime(CLOCK_MONOTONIC_RAW, &curr_time);
+			log_time_difference_ms(curr_time, arrival_time, "lower vent");
+			servo_lower();
+		} else if (current_state == STATE_FAIL_SAFE) {
+			LOG(VENT_CONTROL, "vent read FAIL_STATE state, lowering vent.");
+			/* Once warning lights are off we want to wait for one second to pass and then re-lower vent */
+			wait_for_warning_light_deactivation();
+			servo_lower();
+		} else if (current_state == STATE_CLEARING) {
+			LOG(VENT_CONTROL, "vent read CLEARING_STATE state");
+			wait_for_warning_light_deactivation();
+			/* Once warning lights are off we want to wait for one second to pass and then raise vent */
+			static const struct timespec one_second_delay = { .tv_sec = (time_t)1, .tv_nsec = 0L };
+			(void)nanosleep(&one_second_delay, NULL);
+			servo_raise();
+			LOG(VENT_CONTROL, "Waited and raising vent.");
+			return;
+>>>>>>> origin/main
 		} else {
 			/* MISRA requires else */
 		}
@@ -94,13 +121,12 @@ static void handle_vent_logic(void) {
  * Function: vent_control_thread_entry
  *--------------------------------------*/
 void *vent_control_thread_entry(void *arg) {
-	LOG("Starting vent control thread");
+	LOG(VENT_CONTROL, "Starting vent control thread");
 	shared_info = (global_values_t *)arg;
 	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_vent_logic();
-		increment_heartbeat(shared_info, VENT_CONTROL);
 	}
-	LOG("Shutting down vent control thread");
+	LOG(VENT_CONTROL, "Shutting down vent control thread");
 	return NULL;
 }
