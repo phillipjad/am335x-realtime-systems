@@ -52,6 +52,11 @@ void project_log(FILE *stream, bool include_newline, const char *filename, uint3
     __attribute__((format(printf, 5, 6)));
 
 /**
+ * @brief Initializes the log handler by setting up all required directories and bootstrapping the queue structure.
+ */
+void init_log_handler(global_values_t *app_global);
+
+/**
  * @brief Logs the time difference between \p t1 and \p t2 to do \p action
  *
  * @param[in] t1 The minuend of the difference

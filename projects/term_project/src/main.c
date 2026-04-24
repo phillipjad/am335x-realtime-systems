@@ -275,7 +275,7 @@ static void join_project_threads(project_threads_t *threads) {
 	}
 }
 
-static void check_heartbeats() {
+static void check_heartbeats(void) {
 	uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
 	uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
 	char *thread_names[NUM_THREADS] = { "Vent controller", "Log handler", "Sensor monitoring", "Supervisor input",
@@ -307,6 +307,9 @@ int32_t main(void) {
 	load_app_config(user_config);
 #endif /* NDEBUG */
 #endif /* USE_CONFIG */
+
+	/* Initialize the system logger */
+	init_log_handler();
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();

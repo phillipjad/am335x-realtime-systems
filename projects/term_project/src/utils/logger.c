@@ -1,12 +1,62 @@
+#include <errno.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 
 /* Local project includes after system libraries */
 #include "logger.h"
 #include "project_constants.h"
+#include "project_types.h"
 
-#define MAX_LOG_LEN (1000U)
+static char LOG_PATH[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
+
+/**
+ * @brief Asserts that path exists either through creation or pre-existance
+ *
+ * @param path[in] Path to check
+ * @param mode The mode the create \p path at
+ */
+static void assert_directory_exists(const char *path, mode_t mode) {
+	int32_t result = mkdir(path, mode);
+	if ((result != STATUS_SUCCESS) && (errno != EEXIST)) {
+		LOG_AND_EXIT("Failed to assert that %s directory exists", path);
+	}
+}
+
+void init_log_handler(global_values_t *app_global) {
+	/* Ensure the base of the log dir is present */
+	assert_directory_exists(LOG_BASE_DIR, 0755);
+
+	/* Ensure the directory for today is present */
+	size_t written = snprintf(LOG_PATH, MAX_FILE_PATH_LENGTH, "%s/", LOG_BASE_DIR);
+	struct timespec now_ts = { 0 };
+	(void)clock_gettime(CLOCK_REALTIME, &now_ts);
+	struct tm *tm = localtime(&now_ts.tv_sec);
+	written += strftime(&LOG_PATH[written], MAX_FILE_PATH_LENGTH - written, "%m_%d_%Y/", tm);
+	if (written > MAX_FILE_PATH_LENGTH) {
+		LOG_AND_EXIT("File path length larger than limit: %zu > %u", written, MAX_FILE_PATH_LENGTH);
+	}
+	assert_directory_exists(LOG_PATH, 0755);
+
+	/* Create the directory for this instance of the program */
+	written += strftime(&LOG_PATH[written], MAX_FILE_PATH_LENGTH - written, "%H_%M_%S/", tm);
+	if (written > MAX_FILE_PATH_LENGTH) {
+		LOG_AND_EXIT("File path length larger than limit: %zu > %u", written, MAX_FILE_PATH_LENGTH);
+	}
+	assert_directory_exists(LOG_PATH, 0755);
+
+	log_queue_t *logger = &app_global->logger;
+	int32_t result = pthread_mutex_init(&logger->log_mu, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to init logger mutex");
+	}
+
+	return;
+}
 
 /*--------------------------------------
  * Function: project_log
