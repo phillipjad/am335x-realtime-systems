@@ -51,27 +51,6 @@ typedef enum {
 	NUM_THREADS
 } thread_index_e;
 
-/**
- * @brief Global struct used to share values across various threads
- */
-typedef struct {
-	pthread_mutex_t mutex;             /**< Mutex for protected access */
-	pthread_cond_t cv;                 /**< Condition variable to control threads */
-	atomic_bool is_shutdown_requested; /**< atomic_bool to determine if we should shutdown the application */
-	configuration_items_t config;      /**< Configuration items used throughout application */
-	state_t current_state;             /**< System state */
-	float64_t current_temp;            /**< Current temperature */
-	float64_t target_temp;             /**< Target temperature */
-	bool servo_health;                 /**< Servo health */
-	struct timespec servo_activation_time;      /**< Train arrival time */
-	bool temperature_health;           /**< Temperature health */
-	bool relay_health;           	   /**< Relay health */
-	uint64_t heartbeats[NUM_THREADS];
-	log_queue_t logger;                /**< Application logger */
-#ifndef NDEBUG
-#endif                              /* NDEBUG */
-} global_values_t;
-
 // Button debounce variables
 typedef struct {
 	uint8_t pin_id;
@@ -103,5 +82,27 @@ typedef struct {
 	size_t tail;
 	size_t size;
 } log_queue_t;
+
+/**
+ * @brief Global struct used to share values across various threads
+ */
+typedef struct {
+	pthread_mutex_t mutex;             /**< Mutex for protected access */
+	pthread_cond_t cv;                 /**< Condition variable to control threads */
+	atomic_bool is_shutdown_requested; /**< atomic_bool to determine if we should shutdown the application */
+	configuration_items_t config;      /**< Configuration items used throughout application */
+	state_t current_state;             /**< System state */
+	float64_t current_temp;            /**< Current temperature */
+	float64_t target_temp;             /**< Target temperature */
+	bool servo_health;                 /**< Servo health */
+	struct timespec servo_activation_time;      /**< Train arrival time */
+	bool temperature_health;           /**< Temperature health */
+	bool relay_health;           	   /**< Relay health */
+	uint64_t heartbeats[NUM_THREADS];
+	log_queue_t logger;                /**< Application logger */
+#ifndef NDEBUG
+#endif                              /* NDEBUG */
+} global_values_t;
+
 
 #endif /* PROJECT_TYPES_H */

@@ -66,7 +66,7 @@ static void hardware_init(void) {
 	LOG(NUM_THREADS, "Initializing mmap");
 	gpio_map_init();
 	configuration_items_t *user_config = &shared_info.config;
-	LOG("Initialized hardware LEDs");
+	LOG(NUM_THREADS, "Initialized hardware LEDs");
 	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
 
@@ -77,7 +77,7 @@ static void hardware_init(void) {
 	LOG(NUM_THREADS, "Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
 
-	LOG("Initialized LCD");
+	LOG(NUM_THREADS, "Initialized LCD");
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
 	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
