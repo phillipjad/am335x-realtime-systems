@@ -88,7 +88,7 @@ void sensor_monitoring(direction_t train_direction) {
 		// Release lock
 		pthread_mutex_unlock(&shared_info->mutex);
 		// Log train direction
-		LOG("Train arriving from the %s", (train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
+		LOG(SENSOR_MONITORING, "Train arriving from the %s", (train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
 
 		// Check if the train has arrived to the other side
 		// ACTIVE means train is already on track
@@ -131,11 +131,12 @@ void sensor_monitoring(direction_t train_direction) {
 		pthread_mutex_unlock(&shared_info->mutex);
 		// Logs outside critical section
 		if (fail_safe_active) {
-			LOG("FAILSAFE STATE ACTIVE: Train has not moved from the %s. Lowering gate and warning lights blinking. "
+			LOG(SENSOR_MONITORING,
+			    "FAILSAFE STATE ACTIVE: Train has not moved from the %s. Lowering gate and warning lights blinking. "
 			    "Awaiting supervisor \"clear\" or \"c\"...",
 			    (train_direction == DIRECTION_EAST ? "EAST" : "WEST"));
 		} else {
-			LOG("CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
+			LOG(SENSOR_MONITORING, "CLEAR STATE ACTIVE: Train has arrive to other end of platform. Opening gate and turning off lights.");
 		}
 	} else {
 		/* MISRA requires else */
@@ -180,9 +181,9 @@ void failsafe_timeout(void) {
 			// Release lock
 			pthread_mutex_unlock(&shared_info->mutex);
 			if (fail_safe_active) {
-				LOG("FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %lf seconds. Awaiting supervisor \"clear\" "
-				    "or "
-				    "\"c\"...",
+				LOG(SENSOR_MONITORING,
+				    "FAILSAFE TIMEOUT ACTIVE: Train did not arrive within %lf seconds. Awaiting supervisor \"clear\" "
+				    "or \"c\"...",
 				    TIMEOUT_TIME_F);
 			}
 		}
@@ -214,7 +215,7 @@ static void check_for_idle(bool was_button_pressed) {
  * Function: sensor_monitoring_thread_entry
  *------------------------------------------*/
 void *sensor_monitoring_thread_entry(void *arg) {
-	LOG("Starting sensor_monitoring!");
+	LOG(SENSOR_MONITORING, "Starting sensor_monitoring!");
 	shared_info = (global_values_t *)arg;
 	struct timespec timer = { 0 };
 	// Waiting period using debounce parameter
@@ -268,6 +269,6 @@ void *sensor_monitoring_thread_entry(void *arg) {
 	pthread_cond_broadcast(&shared_info->cv);
 	// Release lock
 	pthread_mutex_unlock(&shared_info->mutex);
-	LOG("Shutting down sensor monitoring thread...");
+	LOG(SENSOR_MONITORING, "Shutting down sensor monitoring thread...");
 	return NULL;
 }

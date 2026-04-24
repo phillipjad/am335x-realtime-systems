@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 
 /* Local project includes after system libraries */
 #ifdef USE_CONFIG /* We only need this header if we are using config file logic in release */
@@ -31,8 +32,7 @@
 #include "temperature_sensor.h"
 #include "vent_control.h"
 
-global_values_t shared_info = { 0 };
-
+/* Main controls all threads. As such, we register all of them in one neat struct for easier handling */
 typedef struct {
 	pthread_t vent_control_thread;
 	pthread_t log_handler_thread;
@@ -45,6 +45,9 @@ typedef struct {
 	pthread_t state_management_thread;
 } project_threads_t;
 
+global_values_t shared_info = { 0 };
+static project_threads_t threads = { 0 };
+
 /*--------------------------------------
  * Static Function: application_init
  *--------------------------------------*/
@@ -53,7 +56,7 @@ static void application_init(void) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to register application signal handlers. Status code: %d", result);
 	}
-	LOG("Initialized application");
+	LOG(NUM_THREADS, "Initialized application");
 }
 
 #ifdef NDEBUG
@@ -61,14 +64,14 @@ static void application_init(void) {
  * Static Function: hardware_init
  *--------------------------------------*/
 static void hardware_init(void) {
-	LOG("Initializing mmap");
+	LOG(NUM_THREADS, "Initializing mmap");
 	gpio_map_init();
-	LOG("Initialized hardware buttons");
+	LOG(NUM_THREADS, "Initialized hardware buttons");
 	configuration_items_t *user_config = &shared_info.config;
 	gpio_set_direction(user_config->gpio_layout.east_button, GPIO_IN);
 	gpio_set_direction(user_config->gpio_layout.west_button, GPIO_IN);
 
-	LOG("Initialized hardware LEDs");
+	LOG(NUM_THREADS, "Initialized hardware LEDs");
 	gpio_set_direction(user_config->gpio_layout.led_1, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.led_2, GPIO_OUT);
 
@@ -76,7 +79,7 @@ static void hardware_init(void) {
 	gpio_set(user_config->gpio_layout.led_1, false);
 	gpio_set(user_config->gpio_layout.led_2, false);
 
-	LOG("Initialized servo");
+	LOG(NUM_THREADS, "Initialized servo");
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
 }
 #endif /* NDEBUG */
@@ -85,7 +88,7 @@ static void hardware_init(void) {
  * Static Function: globals_init
  *--------------------------------------*/
 static void globals_init(void) {
-	LOG("Initializing global states");
+	LOG(NUM_THREADS, "Initializing global states");
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
@@ -99,10 +102,10 @@ static void globals_init(void) {
  *--------------------------------------*/
 static void log_mode(void) {
 #ifdef DEBUG
-	LOG("DEBUG MODE ENABLED");
+	LOG(NUM_THREADS, "DEBUG MODE ENABLED");
 #else
 #ifdef NDEBUG
-	LOG("RELEASE MODE ENABLED");
+	LOG(NUM_THREADS, "RELEASE MODE ENABLED");
 #else
 	LOG_AND_EXIT("No release mode detected!");
 #endif
@@ -117,7 +120,7 @@ static void log_mode(void) {
 static void get_user_configuration_items(configuration_items_t *user_config) {
 	char input_buffer[USER_INPUT_MAX_LEN + 1U] = { 0 };
 
-	LOG("Prompting user for configuration items");
+	LOG(NUM_THREADS, "Prompting user for configuration items");
 
 	/* East Button Pin */
 	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for East Button");
@@ -172,17 +175,103 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 #endif /* NDEBUG */
 #endif /* !USE_CONFIG */
 
+static void start_project_threads() {
+	int32_t result = pthread_create(&threads.vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create vent control thread");
+	}
+	result = pthread_create(&threads.log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create log handler thread");
+	}
+	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create sensor monitoring thread");
+	}
+	result = pthread_create(&threads.supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create supervisor input thread");
+	}
+	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create LCD screen thread");
+	}
+	result = pthread_create(&threads.temperature_sensor_thread, NULL, &temperature_sensor_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create temperature sensor thread");
+	}
+	result = pthread_create(&threads.led_thread, NULL, &led_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create LED thread");
+	}
+	result = pthread_create(&threads.potentiometer_thread, NULL, &potentiometer_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create potentiometer thread");
+	}
+	result = pthread_create(&threads.state_management_thread, NULL, &state_management_thread_entry, (void *)&shared_info);
+	if (result != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to create state management thread");
+	}
+}
+
+static void join_project_threads() {
+	/* Join all producer threads first so the log_handler can drain their final messages */
+	int32_t result = pthread_join(threads.vent_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join vent control thread");
+	}
+	result = pthread_join(threads.sensor_monitoring_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
+	}
+	result = pthread_join(threads.supervisor_input_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join supervisor input thread");
+	}
+	result = pthread_join(threads.lcd_screen_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join LCD screen thread");
+	}
+	result = pthread_join(threads.temperature_sensor_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join temperature sensor thread");
+	}
+	result = pthread_join(threads.led_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join LED thread");
+	}
+	result = pthread_join(threads.potentiometer_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join potentiometer thread");
+	}
+	result = pthread_join(threads.state_management_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join state management thread");
+	}
+
+	/* Wake the log_handler so it exits its wait promptly and drains remaining messages */
+	(void)pthread_cond_broadcast(&shared_info.logger.log_cv);
+
+	result = pthread_join(threads.log_handler_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join log handler thread");
+	}
+}
+
 /**
  * @brief Shuts down the application and handles any required cleanup
  */
-static void handle_shutdown(void) {
-	LOG("Shutting down...");
+static void handle_shutdown(int32_t exit_code) {
+	/* We should unconditionally set shutdown requested here in case we shutdown due to missed heartbeats */
+	atomic_store(&shared_info.is_shutdown_requested, true);
+	join_project_threads();
+	LOG(NUM_THREADS, "Shutting down...");
 	servo_shutdown();
 #ifdef NDEBUG
 	/* Hardware mmap close if we are in release mode */
 	gpio_map_close();
 #endif /* NDEBUG */
-	exit(EXIT_SUCCESS);
+	exit(exit_code);
 }
 
 /**
@@ -194,110 +283,44 @@ static void log_system_info(void) {
 	if (result != EXIT_SUCCESS) {
 		LOG_AND_EXIT("Failed to log system info");
 	}
-	LOG("System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version, sys_info.machine);
+	LOG(NUM_THREADS, "System information: %s, %s, %s, %s", sys_info.sysname, sys_info.release, sys_info.version,
+	    sys_info.machine);
 }
 
-static void start_project_threads(project_threads_t *threads) {
-	int32_t result = pthread_create(&threads->vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create vent control thread");
-	}
-	result = pthread_create(&threads->log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create log handler thread");
-	}
-	result = pthread_create(&threads->sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create sensor monitoring thread");
-	}
-	result = pthread_create(&threads->supervisor_input_thread, NULL, &supervisor_input_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create supervisor input thread");
-	}
-	result = pthread_create(&threads->lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LCD screen thread");
-	}
-	result = pthread_create(&threads->temperature_sensor_thread, NULL, &temperature_sensor_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create temperature sensor thread");
-	}
-	result = pthread_create(&threads->led_thread, NULL, &led_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LED thread");
-	}
-	result = pthread_create(&threads->potentiometer_thread, NULL, &potentiometer_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create potentiometer thread");
-	}
-	result = pthread_create(&threads->state_management_thread, NULL, &state_management_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create state management thread");
-	}
-}
-
-static void join_project_threads(project_threads_t *threads) {
-	int32_t result = pthread_join(threads->vent_control_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join vent control thread");
-	}
-	result = pthread_join(threads->log_handler_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join log handler thread");
-	}
-	result = pthread_join(threads->sensor_monitoring_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join sensor monitoring thread");
-	}
-	result = pthread_join(threads->supervisor_input_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join supervisor input thread");
-	}
-	result = pthread_join(threads->lcd_screen_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join LCD screen thread");
-	}
-	result = pthread_join(threads->temperature_sensor_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join temperature sensor thread");
-	}
-	result = pthread_join(threads->led_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join LED thread");
-	}
-	result = pthread_join(threads->potentiometer_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join potentiometer thread");
-	}
-	result = pthread_join(threads->state_management_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG("Failed to join state management thread");
-	}
-}
-
-static void check_heartbeats() {
-	uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
-	uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
-	char *thread_names[NUM_THREADS] = { "Vent controller", "Log handler", "Sensor monitoring", "Supervisor input",
-		"LCD screen", "Temp sensor", "LED", "Potentiometer", "State management" };
+static int32_t check_heartbeats(void) {
+	static uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
+	static uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
 	static const uint8_t MAX_MISSED_HEARTBEATS = 5U;
 	for (uint8_t ii = 0U; ii < NUM_THREADS; ++ii) {
+		if (atomic_load(&shared_info.is_shutdown_requested)) {
+			return STATUS_SUCCESS;
+		}
 		if (shared_info.heartbeats[ii] <= prev_heartbeats[ii]) {
 			++num_missed_heartbeats[ii];
-			LOG("%s thread missed heartbeat %u time(s) in a row", thread_names[ii], num_missed_heartbeats[ii]);
+			LOG(NUM_THREADS, "%s thread missed heartbeat %u time(s) in a row", THREAD_NAMES[ii], num_missed_heartbeats[ii]);
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
-				// TODO: IMPLEMENT REAL DEADLOCK/STALL HANDLING LOGIC
-				LOG("%s thread has stalled or deadlocked. Heartbeat missed %u times in a row", thread_names[ii],
-				    num_missed_heartbeats[ii]);
-				exit(1);
+				LOG(NUM_THREADS, "%s thread has stalled or deadlocked. Heartbeat missed %u times in a row",
+				    THREAD_NAMES[ii], num_missed_heartbeats[ii]);
+				return STATUS_FAIL;
 			}
+		} else {
+			prev_heartbeats[ii] = shared_info.heartbeats[ii];
+			num_missed_heartbeats[ii] = 0U;
 		}
 	}
+
+	return STATUS_SUCCESS;
 }
 
+static void verify_sudo(void) {
+	if (geteuid() != 0) {
+		LOG_AND_EXIT("This program must be run with sudo/root privileges");
+	}
+}
 
 /* Application entrypoint */
 int32_t main(void) {
+	verify_sudo();
 #ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
 #endif            /* NDEBUG */
@@ -307,6 +330,9 @@ int32_t main(void) {
 	load_app_config(user_config);
 #endif /* NDEBUG */
 #endif /* USE_CONFIG */
+
+	/* Initialize the system logger */
+	init_log_handler(&shared_info);
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
@@ -329,17 +355,14 @@ int32_t main(void) {
 
 	/* Global params init */
 	globals_init();
-
-	project_threads_t threads = { 0 };
-	start_project_threads(&threads);
+	start_project_threads();
+	int32_t exit_code = 0;
 	while (!atomic_load(&shared_info.is_shutdown_requested)) {
 		struct timespec heartbeat_check_ticker = { .tv_sec = 5L, .tv_nsec = 0L };
 		nanosleep(&heartbeat_check_ticker, NULL);
-		check_heartbeats();
+		exit_code = check_heartbeats();
 	}
-	join_project_threads(&threads);
+	LOG(NUM_THREADS, "Starting application shutdown sequence...");
 
-	LOG("Starting application shutdown sequence...");
-
-	handle_shutdown();
+	handle_shutdown(exit_code);
 }

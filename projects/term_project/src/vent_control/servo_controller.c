@@ -104,7 +104,7 @@ static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 }
 #else
 static void servo_init_sw() {
-	LOG("Servo initialized");
+	LOG(VENT_CONTROL, "Servo initialized");
 }
 #endif /* NDEBUG */
 
@@ -129,7 +129,7 @@ void servo_raise(void) {
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 #else
-	LOG("Raising gate");
+	LOG(VENT_CONTROL, "Raising gate");
 #endif /* NDEBUG */
 }
 
@@ -141,7 +141,7 @@ void servo_lower(void) {
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
 #else
-	LOG("Lowering gate");
+	LOG(VENT_CONTROL, "Lowering gate");
 #endif /* NDEBUG */
 }
 
@@ -149,7 +149,7 @@ void servo_lower(void) {
  * Function: servo_shutdown
  *--------------------------------------*/
 void servo_shutdown(void) {
-	LOG("Shutting down gate");
+	LOG(VENT_CONTROL, "Shutting down gate");
 #ifdef NDEBUG
 	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);

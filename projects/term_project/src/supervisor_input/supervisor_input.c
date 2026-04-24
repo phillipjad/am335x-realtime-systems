@@ -28,9 +28,9 @@ static void handle_clear(void) {
 	}
 	pthread_mutex_unlock(&shared_info->mutex);
 	if (cleared) {
-		LOG("Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...");
+		LOG(SUPERVISOR_INPUT, "Supervisor has activated clear from fail-safe mode. Resetting railroad crossing...");
 	} else {
-		LOG("Not in fail-safe mode, disregarding input.");
+		LOG(SUPERVISOR_INPUT, "Not in fail-safe mode, disregarding input.");
 	}
 }
 
@@ -40,7 +40,7 @@ static void handle_clear(void) {
  *--------------------------------------*/
 static void handle_debug_east(void) {
 	atomic_store(&shared_info->debug_east_pending, true);
-	LOG("[DEBUG] Simulating EAST button press.");
+	LOG(SUPERVISOR_INPUT, "[DEBUG] Simulating EAST button press.");
 }
 
 /*--------------------------------------
@@ -48,18 +48,18 @@ static void handle_debug_east(void) {
  *--------------------------------------*/
 static void handle_debug_west(void) {
 	atomic_store(&shared_info->debug_west_pending, true);
-	LOG("[DEBUG] Simulating WEST button press.");
+	LOG(SUPERVISOR_INPUT, "[DEBUG] Simulating WEST button press.");
 }
 
 /*--------------------------------------
  * Static Function: handle_debug_help
  *--------------------------------------*/
 static void handle_debug_help(void) {
-	LOG("[DEBUG] Available commands:");
-	LOG("[DEBUG]   clear, c                    - Clear fail-safe state (supervisor)");
-	LOG("[DEBUG]   e, E, east, East, EAST      - Simulate EAST button press");
-	LOG("[DEBUG]   w, W, west, West, WEST      - Simulate WEST button press");
-	LOG("[DEBUG]   h, H, help                  - Show this help message");
+	LOG(SUPERVISOR_INPUT, "[DEBUG] Available commands:");
+	LOG(SUPERVISOR_INPUT, "[DEBUG]   clear, c                    - Clear fail-safe state (supervisor)");
+	LOG(SUPERVISOR_INPUT, "[DEBUG]   e, E, east, East, EAST      - Simulate EAST button press");
+	LOG(SUPERVISOR_INPUT, "[DEBUG]   w, W, west, West, WEST      - Simulate WEST button press");
+	LOG(SUPERVISOR_INPUT, "[DEBUG]   h, H, help                  - Show this help message");
 }
 #endif /* NDEBUG */
 
@@ -98,7 +98,7 @@ static void handle_supervisor_input(void) {
  * Function: supervisor_input_thread_entry
  *--------------------------------------*/
 void *supervisor_input_thread_entry(void *args) {
-	LOG("Supervisor thread started.");
+	LOG(SUPERVISOR_INPUT, "Supervisor thread started.");
 	shared_info = (global_values_t *)args;
 
 #ifndef NDEBUG
@@ -110,6 +110,6 @@ void *supervisor_input_thread_entry(void *args) {
 		increment_heartbeat(shared_info, SUPERVISOR_INPUT);
 	}
 
-	LOG("Shutting down supervisor thread...");
+	LOG(SUPERVISOR_INPUT, "Shutting down supervisor thread...");
 	return NULL;
 }

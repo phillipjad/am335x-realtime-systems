@@ -27,4 +27,12 @@
 /* Unit conversions */
 #define NSEC_PER_USEC (1000U)
 
+/* Logger Constants */
+#define LOG_PARENT_DIR ("/opt/smart_vent")
+#define LOG_BASE_DIR ("/opt/smart_vent/logs")
+#define MAX_LOG_LEN (1000U)
+#define MAX_LINENO_LEN (10U)
+#define MAX_LOG_QUEUE_CAPACITY (1000U)
+
+
 #endif /* PROJECT_CONSTANTS_H */
