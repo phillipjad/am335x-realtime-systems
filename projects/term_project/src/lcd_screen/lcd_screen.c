@@ -212,12 +212,16 @@ void *lcd_screen_thread_entry(void *arg) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
-			lcd_print(fd, "ERROR: FAIL-SAFE STATE");
+			lcd_print(fd, "ERROR:");
+			lcd_set_cursor(fd, 1, 0);
+			lcd_print(fd, "FAIL-SAFE STATE");
 		} else {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
 			lcd_clear(fd);
 			lcd_set_cursor(fd, 0, 0);
-			lcd_print(fd, "ERROR: FAIL STATE");
+			lcd_print(fd, "ERROR:");
+			lcd_set_cursor(fd, 1, 0);
+			lcd_print(fd, "FAIL STATE");
 		}
 		nanosleep(&timer, NULL);
 	}

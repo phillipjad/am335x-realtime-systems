@@ -7,9 +7,9 @@
 #include "app_config.h"
 #endif             /* NDEBUG */
 #endif             /* USE_CONFIG */
+#include "project_constants.h"
 #ifndef USE_CONFIG /* We only need user input when not using a config file in release */
 #ifdef NDEBUG
-#include "project_constants.h"
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
 #endif              /* NDEBUG */

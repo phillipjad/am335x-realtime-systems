@@ -31,4 +31,7 @@
 #define FAIL ("Fail")
 #define AUTO ("Auto")
 
+/* Temp Buffer (+or- range) */
+#define TEMP_BUFFER (0.5)
+
 #endif /* PROJECT_CONSTANTS_H */
