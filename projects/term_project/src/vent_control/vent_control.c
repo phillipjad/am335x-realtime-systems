@@ -1,6 +1,7 @@
 #include "vent_control.h"
 
 #include <pthread.h>
+#include <string.h>
 #include <unistd.h>
 
 /* Local project includes after system libraries */
@@ -16,12 +17,12 @@ static bool vent_open = false;
 /*---------------------------
  * Function: time_taken in ms
  *---------------------------*/
-static float64_t time_taken(struct timespec *start, struct timespec *end) {
-	time_t milliseconds = (end->tv_sec - start->tv_sec);
+static int64_t time_taken(struct timespec *start, struct timespec *end) {
+	time_t seconds = (end->tv_sec - start->tv_sec);
 	int64_t nanoseconds = (end->tv_nsec - start->tv_nsec) / (int64_t)NSEC_PER_MSEC;
-	float64_t milliseconds_as_float = ((float64_t)milliseconds) * ((float64_t)MSEC_PER_SEC);
-	float64_t nseconds_as_float = (float64_t)nanoseconds;
-	return milliseconds_as_float + nseconds_as_float;
+	int64_t milliseconds = (nanoseconds / NSEC_PER_MSEC);
+	milliseconds += ((int64_t)seconds * MSEC_PER_SEC);
+	return milliseconds;
 }
 
 static void handle_vent_logic(void) {
@@ -33,7 +34,7 @@ static void handle_vent_logic(void) {
 	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
 	increment_heartbeat(shared_info, VENT_CONTROL);
-	state_t current_state = shared_info->current_state;
+	state_e current_state = shared_info->current_state;
 	float64_t current_temp = shared_info->current_temp;
 	float64_t target_temp = shared_info->target_temp;
 	pthread_mutex_unlock(&shared_info->mutex);
@@ -70,20 +71,18 @@ static void handle_vent_logic(void) {
 				servo_lower();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 			}
-		} else if (current_state == STATE_FAIL) {
-			// Send message to queue and wait for it to finish
-			LOG_AND_EXIT("Vent read STATE_FAIL, shutting down");
-		} else {
-			/* MISRA requires else */
 		}
 		if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
 			pthread_mutex_lock(&shared_info->mutex);
-			shared_info->current_state = STATE_FAIL;
-			shared_info->servo_health = false;
+			set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
 			pthread_mutex_unlock(&shared_info->mutex);
 		}
-	} else {
-		return;
+		/* We don't currently need to clear the servo error since it's terminal but leaving here for future changes */
+		// else if ((time_taken(&servo_start_time, &servo_end_time) <= SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
+		// 	pthread_mutex_lock(&shared_info->mutex);
+		// 	set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+		// 	pthread_mutex_unlock(&shared_info->mutex);
+		// }
 	}
 }
 
@@ -93,10 +92,11 @@ static void handle_vent_logic(void) {
 void *vent_control_thread_entry(void *arg) {
 	LOG(VENT_CONTROL, "Starting vent control thread");
 	shared_info = (global_values_t *)arg;
+	struct timespec thread_sleep = { .tv_sec = 0L, .tv_nsec = 500 * NSEC_PER_MSEC };
 	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_vent_logic();
-		sleep(2U);
+		(void)nanosleep(&thread_sleep, NULL);
 	}
 	LOG(VENT_CONTROL, "Shutting down vent control thread");
 	return NULL;
