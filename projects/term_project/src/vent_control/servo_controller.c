@@ -1,12 +1,9 @@
 #include "servo_controller.h"
 
-#include <pthread.h>
-#ifdef NDEBUG /* We only need PWM control in release */
-#include "pwm_io_logic.h"
-#endif /* NDEBUG */
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "pwm_io_logic.h"
 
 /* Servo Angles */
 #define SERVO_RIGHT (2000000U)
@@ -18,7 +15,6 @@
 #define GATE_RAISE (SERVO_RIGHT)
 #define GATE_LOWER (SERVO_CENTER)
 
-#ifdef NDEBUG
 static uint8_t extracted_chip_value = 0;
 static uint8_t extracted_channel_value = 0;
 
@@ -102,47 +98,26 @@ static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 	// Enable output
 	enable_pwm(extracted_chip_value, extracted_channel_value, true);
 }
-#else
-static void servo_init_sw() {
-	LOG(VENT_CONTROL, "Servo initialized");
-}
-#endif /* NDEBUG */
 
 /*--------------------------------------
  * Function: servo_init
  *--------------------------------------*/
 void servo_init(uint8_t servo_chip, char servo_channel) {
-#ifdef NDEBUG
 	servo_init_hw(servo_chip, servo_channel);
-#else
-	(void)servo_chip;
-	(void)servo_channel;
-	servo_init_sw();
-#endif /* NDEBUG */
 }
 
 /*--------------------------------------
  * Function: servo_raise
  *--------------------------------------*/
 void servo_raise(void) {
-#ifdef NDEBUG
-	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
-#else
-	LOG(VENT_CONTROL, "Raising gate");
-#endif /* NDEBUG */
 }
 
 /*--------------------------------------
  * Function: servo_lower
  *--------------------------------------*/
 void servo_lower(void) {
-#ifdef NDEBUG
-	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
-#else
-	LOG(VENT_CONTROL, "Lowering gate");
-#endif /* NDEBUG */
 }
 
 /*--------------------------------------
@@ -150,16 +125,11 @@ void servo_lower(void) {
  *--------------------------------------*/
 void servo_shutdown(void) {
 	LOG(VENT_CONTROL, "Shutting down gate");
-#ifdef NDEBUG
-	// Set duty cycle
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 	struct timespec timer = { 0 };
 	timer.tv_sec = 0;
 	timer.tv_nsec = SEC_TO_NSEC / 2;
 	nanosleep(&timer, NULL);
-	// Disable output
 	enable_pwm(extracted_chip_value, extracted_channel_value, false);
-	// Unexport
 	unexport_pwm_channel(extracted_chip_value, extracted_channel_value);
-#endif /* NDEBUG */
 }

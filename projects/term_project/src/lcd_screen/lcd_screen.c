@@ -8,15 +8,10 @@
 #include "project_constants.h"
 #include "project_types.h"
 
-#ifdef NDEBUG /* Use LCD packages for release mode */
+/* LCD packages */
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
-#endif /* NDEBUG */
-
-/** Time represented in nanoseconds */
-#define QUARTER_SECOND_AS_NSEC (250000000L)
-#define HALF_SECOND_AS_NSEC (5000000L)
 
 /* LCD Screen Macros - https://www.handsontec.com/dataspecs/module/I2C_1602_LCD.pdf*/
 #define LCD_REGISTER_OFFSET 0x01
@@ -38,8 +33,6 @@
 #define LCD_FOUR_BIT_MODE 0x20
 
 #define LCD_TARGET_SHOW_TIME 2
-
-#ifdef NDEBUG
 static int32_t lcd_init_hw(const char *i2c_path, uint8_t lcd_addr) {
 	int32_t fd = open(i2c_path, O_RDWR);
 	if (fd < 0) {
@@ -52,37 +45,19 @@ static int32_t lcd_init_hw(const char *i2c_path, uint8_t lcd_addr) {
 	}
 	return fd;
 }
-#else
-static void lcd_init_sw() {
-	LOG(LCD_SCREEN, "initialized");
-}
-#endif /* NDEBUG */
 
 int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
-#ifdef NDEBUG
 	return lcd_init_hw(i2c_path, lcd_addr);
-#else
-	(void)i2c_path;
-	(void)lcd_addr;
-	lcd_init_sw();
-	return 0;
-#endif /* NDEBUG */
 }
 
 static void lcd_write_data(int32_t fd, uint8_t data) {
-#ifdef NDEBUG
 	int32_t result = write(fd, &data, 1);
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
 	}
-#else
-	(void)fd;
-	LOG(LCD_SCREEN, "Writing: %u", data);
-#endif /* NDEBUG */
 }
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
-#ifdef NDEBUG
 	struct timespec timer = { 0 };
 	timer.tv_nsec = HALF_SECOND_AS_NSEC;
 
@@ -92,48 +67,24 @@ static void lcd_pulse(int32_t fd, uint8_t data) {
 	// Confirm write with low
 	lcd_write_data(fd, data & ~LCD_ENABLE_OFFSET);
 	nanosleep(&timer, NULL);
-#else
-	(void)fd;
-	LOG(LCD_SCREEN, "Pulsing data: %u", data);
-#endif /* NDEBUG */
 }
 
 static void lcd_send_byte(int32_t fd, uint8_t data, uint8_t register_select_mode) {
-#ifdef NDEBUG
 	lcd_pulse(fd, (data & 0xF0) | register_select_mode | LCD_BACKLIGHT_OFFSET);
 	lcd_pulse(fd, ((data << 4) & 0xF0) | register_select_mode | LCD_BACKLIGHT_OFFSET);
-#else
-	(void)fd;
-	(void)register_select_mode;
-	LOG(LCD_SCREEN, "Send byte: %u", data);
-#endif /* NDEBUG */
 }
 
 void lcd_clear(int32_t fd) {
-#ifdef NDEBUG
 	lcd_send_byte(fd, LCD_CLEAR, LCD_COMMAND);
-#else
-	(void)fd;
-	LOG(LCD_SCREEN, "Clearing screen");
-#endif /* NDEBUG */
 }
 
 // Only using two rows in screen
 void lcd_set_cursor(int32_t fd, uint8_t row, uint8_t col) {
-#ifdef NDEBUG
 	if (row == 0) {
 		lcd_send_byte(fd, LCD_SET_CURSOR | (col + LCD_ROW_ZERO), LCD_COMMAND);
 	} else {
 		lcd_send_byte(fd, LCD_SET_CURSOR | (col + LCD_ROW_ONE), LCD_COMMAND);
 	}
-#else
-	(void)fd;
-	if (row == 0) {
-		LOG(LCD_SCREEN, "Cursor set to row 0, column %u", col);
-	} else {
-		LOG(LCD_SCREEN, "Cursor set to row 1, column %u", col);
-	}
-#endif /* NDEBUG */
 }
 
 void lcd_print(int32_t fd, const char *str) {
@@ -154,7 +105,7 @@ static float64_t get_current_time() {
 	return t.tv_sec + ((float64_t)t.tv_nsec / SEC_TO_NSEC);
 }
 
-static bool update_lcd(float64_t read_time, float64_t current_time, state_t last_state, state_t current_state) {
+static bool update_lcd(float64_t read_time, float64_t current_time, state_e last_state, state_e current_state) {
 	bool update = false;
 	if (read_time != 0 && (current_time - read_time) < LCD_TARGET_SHOW_TIME) {
 		update = true;
@@ -179,7 +130,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	int32_t fd = shared_info->config.gpio_layout.lcd_fd;
 	float64_t latest_target_temp = 0;
 	float64_t latest_target_temp_timestamp = 0;
-	state_t last_read_state = STATE_IDLE;
+	state_e last_read_state = STATE_IDLE;
 
 	// Wake up display
 	for (int32_t ii = 0; ii < 3; ++ii) {
@@ -205,7 +156,7 @@ void *lcd_screen_thread_entry(void *arg) {
 		pthread_mutex_lock(&shared_info->mutex);
 		float64_t current_temp = shared_info->current_temp;
 		float64_t target_temp = shared_info->target_temp;
-		state_t state_snapshot = shared_info->current_state;
+		state_e state_snapshot = shared_info->current_state;
 		increment_heartbeat(shared_info, LCD_SCREEN);
 		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);

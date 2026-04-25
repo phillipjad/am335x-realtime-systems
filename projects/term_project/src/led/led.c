@@ -13,7 +13,7 @@ static global_values_t *shared_info = NULL;
 
 static void handle_system_led_state(void) {
 	pthread_mutex_lock(&shared_info->mutex);
-	bool is_system_healthy = !shared_info->application_is_in_error;
+	bool is_system_healthy = !((shared_info->current_state == STATE_FAIL) || (shared_info->current_state == STATE_FAIL_SAFE));
 	pthread_mutex_unlock(&shared_info->mutex);
 
 	if (is_system_healthy) {

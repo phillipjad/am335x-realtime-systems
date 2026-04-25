@@ -4,21 +4,15 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
-#ifdef USE_CONFIG /* We only need this header if we are using config file logic in release */
-#ifdef NDEBUG
+#ifdef USE_CONFIG
 #include "app_config.h"
-#endif /* NDEBUG */
 #endif /* USE_CONFIG */
 #include "project_constants.h"
-#ifndef USE_CONFIG /* We only need user input when not using a config file in release */
-#ifdef NDEBUG
+#ifndef USE_CONFIG
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
-#endif              /* NDEBUG */
 #endif              /* !USE_CONFIG */
-#ifdef NDEBUG       /* We only need this header when using mmap logic */
 #include "gpio_control.h"
-#endif /* NDEBUG */
 #include "lcd_screen.h"
 #include "led.h"
 #include "log_handler.h"
@@ -59,7 +53,6 @@ static void application_init(void) {
 	LOG(NUM_THREADS, "Initialized application");
 }
 
-#ifdef NDEBUG
 /*--------------------------------------
  * Static Function: hardware_init
  *--------------------------------------*/
@@ -84,7 +77,6 @@ static void hardware_init(void) {
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 }
-#endif /* NDEBUG */
 
 /*--------------------------------------
  * Static Function: globals_init
@@ -94,27 +86,16 @@ static void globals_init(void) {
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
-	shared_info.servo_activation_time = (struct timespec){ 0 };
-	shared_info.servo_health = true;
 }
 
 /*--------------------------------------
  * Static Function: log_mode
  *--------------------------------------*/
 static void log_mode(void) {
-#ifdef DEBUG
-	LOG(NUM_THREADS, "DEBUG MODE ENABLED");
-#else
-#ifdef NDEBUG
 	LOG(NUM_THREADS, "RELEASE MODE ENABLED");
-#else
-	LOG_AND_EXIT("No release mode detected!");
-#endif
-#endif
 }
 
 #ifndef USE_CONFIG
-#ifdef NDEBUG
 /*--------------------------------------
  * Static Function: get_user_configuration_items
  *--------------------------------------*/
@@ -166,7 +147,6 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
 	/* Servo Pin */
 }
-#endif /* NDEBUG */
 #endif /* !USE_CONFIG */
 
 static void start_project_threads() {
@@ -256,10 +236,7 @@ static void handle_shutdown(int32_t exit_code) {
 	join_project_threads();
 	LOG(NUM_THREADS, "Shutting down...");
 	servo_shutdown();
-#ifdef NDEBUG
-	/* Hardware mmap close if we are in release mode */
 	gpio_map_close();
-#endif /* NDEBUG */
 	exit(exit_code);
 }
 
@@ -313,14 +290,9 @@ int32_t main(void) {
 	init_log_handler(&shared_info);
 
 	verify_sudo();
-#ifdef NDEBUG /* Only need this in release */
 	configuration_items_t *user_config = &shared_info.config;
-#endif            /* NDEBUG */
-#ifdef USE_CONFIG /* If we are using a config file then we load it in first */
-#ifdef NDEBUG
-	/* We don't configure anything in debug */
+#ifdef USE_CONFIG
 	load_app_config(user_config);
-#endif /* NDEBUG */
 #endif /* USE_CONFIG */
 
 	/* Log the mode that the binary was compiled with */
@@ -331,16 +303,11 @@ int32_t main(void) {
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
 
-#ifndef USE_CONFIG /* If we are not using config we should get inputs from stdio */
-#ifdef NDEBUG
+#ifndef USE_CONFIG
 	get_user_configuration_items(user_config);
-#endif /* NDEBUG */
 #endif /* !USE_CONFIG */
 
-/* Hardware mmap init if we are in release mode */
-#ifdef NDEBUG
 	hardware_init();
-#endif /* NDEBUG */
 
 	/* Global params init */
 	globals_init();
@@ -353,7 +320,9 @@ int32_t main(void) {
 	}
 	LOG(NUM_THREADS, "Starting application shutdown sequence...");
 
-	bool system_error = atomic_load(&shared_info.application_is_in_error);
+	pthread_mutex_lock(&shared_info.mutex);
+	bool system_error = (shared_info.current_state == STATE_FAIL) || (shared_info.current_state == STATE_FAIL_SAFE);
+	pthread_mutex_unlock(&shared_info.mutex);
 	exit_code = (exit_code == STATUS_FAIL) ? exit_code : (system_error) ? (STATUS_FAIL) : exit_code;
 
 	handle_shutdown(exit_code);

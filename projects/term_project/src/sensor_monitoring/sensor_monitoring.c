@@ -5,9 +5,7 @@
 #include <time.h>
 
 /* Local project includes after system libraries */
-#ifdef NDEBUG
 #include "gpio_control.h"
-#endif
 #include "heartbeat.h"
 #include "logger.h"
 #include "project_constants.h"
@@ -66,7 +64,7 @@ void sensor_monitoring(direction_t train_direction) {
     // Grab snapshot of state and direction at start
     // Grab lock
     pthread_mutex_lock(&shared_info->mutex);
-    state_t snapshot_state = shared_info->current_state;
+    state_e snapshot_state = shared_info->current_state;
     direction_t snapshot_direction = shared_info->current_direction;
     struct timespec snapshot_activation_time = shared_info->servo_activation_time;
     // Release lock
@@ -154,7 +152,7 @@ void failsafe_timeout(void) {
 	// Grab snapshot of state and direction at start
 	// Grab lock
 	pthread_mutex_lock(&shared_info->mutex);
-	state_t snapshot_state = shared_info->current_state;
+	state_e snapshot_state = shared_info->current_state;
 	struct timespec snapshot_activation_time = shared_info->servo_activation_time;
 	// Release lock
 	pthread_mutex_unlock(&shared_info->mutex);
@@ -195,7 +193,7 @@ void failsafe_timeout(void) {
 static void check_for_idle(bool was_button_pressed) {
     // Get current state
     pthread_mutex_lock(&shared_info->mutex);
-    state_t current_state = shared_info->current_state;
+    state_e current_state = shared_info->current_state;
     pthread_mutex_unlock(&shared_info->mutex);
 
     //Get current sys time
@@ -227,12 +225,6 @@ void *sensor_monitoring_thread_entry(void *arg) {
 
 	// Check for servo events based on temperature
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-#ifdef NDEBUG
-		// Check west approach button
-#else
-		// In debug mode, gpio_map is not initialized — use supervisor-injected atomic flags instead
-#endif /* NDEBUG */
-
 		/* Check if we should revert back to idle. This will **NOT** interrupt failsafe logic */
 		// check_for_idle(button_pressed);
 
