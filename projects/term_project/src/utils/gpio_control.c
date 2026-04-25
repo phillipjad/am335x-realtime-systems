@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #include "logger.h"
-#include "project_constants.h"
 #include "project_types.h"
 
 /* GPIO Count */
@@ -60,28 +59,28 @@ void gpio_map_init(void) {
 	// Page offset
 	uint32_t page_off = 0;
 	// Clear out
-	memset(gpios_array, 0, sizeof(gpios_array));
+	(void)memset(gpios_array, 0, sizeof(gpios_array));
 
 	// GPIOs
 	const uint32_t addresses[GPIO_COUNT] = { GPIO0_BASE_PHYS, GPIO1_BASE_PHYS, GPIO2_BASE_PHYS, GPIO3_BASE_PHYS };
 
 	// GPIO Setup
-	for (int i = 0; i < GPIO_COUNT; ++i) {
-		gpios_array[i].fd = open("/dev/mem", O_RDWR | O_SYNC);
-		if (gpios_array[i].fd < 0) {
-			LOG_AND_EXIT("Failed to open /dev/mem for GPIO PHYSICAL BASE: %d", i);
+	for (int32_t ii = 0; ii < GPIO_COUNT; ++ii) {
+		gpios_array[ii].fd = open("/dev/mem", O_RDWR | O_SYNC);
+		if (gpios_array[ii].fd < 0) {
+			LOG_AND_EXIT("Failed to open /dev/mem for GPIO PHYSICAL BASE: %d", ii);
 		}
 
-		page_base = (uint32_t)(addresses[i] & ~(PAGE_SIZE - 1U));
-		page_off = (uint32_t)(addresses[i] - page_base);
+		page_base = (uint32_t)(addresses[ii] & ~(PAGE_SIZE - 1U));
+		page_off = (uint32_t)(addresses[ii] - page_base);
 
-		gpios_array[i].map_base =
-		    (volatile uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, gpios_array[i].fd, page_base);
-		if (gpios_array[i].map_base == MAP_FAILED) {
-			LOG_AND_EXIT("Failed to create mmap base for GPIO PHYSICAL BASE: %d, at physical address: 0x%X", i, addresses[i]);
+		gpios_array[ii].map_base =
+		    (volatile uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, gpios_array[ii].fd, page_base);
+		if (gpios_array[ii].map_base == MAP_FAILED) {
+			LOG_AND_EXIT("Failed to create mmap base for GPIO PHYSICAL BASE: %d, at physical address: 0x%X", ii, addresses[ii]);
 		}
 
-		gpios_array[i].gpio_base = gpios_array[i].map_base + page_off;
+		gpios_array[ii].gpio_base = gpios_array[ii].map_base + page_off;
 	}
 }
 
@@ -89,12 +88,12 @@ void gpio_map_init(void) {
  * Function: gpio_map_close
  *--------------------------------------*/
 void gpio_map_close(void) {
-	for (int i = 0; i < GPIO_COUNT; ++i) {
-		if (gpios_array[i].map_base && gpios_array[i].map_base != MAP_FAILED) {
-			munmap((void *)(uintptr_t)gpios_array[i].map_base, PAGE_SIZE);
+	for (int32_t ii = 0; ii < GPIO_COUNT; ++ii) {
+		if (gpios_array[ii].map_base && gpios_array[ii].map_base != MAP_FAILED) {
+			munmap((void *)(uintptr_t)gpios_array[ii].map_base, PAGE_SIZE);
 		}
-		if (gpios_array[i].fd >= 0) {
-			close(gpios_array[i].fd);
+		if (gpios_array[ii].fd >= 0) {
+			close(gpios_array[ii].fd);
 		}
 	}
 }

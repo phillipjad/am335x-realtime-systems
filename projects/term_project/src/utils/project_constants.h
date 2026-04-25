@@ -14,6 +14,10 @@
 #define MSEC_PER_SEC (1000U)
 #define NSEC_PER_MSEC (1000000L)
 
+/* Various time constants */
+#define QUARTER_SECOND_AS_NSEC (250000000L)
+#define HALF_SECOND_AS_NSEC (5000000L)
+
 /* Debounce Values */
 #define SAMPLE_MS (5)
 #define STABLE_NEEDED (6)
