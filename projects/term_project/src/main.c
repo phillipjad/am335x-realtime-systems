@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdlib.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 
@@ -351,6 +352,9 @@ int32_t main(void) {
 		exit_code = check_heartbeats();
 	}
 	LOG(NUM_THREADS, "Starting application shutdown sequence...");
+
+	bool system_error = atomic_load(&shared_info.application_is_in_error);
+	exit_code = (exit_code == STATUS_FAIL) ? exit_code : (system_error) ? (STATUS_FAIL) : exit_code;
 
 	handle_shutdown(exit_code);
 }

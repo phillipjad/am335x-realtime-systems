@@ -61,7 +61,7 @@ typedef struct {
 } button_debounce_t;
 
 typedef struct {
-	int fd;
+	int32_t fd;
 	volatile uint8_t *map_base;  // mapped page base
 	volatile uint8_t *gpio_base; // base + page_offset
 } gpio_map_t;
@@ -83,6 +83,11 @@ typedef struct {
 	size_t size;
 } log_queue_t;
 
+typedef struct {
+	bool is_set;
+	char error_msg[MAX_LOG_LEN + 1U];
+} error_e;
+
 /**
  * @brief Global struct used to share values across various threads
  */
@@ -94,14 +99,11 @@ typedef struct {
 	state_t current_state;                 /**< System state */
 	float64_t current_temp;                /**< Current temperature */
 	float64_t target_temp;                 /**< Target temperature */
-	bool servo_health;                     /**< Servo health */
 	struct timespec servo_activation_time; /**< Train arrival time */
-	bool temperature_health;               /**< Temperature health */
-	bool relay_health;                     /**< Relay health */
-	uint64_t heartbeats[NUM_THREADS];
-	log_queue_t logger; /**< Application logger */
-#ifndef NDEBUG
-#endif /* NDEBUG */
+	uint64_t heartbeats[NUM_THREADS];      /**< Thread heartbeats */
+	error_e thread_errors[NUM_THREADS];    /**< Thread errors */
+	atomic_bool application_is_in_error;   /**< indicates the application is in error */
+	log_queue_t logger;                    /**< Application logger */
 } global_values_t;
 
 
