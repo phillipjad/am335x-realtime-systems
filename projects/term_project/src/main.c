@@ -272,6 +272,12 @@ static int32_t check_heartbeats(void) {
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
 				LOG(NUM_THREADS, "%s thread has stalled or deadlocked. Heartbeat missed %u times in a row",
 				    THREAD_NAMES[ii], num_missed_heartbeats[ii]);
+				pthread_mutex_lock(&shared_info.mutex);
+				shared_info.current_state = STATE_FAIL;
+				pthread_mutex_unlock(&shared_info.mutex);
+				struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
+				nanosleep(&lcd_update, NULL);
+				atomic_store(&shared_info.is_shutdown_requested, true);
 				return STATUS_FAIL;
 			}
 		} else {

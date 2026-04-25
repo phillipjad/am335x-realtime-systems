@@ -29,6 +29,8 @@ static void handle_application_health(void) {
 				pthread_mutex_lock(&shared_info->mutex);
 				shared_info->current_state = STATE_FAIL;
 				pthread_mutex_unlock(&shared_info->mutex);
+				struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
+				nanosleep(&lcd_update, NULL);
 				atomic_store(&shared_info->is_shutdown_requested, true);
 				break;
 			}
