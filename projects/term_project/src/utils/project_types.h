@@ -107,6 +107,10 @@ typedef struct {
 	log_queue_t logger;                    /**< Application logger */
 } global_values_t;
 
+static inline bool has_error(const error_e *err) {
+	return err->is_set;
+}
+
 static inline void set_error(error_e *err, const char *error_msg) {
 	err->is_set = true;
 	(void)strncpy(err->error_msg, error_msg, MAX_LOG_LEN);

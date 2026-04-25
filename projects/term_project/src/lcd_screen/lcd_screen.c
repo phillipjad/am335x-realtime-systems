@@ -1,6 +1,7 @@
 #include "lcd_screen.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 
 /* Local project includes after system libraries */
 #include "heartbeat.h"
@@ -34,6 +35,9 @@
 #define LCD_CHAR_SIZE 16
 
 #define LCD_TARGET_SHOW_TIME 2
+
+static global_values_t *shared_info = NULL;
+
 static int32_t lcd_init_hw(const char *i2c_path, uint8_t lcd_addr) {
 	int32_t fd = open(i2c_path, O_RDWR);
 	if (fd < 0) {
@@ -53,9 +57,15 @@ int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
 
 static void lcd_write_data(int32_t fd, uint8_t data) {
 	int32_t result = write(fd, &data, 1);
+	// Locking because of error checking/settings
+	pthread_mutex_lock(&shared_info->mutex);
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
+		set_error(&shared_info->thread_errors[LCD_SCREEN], strerror(errno));
+	} else if (has_error(&shared_info->thread_errors[LCD_SCREEN])) {
+		clear_error(&shared_info->thread_errors[LCD_SCREEN]);
 	}
+	pthread_mutex_unlock(&shared_info->mutex);
 }
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
@@ -115,8 +125,6 @@ static bool update_lcd(float64_t read_time, float64_t current_time, state_e last
 	}
 	return update;
 }
-
-static global_values_t *shared_info = NULL;
 
 void *lcd_screen_thread_entry(void *arg) {
 	LOG(LCD_SCREEN, "Starting LCD screen thread");

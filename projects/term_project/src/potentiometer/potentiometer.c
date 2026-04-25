@@ -75,21 +75,25 @@ void *potentiometer_thread_entry(void *arg) {
 		(void)memset(input, 0, sizeof(input));
 		// Read potentiometer input
 		ssize_t result = read(fd, input, sizeof(input) - 1);
-		if (result == -1) {
-			LOG(POTENTIOMETER, "Potentiometer read error: %s", strerror(errno));
-		}
-
-		float64_t value = atof(input);
-		percent = value / POT_MAX_VALUE;
-		temp = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * percent);
-		// Change to percentage after adjusting temperature
-		percent = percent * 100;
-
 		pthread_mutex_lock(&shared_info->mutex);
-		// If in RUNNING or FAIL_SAFE mode, will read value and adjust target_temp or servo duty_cycle
-		// Write to global potentiometer values
-		shared_info->potentiometer_percentage_closed = percent;
-		shared_info->target_temp = temp;
+		if (result < 0) {
+			LOG(POTENTIOMETER, "Potentiometer read error: %s", strerror(errno));
+			set_error(&shared_info->thread_errors[POTENTIOMETER], strerror(errno));
+		} else {
+			if (has_error(&shared_info->thread_errors[POTENTIOMETER])) {
+					clear_error(&shared_info->thread_errors[POTENTIOMETER]);
+			}
+			float64_t value = atof(input);
+			percent = value / POT_MAX_VALUE;
+			temp = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * percent);
+			// Change to percentage after adjusting temperature
+			percent = percent * 100;
+
+			// If in RUNNING or FAIL_SAFE mode, will read value and adjust target_temp or servo duty_cycle
+			// Write to global potentiometer values
+			shared_info->potentiometer_percentage_closed = percent;
+			shared_info->target_temp = temp;
+		}
 		increment_heartbeat(shared_info, POTENTIOMETER);
 		pthread_mutex_unlock(&shared_info->mutex);
 	}

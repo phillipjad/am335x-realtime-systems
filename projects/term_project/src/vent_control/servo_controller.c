@@ -109,14 +109,14 @@ void servo_init(uint8_t servo_chip, char servo_channel) {
 /*--------------------------------------
  * Function: servo_raise
  *--------------------------------------*/
-void servo_raise(void) {
+int32_t servo_raise(void) {
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 }
 
 /*--------------------------------------
  * Function: servo_lower
  *--------------------------------------*/
-void servo_lower(void) {
+int32_t servo_lower(void) {
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
 }
 
