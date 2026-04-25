@@ -94,6 +94,7 @@ typedef struct {
 	state_t current_state;                 /**< System state */
 	float64_t current_temp;                /**< Current temperature */
 	float64_t target_temp;                 /**< Target temperature */
+	float64_t potentiometer_percentage_closed;    /**< Potentiometer value used for manual control */
 	bool servo_health;                     /**< Servo health */
 	struct timespec servo_activation_time; /**< Train arrival time */
 	bool temperature_health;               /**< Temperature health */

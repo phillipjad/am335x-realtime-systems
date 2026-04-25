@@ -82,6 +82,9 @@ static void hardware_init(void) {
 	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+
+	LOG(NUM_THREADS, "Initialized potentiometer");
+	potentiometer_init(user_config->gpio_layout.potentiometer);
 }
 #endif /* NDEBUG */
 
@@ -95,6 +98,7 @@ static void globals_init(void) {
 	shared_info.current_state = STATE_IDLE;
 	shared_info.servo_activation_time = (struct timespec){ 0 };
 	shared_info.servo_health = true;
+	shared_info.potentiometer_percentage_closed = 0;
 }
 
 /*--------------------------------------

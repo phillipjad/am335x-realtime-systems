@@ -36,6 +36,7 @@
 #define LCD_SET_CURSOR 0x80
 #define LCD_DATA_PINS 0x30
 #define LCD_FOUR_BIT_MODE 0x20
+#define LCD_CHAR_SIZE 16
 
 #define LCD_TARGET_SHOW_TIME 2
 
@@ -137,8 +138,8 @@ void lcd_print(int fd, const char *str) {
 }
 
 void lcd_print_float(int fd, float64_t val) {
-	char buffer[16] = { 0 };
-	snprintf(buffer, sizeof(buffer), "%.2f", val);
+	char buffer[LCD_CHAR_SIZE] = { 0 };
+	snprintf(buffer, sizeof(buffer), "%.2f F", val);
 	lcd_print(fd, buffer);
 }
 
@@ -221,32 +222,44 @@ void *lcd_screen_thread_entry(void *arg) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Target Temp (F):");
+				lcd_print(fd, "R: Target Temp");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, target_temp);
-				LOG(LCD_SCREEN, "Target Temp: %lf", target_temp);
+				LOG(LCD_SCREEN, "Running: Target Temp: %lf", target_temp);
 				render_lcd = false;
 			} else if (render_lcd && last_read_state != state_snapshot) {
 				// Print on LCD - Current temperature: ###
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Current Temp (F):");
+				lcd_print(fd, "R: Current Temp");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, current_temp);
-				LOG(LCD_SCREEN, "Current Temp: %lf", current_temp);
+				LOG(LCD_SCREEN, "Running: Current Temp: %lf", current_temp);
 				render_lcd = false;
 			} else {
 				/* MISRA requires else */
 			}
 		} else if (render_lcd && state_snapshot == STATE_FAIL_SAFE) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
-			lcd_clear(fd);
-			lcd_set_cursor(fd, 0, 0);
-			lcd_print(fd, "ERROR:");
-			lcd_set_cursor(fd, 1, 0);
-			lcd_print(fd, "FAIL-SAFE STATE");
-			LOG(LCD_SCREEN, "Entered state: FAIL-SAFE");
-			render_lcd = false;
+			if ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME) {
+				// Print on LCD - Target Temp: ##
+				lcd_clear(fd);
+				lcd_set_cursor(fd, 0, 0);
+				lcd_print(fd, "FS: Target Temp");
+				lcd_set_cursor(fd, 1, 0);
+				lcd_print_float(fd, target_temp);
+				LOG(LCD_SCREEN, "Fail-Safe: Target Temp: %lf", target_temp);
+				render_lcd = false;
+			} else {
+				// Print on LCD - Current temperature: ###
+				lcd_clear(fd);
+				lcd_set_cursor(fd, 0, 0);
+				lcd_print(fd, "FS: Current Temp");
+				lcd_set_cursor(fd, 1, 0);
+				lcd_print_float(fd, current_temp);
+				LOG(LCD_SCREEN, "Fail-Safe: Current Temp: %lf", current_temp);
+				render_lcd = false;
+			}
 		} else if (render_lcd && state_snapshot == STATE_FAIL) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
 			lcd_clear(fd);
@@ -254,7 +267,7 @@ void *lcd_screen_thread_entry(void *arg) {
 			lcd_print(fd, "ERROR:");
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL STATE");
-			LOG(LCD_SCREEN, "Entered state: FAIL");
+			LOG(LCD_SCREEN, "FAIL: LCD read Fail state");
 			render_lcd = false;
 		} else {
 			/* MISRA requires else */

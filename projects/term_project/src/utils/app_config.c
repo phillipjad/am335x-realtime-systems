@@ -83,7 +83,7 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return parse_pwm_input(value, &config->gpio_layout.servo.servo_chip, &config->gpio_layout.servo.servo_channel);
 	} else if (strcmp(key, LCD_IC2_NUMBER_KEY) == 0) {
 		return parse_input_to_uint8(value, &config->gpio_layout.lcd_i2c_bus);
-	} else if (strcmp(key, POTENTIOMETER_GPIO_PIN) == 0) {
+	} else if (strcmp(key, POTENTIOMETER_AIN_PIN) == 0) {
 		return parse_input_to_uint8(value, &config->gpio_layout.potentiometer);
 	} else {
 		LOG(NUM_THREADS, "Received unknown config key: %s", key);
