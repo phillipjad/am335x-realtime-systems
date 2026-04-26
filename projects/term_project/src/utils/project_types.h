@@ -26,13 +26,14 @@ typedef struct {
 } servo_t;
 
 typedef struct {
+	int32_t lcd_fd;          /**< file descriptor for LCD screen */
+	servo_t servo;           /**< Pin for servo */
 	uint8_t target_temp_led; /**< Pin for target_temp_led */
 	uint8_t system_ok_led;   /**< Pin for system_ok_led */
 	uint8_t system_fail_led; /**< Pin for system_fail_led */
 	uint8_t lcd_i2c_bus;     /**< Bus for LCD screen */
-	int32_t lcd_fd;          /**< file descriptor for LCD screen */
 	uint8_t potentiometer;   /**< Pin for potentiometer */
-	servo_t servo;           /**< Pin for servo */
+	uint8_t temp_sensor;     /**< Pin for temp sensor */
 } gpio_layout_t;
 
 typedef struct {
@@ -42,8 +43,6 @@ typedef struct {
 typedef enum {
 	VENT_CONTROL,
 	LOG_HANDLER,
-	SENSOR_MONITORING,
-	SUPERVISOR_INPUT,
 	LCD_SCREEN,
 	TEMP_SENSOR,
 	LED,
@@ -99,6 +98,7 @@ typedef struct {
 	configuration_items_t config;              /**< Configuration items used throughout application */
 	state_e current_state;                     /**< System state */
 	float64_t current_temp;                    /**< Current temperature */
+	float64_t current_humidity_rh;             /**< Current relative humidity (%) */
 	float64_t target_temp;                     /**< Target temperature */
 	float64_t potentiometer_percentage_closed; /**< Potentiometer value used for manual control */
 	struct timespec servo_activation_time;     /**< Train arrival time */
