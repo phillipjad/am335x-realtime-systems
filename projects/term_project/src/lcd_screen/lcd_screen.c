@@ -113,7 +113,7 @@ void lcd_print_float(int32_t fd, float64_t val) {
 static float64_t get_current_time() {
 	struct timespec t = { 0 };
 	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-	return t.tv_sec + ((float64_t)t.tv_nsec / SEC_TO_NSEC);
+	return t.tv_sec + ((float64_t)t.tv_nsec / NSEC_PER_SEC_F);
 }
 
 static bool update_lcd(float64_t read_time, float64_t current_time, state_e last_state, state_e current_state) {
