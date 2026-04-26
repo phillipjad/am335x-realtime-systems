@@ -77,7 +77,7 @@ static void handle_vent_logic(void) {
 				state_updated = true;
 			}
 		}
-		if (state_update) {
+		if (state_updated) {
 			pthread_mutex_lock(&shared_info->mutex);
 			if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
 				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
