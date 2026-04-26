@@ -63,13 +63,13 @@ static void hardware_init(void) {
 	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
 	// Start with target reached off and system ok on
-	gpio_set(user_config->gpio_layout.target_temp_led, false);
-	gpio_set(user_config->gpio_layout.system_ok_led, true);
+	gpio_set(user_config->gpio_layout.target_temp_led, GPIO_LOW);
+	gpio_set(user_config->gpio_layout.system_ok_led, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized hardware LEDs");
 
 	/* We'll start with the temp sensor set to output and high. Temp sensor thread will manipulate as necessary after */
 	gpio_set_direction(user_config->gpio_layout.temp_sensor, GPIO_OUT);
-	gpio_set(user_config->gpio_layout.temp_sensor, true);
+	gpio_set(user_config->gpio_layout.temp_sensor, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized temp sensor");
 
 
