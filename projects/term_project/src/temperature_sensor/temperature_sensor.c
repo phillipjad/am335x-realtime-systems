@@ -175,8 +175,8 @@ static int32_t read_temp_sensor(temp_readings_t *out) {
 void *temperature_sensor_thread_entry(void *arg) {
 	LOG(TEMP_SENSOR, "Starting temperature sensor thread");
 	shared_info = (global_values_t *)arg;
-	/* Sleep 3.5 seconds between reads to not overload sensor */
-	const struct timespec thread_sleep = { .tv_sec = 3, .tv_nsec = 500 * NSEC_PER_MSEC };
+	/* Sleep 2 seconds between reads to not overload sensor */
+	const struct timespec thread_sleep = { .tv_sec = 2L, .tv_nsec = 0L };
 
 	uint8_t failed_sensor_reads = 0U;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
