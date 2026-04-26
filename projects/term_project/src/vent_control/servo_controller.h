@@ -27,6 +27,13 @@ int32_t servo_raise(void);
 int32_t servo_lower(void);
 
 /**
+ * @brief Function to control servo with the potentiometer percentage
+ *
+ * @return void* Returns NULL
+ */
+int32_t potentiometer_based_servo(float64_t percent);
+
+/**
  * @brief Function to shutdown servo
  *
  * @return void* Returns NULL

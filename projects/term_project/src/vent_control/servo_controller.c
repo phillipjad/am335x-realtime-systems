@@ -110,14 +110,21 @@ void servo_init(uint8_t servo_chip, char servo_channel) {
  * Function: servo_raise
  *--------------------------------------*/
 int32_t servo_raise(void) {
-	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
+	return set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 }
 
 /*--------------------------------------
  * Function: servo_lower
  *--------------------------------------*/
 int32_t servo_lower(void) {
-	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
+	return set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER);
+}
+
+/*--------------------------------------
+ * Function: servo_lower
+ *--------------------------------------*/
+int32_t potentiometer_based_servo(float64_t percent) {
+	return set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER + ((float64_t)(GATE_RAISE - GATE_LOWER)) * (percent/100.0));
 }
 
 /*--------------------------------------

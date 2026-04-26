@@ -31,7 +31,7 @@ static void handle_vent_logic(void) {
 	}
 
 	bool state_updated = false;
-	int32_t servo_state = STATUS_SUCCESS;
+	int32_t servo_status = STATUS_SUCCESS;
 	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
 	increment_heartbeat(shared_info, VENT_CONTROL);
@@ -50,14 +50,14 @@ static void handle_vent_logic(void) {
 			if ((current_temp > (target_temp + TEMP_BUFFER)) && !vent_open) {
 				LOG(VENT_CONTROL, "Read STATE_RUNNING state with high temp, opening vent.");
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_state = servo_raise();
+				servo_status = servo_raise();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 				vent_open = true;
 				state_updated = true;
 			} else if ((current_temp < (target_temp - TEMP_BUFFER)) && vent_open) {
 				LOG(VENT_CONTROL, "Read STATE_RUNNING state with low temp, closing vent.");
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_state = servo_lower();
+				servo_status = servo_lower();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 				vent_open = false;
 				state_updated = true;
@@ -66,10 +66,11 @@ static void handle_vent_logic(void) {
 			}
 		} else if (current_state == STATE_FAIL_SAFE) {
 			// If idle map potentiometer reading to servo angle: SERVO_LOWER + (potentiometer_activation_percentage * (SERVO_RAISE - SERVO_LOWER))
+			potentiometer_based_servo(shared_info->potentiometer_percentage_closed);
 			if (!vent_open) {
-				LOG(VENT_CONTROL, "Read STATE_RUNNING state with manual control, closing vent.");
+				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control, closing vent.");
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_state = servo_lower();
+				servo_status = servo_lower();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 			}
 		}
