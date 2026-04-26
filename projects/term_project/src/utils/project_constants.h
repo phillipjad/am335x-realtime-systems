@@ -52,4 +52,7 @@
 #define MAX_LINENO_LEN (10U)
 #define MAX_LOG_QUEUE_CAPACITY (1000U)
 
+/* Shared sensor constants */
+#define SENSOR_FAIL_THRESHOLD (3U)
+
 #endif /* PROJECT_CONSTANTS_H */

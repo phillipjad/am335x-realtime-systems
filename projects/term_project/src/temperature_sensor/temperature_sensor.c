@@ -56,8 +56,9 @@ static void reset_pin(uint8_t pin) {
  * and https://www.waveshare.com/wiki/DHT22_Temperature-Humidity_Sensor for data parsing
  *
  * @param[out] out The struct to store the output from this temp sensor reading
+ * @return int32_t Unix-like error code. 0 means success < 0 means error
  */
-static void read_dht_22(temp_readings_t *out) {
+static int32_t read_dht_22(temp_readings_t *out) {
 	static const struct timespec start_low_duration = { .tv_sec = 0L, .tv_nsec = 10L * NSEC_PER_MSEC };
 	uint8_t data_pin = shared_info->config.gpio_layout.temp_sensor;
 
@@ -74,11 +75,8 @@ static void read_dht_22(temp_readings_t *out) {
 	while (gpio_read(data_pin)) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &now);
 		if (past_deadline(&now, &deadline)) {
-			pthread_mutex_lock(&shared_info->mutex);
-			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed to pull voltage low within 40 microseconds");
-			pthread_mutex_unlock(&shared_info->mutex);
 			reset_pin(data_pin);
-			return;
+			return STATUS_FAIL;
 		}
 	}
 
@@ -87,11 +85,8 @@ static void read_dht_22(temp_readings_t *out) {
 	while (!gpio_read(data_pin)) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &now);
 		if (past_deadline(&now, &deadline)) {
-			pthread_mutex_lock(&shared_info->mutex);
-			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 timed out waiting for ACK HIGH");
-			pthread_mutex_unlock(&shared_info->mutex);
 			reset_pin(data_pin);
-			return;
+			return STATUS_FAIL;
 		}
 	}
 
@@ -100,11 +95,8 @@ static void read_dht_22(temp_readings_t *out) {
 	while (gpio_read(data_pin)) {
 		clock_gettime(CLOCK_MONOTONIC_RAW, &now);
 		if (past_deadline(&now, &deadline)) {
-			pthread_mutex_lock(&shared_info->mutex);
-			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 timed out waiting for data start");
-			pthread_mutex_unlock(&shared_info->mutex);
 			reset_pin(data_pin);
-			return;
+			return STATUS_FAIL;
 		}
 	}
 
@@ -117,11 +109,8 @@ static void read_dht_22(temp_readings_t *out) {
 		while (!gpio_read(data_pin)) {
 			clock_gettime(CLOCK_MONOTONIC_RAW, &now);
 			if (past_deadline(&now, &deadline)) {
-				pthread_mutex_lock(&shared_info->mutex);
-				set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT-22 timed out in bit separator");
-				pthread_mutex_unlock(&shared_info->mutex);
 				reset_pin(data_pin);
-				return;
+				return STATUS_FAIL;
 			}
 		}
 
@@ -136,11 +125,8 @@ static void read_dht_22(temp_readings_t *out) {
 		while (gpio_read(data_pin)) {
 			clock_gettime(CLOCK_MONOTONIC_RAW, &high_end);
 			if (past_deadline(&high_end, &bit_deadline)) {
-				pthread_mutex_lock(&shared_info->mutex);
-				set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 timed out in bit HIGH pulse");
-				pthread_mutex_unlock(&shared_info->mutex);
 				reset_pin(data_pin);
-				return;
+				return STATUS_FAIL;
 			}
 		}
 		clock_gettime(CLOCK_MONOTONIC_RAW, &high_end);
@@ -158,7 +144,7 @@ static void read_dht_22(temp_readings_t *out) {
 	if (expected != raw_bytes[4]) {
 		LOG(TEMP_SENSOR, "DHT22 checksum mismatch: expected 0x%02X got 0x%02X", expected, raw_bytes[4]);
 		reset_pin(data_pin);
-		return;
+		return STATUS_FAIL;
 	}
 
 	/* Convert raw bytes to physical values */
@@ -172,21 +158,18 @@ static void read_dht_22(temp_readings_t *out) {
 		out->temp_c = -(out->temp_c);
 	}
 
-	/* If we got data that's valid we can idempotently clear any temp sensor errors */
-	pthread_mutex_lock(&shared_info->mutex);
-	clear_error(&shared_info->thread_errors[TEMP_SENSOR]);
-	pthread_mutex_unlock(&shared_info->mutex);
-
 	reset_pin(data_pin);
+	return STATUS_SUCCESS;
 }
 
 /**
  * @brief Generic temp sensor wrapper function
  *
  * @param[out] out Struct to read values from the temp sensor into
+ * @return int32_t Unix-like error code. 0 means success < 0 means error
  */
-static void read_temp_sensor(temp_readings_t *out) {
-	read_dht_22(out);
+static int32_t read_temp_sensor(temp_readings_t *out) {
+	return read_dht_22(out);
 }
 
 void *temperature_sensor_thread_entry(void *arg) {
@@ -195,15 +178,31 @@ void *temperature_sensor_thread_entry(void *arg) {
 	/* Sleep 3.5 seconds between reads to not overload sensor */
 	const struct timespec thread_sleep = { .tv_sec = 3, .tv_nsec = 500 * NSEC_PER_MSEC };
 
+	uint8_t failed_sensor_reads = 0U;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		temp_readings_t readings = { 0 };
-		read_temp_sensor(&readings);
+		int32_t result = read_temp_sensor(&readings);
+		if (result != STATUS_SUCCESS) { 
+			++failed_sensor_reads;
+		} else {
+			pthread_mutex_lock(&shared_info->mutex);
+			shared_info->current_temp = readings.temp_c;
+			shared_info->current_humidity_rh = readings.humidity_rh;
+			pthread_mutex_unlock(&shared_info->mutex);
+			LOG(TEMP_SENSOR, "Temp: %.3lf C  Humidity: %.1f %%RH", readings.temp_c, readings.humidity_rh);
+		}
 
-		pthread_mutex_lock(&shared_info->mutex);
-		shared_info->current_temp = readings.temp_c;
-		shared_info->current_humidity_rh = readings.humidity_rh;
-		pthread_mutex_unlock(&shared_info->mutex);
-		LOG(TEMP_SENSOR, "Temp: %.3lf C  Humidity: %.1f %%RH", readings.temp_c, readings.humidity_rh);
+		if (failed_sensor_reads > SENSOR_FAIL_THRESHOLD) {
+			pthread_mutex_lock(&shared_info->mutex);
+			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed 3 consecutive sensor readings");
+			pthread_mutex_unlock(&shared_info->mutex);
+		} else { 
+			if (result == STATUS_SUCCESS) {
+				pthread_mutex_lock(&shared_info->mutex);
+				clear_error(&shared_info->thread_errors[TEMP_SENSOR]);
+				pthread_mutex_unlock(&shared_info->mutex);
+			}
+		}
 
 		increment_heartbeat(shared_info, TEMP_SENSOR);
 		(void)nanosleep(&thread_sleep, NULL);
