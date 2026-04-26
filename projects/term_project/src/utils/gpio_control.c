@@ -127,7 +127,7 @@ uint8_t gpio_read(uint8_t pin) {
 
 	// Get registers values
 	volatile uint32_t *register_address = reg32(base, GPIO_DATAIN_OFFSET);
-	// Read if register valjue is populated after bitmask, if so then return true
+	// Read if register value is populated after bitmask, if so then return true
 	return (*register_address & (1U << pin_number)) ? 1U : 0U;
 }
 
