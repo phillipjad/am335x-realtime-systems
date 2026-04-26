@@ -93,7 +93,7 @@ static void handle_vent_logic(void) {
 		/* We don't currently need to clear the servo error since it's terminal but leaving here for future changes */
 		// else if ((time_taken(&servo_start_time, &servo_end_time) <= SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
 		// 	pthread_mutex_lock(&shared_info->mutex);
-		// 	set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+		// 	clear_error(&shared_info->thread_errors[VENT_CONTROL]);
 		// 	pthread_mutex_unlock(&shared_info->mutex);
 		// }
 	}

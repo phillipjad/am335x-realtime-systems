@@ -194,7 +194,7 @@ void *temperature_sensor_thread_entry(void *arg) {
 
 		if (failed_sensor_reads > SENSOR_FAIL_THRESHOLD) {
 			pthread_mutex_lock(&shared_info->mutex);
-			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed 3 consecutive sensor readings");
+			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed %u consecutive sensor readings", SENSOR_FAIL_THRESHOLD);
 			pthread_mutex_unlock(&shared_info->mutex);
 		} else {
 			if (result == STATUS_SUCCESS) {
