@@ -71,23 +71,25 @@ static void handle_vent_logic(void) {
 			if (last_vent_percent_closed != read_percent) {
 				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%% closed", read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				potentiometer_based_servo(read_percent);
+				servo_status = potentiometer_based_servo(read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 				last_vent_percent_closed = read_percent;
 				state_updated = true;
 			}
 		}
-		pthread_mutex_lock(&shared_info->mutex);
-		if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
-			set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
-		} else if (servo_status != STATUS_SUCCESS) {
-			set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
-		} else if (has_error(&shared_info->thread_errors[VENT_CONTROL])) {
-			clear_error(&shared_info->thread_errors[VENT_CONTROL]);
-		} else {
-			/* MISRA requires else */
+		if (state_update) {
+			pthread_mutex_lock(&shared_info->mutex);
+			if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
+				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+			} else if (servo_status != STATUS_SUCCESS) {
+				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
+			} else if (has_error(&shared_info->thread_errors[VENT_CONTROL])) {
+				clear_error(&shared_info->thread_errors[VENT_CONTROL]);
+			} else {
+				/* MISRA requires else */
+			}
+			pthread_mutex_unlock(&shared_info->mutex);
 		}
-		pthread_mutex_unlock(&shared_info->mutex);
 		/* We don't currently need to clear the servo error since it's terminal but leaving here for future changes */
 		// else if ((time_taken(&servo_start_time, &servo_end_time) <= SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
 		// 	pthread_mutex_lock(&shared_info->mutex);
