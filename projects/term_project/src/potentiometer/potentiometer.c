@@ -7,8 +7,8 @@
 /* Local project includes after system libraries */
 #include "heartbeat.h"
 #include "logger.h"
-#include "project_types.h"
 #include "project_constants.h"
+#include "project_types.h"
 
 #define POT_INPUT_SIZE 20
 #define POT_MAX_VALUE 4095.0
@@ -18,33 +18,18 @@ static global_values_t *shared_info = NULL;
 static int fd = 0;
 
 static void potentiometer_init_hw(uint8_t pin_number) {
-        // Map pin number value to AIN #
+	// Map pin number value to AIN #
 	// 5 as default AIN value
 	uint8_t ain_number = 5;
-	switch(pin_number) {
-		case 33:
-			ain_number = 4;
-			break;
-		case 35:
-			ain_number = 6;
-			break;
-		case 36:
-			ain_number = 5;
-			break;
-		case 37:
-			ain_number = 2;
-			break;
-		case 38:
-			ain_number = 3;
-			break;
-		case 39:
-			ain_number = 0;
-			break;
-		case 40:
-			ain_number = 1;
-			break;
-		default:
-                	LOG_AND_EXIT("ERROR: Invalid pin number (%u) mapping to AIN # given in hardware init.", pin_number);
+	switch (pin_number) {
+	case 33: ain_number = 4; break;
+	case 35: ain_number = 6; break;
+	case 36: ain_number = 5; break;
+	case 37: ain_number = 2; break;
+	case 38: ain_number = 3; break;
+	case 39: ain_number = 0; break;
+	case 40: ain_number = 1; break;
+	default: LOG_AND_EXIT("ERROR: Invalid pin number (%u) mapping to AIN # given in hardware init.", pin_number);
 	}
 	char potentiometer_path[MAX_FILE_PATH_LENGTH] = { 0 };
 	(void)snprintf(potentiometer_path, sizeof(potentiometer_path), "/sys/bus/iio/devices/iio:device0/in_voltage%u_raw", ain_number);
@@ -59,7 +44,7 @@ static void potentiometer_init_hw(uint8_t pin_number) {
  * Function: potentiometer_init
  *--------------------------------------*/
 void potentiometer_init(uint8_t pin_number) {
-        potentiometer_init_hw(pin_number);
+	potentiometer_init_hw(pin_number);
 }
 
 void *potentiometer_thread_entry(void *arg) {
@@ -81,7 +66,7 @@ void *potentiometer_thread_entry(void *arg) {
 			set_error(&shared_info->thread_errors[POTENTIOMETER], strerror(errno));
 		} else {
 			if (has_error(&shared_info->thread_errors[POTENTIOMETER])) {
-					clear_error(&shared_info->thread_errors[POTENTIOMETER]);
+				clear_error(&shared_info->thread_errors[POTENTIOMETER]);
 			}
 			float64_t value = atof(input);
 			percent = value / POT_MAX_VALUE;

@@ -1,7 +1,7 @@
 #include "lcd_screen.h"
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <errno.h>
 
 /* Local project includes after system libraries */
 #include "heartbeat.h"
