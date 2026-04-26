@@ -159,6 +159,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	lcd_set_cursor(fd, 0, 0);
 	lcd_print(fd, "Starting LCD...");
 	render_lcd = false;
+	bool was_showing_target = false;
 
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		// Lock thread
@@ -170,15 +171,28 @@ void *lcd_screen_thread_entry(void *arg) {
 		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);
 
-		// Check if target temp changed
+		// Check if target temp changed between certain range to account for noise
 		float64_t current_time = get_current_time();
-		if (latest_target_temp != target_temp) {
+		float64_t temp_difference = latest_target_temp - target_temp;
+		if (temp_difference < 0) {
+			temp_difference = -temp_difference;
+		}
+		printf("temp diff: %f\n", temp_difference);
+		printf("%f vs %f\n", latest_target_temp, target_temp);
+
+		if (temp_difference > 0.1) {
 			latest_target_temp = target_temp;
 			latest_target_temp_timestamp = get_current_time();
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		} else if (last_read_state != state_snapshot) {
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		}
+		bool show_target = (current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME;
+		if (was_showing_target && !show_target) {
+			render_lcd = true;
+		}
+		was_showing_target = show_target;
+
 		if (state_snapshot == STATE_RUNNING) {
 			// Buffer of temp before updating so we don't spam updates
 			// Show target for first 2 sec then current temp

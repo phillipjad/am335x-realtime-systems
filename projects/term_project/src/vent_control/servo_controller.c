@@ -124,7 +124,8 @@ int32_t servo_lower(void) {
  * Function: servo_lower
  *--------------------------------------*/
 int32_t potentiometer_based_servo(float64_t percent) {
-	return set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_LOWER + ((float64_t)(GATE_RAISE - GATE_LOWER)) * (percent/100.0));
+	float64_t duty_value = GATE_LOWER + ((float64_t)(GATE_RAISE - GATE_LOWER)) * (percent/100.0);
+	return set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, duty_value);
 }
 
 /*--------------------------------------

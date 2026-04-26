@@ -13,6 +13,7 @@
 
 static global_values_t *shared_info = NULL;
 static bool vent_open = false;
+static float64_t last_vent_percent_closed = -1;
 
 /*---------------------------
  * Function: time_taken in ms
@@ -66,12 +67,14 @@ static void handle_vent_logic(void) {
 			}
 		} else if (current_state == STATE_FAIL_SAFE) {
 			// If idle map potentiometer reading to servo angle: SERVO_LOWER + (potentiometer_activation_percentage * (SERVO_RAISE - SERVO_LOWER))
-			potentiometer_based_servo(shared_info->potentiometer_percentage_closed);
-			if (!vent_open) {
-				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control, closing vent.");
+			float64_t read_percent = shared_info->potentiometer_percentage_closed;
+			if (last_vent_percent_closed != read_percent) {
+				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%% closed", read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_status = servo_lower();
+				potentiometer_based_servo(read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
+				last_vent_percent_closed = read_percent;
+				state_updated = true;
 			}
 		}
 		pthread_mutex_lock(&shared_info->mutex);
