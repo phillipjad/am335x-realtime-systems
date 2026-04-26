@@ -76,6 +76,9 @@ static void hardware_init(void) {
 	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+
+	LOG(NUM_THREADS, "Initialized potentiometer");
+	potentiometer_init(user_config->gpio_layout.potentiometer);
 }
 
 /*--------------------------------------
@@ -86,6 +89,8 @@ static void globals_init(void) {
 	pthread_mutex_init(&shared_info.mutex, NULL);
 	pthread_cond_init(&shared_info.cv, NULL);
 	shared_info.current_state = STATE_IDLE;
+	shared_info.servo_activation_time = (struct timespec){ 0 };
+	shared_info.potentiometer_percentage_closed = 0;
 }
 
 /*--------------------------------------
@@ -267,6 +272,12 @@ static int32_t check_heartbeats(void) {
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
 				LOG(NUM_THREADS, "%s thread has stalled or deadlocked. Heartbeat missed %u times in a row",
 				    THREAD_NAMES[ii], num_missed_heartbeats[ii]);
+				pthread_mutex_lock(&shared_info.mutex);
+				shared_info.current_state = STATE_FAIL;
+				pthread_mutex_unlock(&shared_info.mutex);
+				struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
+				nanosleep(&lcd_update, NULL);
+				atomic_store(&shared_info.is_shutdown_requested, true);
 				return STATUS_FAIL;
 			}
 		} else {

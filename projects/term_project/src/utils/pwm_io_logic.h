@@ -11,7 +11,7 @@ void unexport_pwm_channel(uint8_t chip, uint8_t channel);
 
 void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns);
 
-void set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns);
+int32_t set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns);
 
 void enable_pwm(uint8_t chip, uint8_t channel, bool enable);
 

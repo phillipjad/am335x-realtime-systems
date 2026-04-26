@@ -33,6 +33,8 @@
 
 /* Temp Buffer (+or- range) */
 #define TEMP_BUFFER (0.5)
+#define MIN_TEMP (60.0)
+#define MAX_TEMP (100.0)
 
 /* Logger Constants */
 #define LOG_PARENT_DIR ("/opt/smart_vent")

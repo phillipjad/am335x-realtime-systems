@@ -1,4 +1,5 @@
 #include "lcd_screen.h"
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -31,8 +32,12 @@
 #define LCD_SET_CURSOR 0x80
 #define LCD_DATA_PINS 0x30
 #define LCD_FOUR_BIT_MODE 0x20
+#define LCD_CHAR_SIZE 16
 
 #define LCD_TARGET_SHOW_TIME 2
+
+static global_values_t *shared_info = NULL;
+
 static int32_t lcd_init_hw(const char *i2c_path, uint8_t lcd_addr) {
 	int32_t fd = open(i2c_path, O_RDWR);
 	if (fd < 0) {
@@ -52,9 +57,15 @@ int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
 
 static void lcd_write_data(int32_t fd, uint8_t data) {
 	int32_t result = write(fd, &data, 1);
+	// Locking because of error checking/settings
+	pthread_mutex_lock(&shared_info->mutex);
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
+		set_error(&shared_info->thread_errors[LCD_SCREEN], strerror(errno));
+	} else if (has_error(&shared_info->thread_errors[LCD_SCREEN])) {
+		clear_error(&shared_info->thread_errors[LCD_SCREEN]);
 	}
+	pthread_mutex_unlock(&shared_info->mutex);
 }
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
@@ -94,8 +105,8 @@ void lcd_print(int32_t fd, const char *str) {
 }
 
 void lcd_print_float(int32_t fd, float64_t val) {
-	char buffer[16] = { 0 };
-	snprintf(buffer, sizeof(buffer), "%.2f", val);
+	char buffer[LCD_CHAR_SIZE] = { 0 };
+	snprintf(buffer, sizeof(buffer), "%.2f F", val);
 	lcd_print(fd, buffer);
 }
 
@@ -114,8 +125,6 @@ static bool update_lcd(float64_t read_time, float64_t current_time, state_e last
 	}
 	return update;
 }
-
-static global_values_t *shared_info = NULL;
 
 void *lcd_screen_thread_entry(void *arg) {
 	LOG(LCD_SCREEN, "Starting LCD screen thread");
@@ -150,6 +159,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	lcd_set_cursor(fd, 0, 0);
 	lcd_print(fd, "Starting LCD...");
 	render_lcd = false;
+	bool was_showing_target = false;
 
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		// Lock thread
@@ -161,15 +171,28 @@ void *lcd_screen_thread_entry(void *arg) {
 		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);
 
-		// Check if target temp changed
+		// Check if target temp changed between certain range to account for noise
 		float64_t current_time = get_current_time();
-		if (latest_target_temp != target_temp) {
+		float64_t temp_difference = latest_target_temp - target_temp;
+		if (temp_difference < 0) {
+			temp_difference = -temp_difference;
+		}
+		printf("temp diff: %f\n", temp_difference);
+		printf("%f vs %f\n", latest_target_temp, target_temp);
+
+		if (temp_difference > 0.1) {
 			latest_target_temp = target_temp;
 			latest_target_temp_timestamp = get_current_time();
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		} else if (last_read_state != state_snapshot) {
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		}
+		bool show_target = (current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME;
+		if (was_showing_target && !show_target) {
+			render_lcd = true;
+		}
+		was_showing_target = show_target;
+
 		if (state_snapshot == STATE_RUNNING) {
 			// Buffer of temp before updating so we don't spam updates
 			// Show target for first 2 sec then current temp
@@ -178,32 +201,44 @@ void *lcd_screen_thread_entry(void *arg) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Target Temp (F):");
+				lcd_print(fd, "R: Target Temp");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, target_temp);
-				LOG(LCD_SCREEN, "Target Temp: %lf", target_temp);
+				LOG(LCD_SCREEN, "Running: Target Temp: %lf", target_temp);
 				render_lcd = false;
 			} else if (render_lcd && last_read_state != state_snapshot) {
 				// Print on LCD - Current temperature: ###
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "Current Temp (F):");
+				lcd_print(fd, "R: Current Temp");
 				lcd_set_cursor(fd, 1, 0);
 				lcd_print_float(fd, current_temp);
-				LOG(LCD_SCREEN, "Current Temp: %lf", current_temp);
+				LOG(LCD_SCREEN, "Running: Current Temp: %lf", current_temp);
 				render_lcd = false;
 			} else {
 				/* MISRA requires else */
 			}
 		} else if (render_lcd && state_snapshot == STATE_FAIL_SAFE) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
-			lcd_clear(fd);
-			lcd_set_cursor(fd, 0, 0);
-			lcd_print(fd, "ERROR:");
-			lcd_set_cursor(fd, 1, 0);
-			lcd_print(fd, "FAIL-SAFE STATE");
-			LOG(LCD_SCREEN, "Entered state: FAIL-SAFE");
-			render_lcd = false;
+			if ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME) {
+				// Print on LCD - Target Temp: ##
+				lcd_clear(fd);
+				lcd_set_cursor(fd, 0, 0);
+				lcd_print(fd, "FS: Target Temp");
+				lcd_set_cursor(fd, 1, 0);
+				lcd_print_float(fd, target_temp);
+				LOG(LCD_SCREEN, "Fail-Safe: Target Temp: %lf", target_temp);
+				render_lcd = false;
+			} else {
+				// Print on LCD - Current temperature: ###
+				lcd_clear(fd);
+				lcd_set_cursor(fd, 0, 0);
+				lcd_print(fd, "FS: Current Temp");
+				lcd_set_cursor(fd, 1, 0);
+				lcd_print_float(fd, current_temp);
+				LOG(LCD_SCREEN, "Fail-Safe: Current Temp: %lf", current_temp);
+				render_lcd = false;
+			}
 		} else if (render_lcd && state_snapshot == STATE_FAIL) {
 			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
 			lcd_clear(fd);
@@ -211,7 +246,7 @@ void *lcd_screen_thread_entry(void *arg) {
 			lcd_print(fd, "ERROR:");
 			lcd_set_cursor(fd, 1, 0);
 			lcd_print(fd, "FAIL STATE");
-			LOG(LCD_SCREEN, "Entered state: FAIL");
+			LOG(LCD_SCREEN, "FAIL: LCD read Fail state");
 			render_lcd = false;
 		} else {
 			/* MISRA requires else */

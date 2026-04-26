@@ -13,6 +13,7 @@
 
 static global_values_t *shared_info = NULL;
 static bool vent_open = false;
+static float64_t last_vent_percent_closed = -1;
 
 /*---------------------------
  * Function: time_taken in ms
@@ -31,6 +32,7 @@ static void handle_vent_logic(void) {
 	}
 
 	bool state_updated = false;
+	int32_t servo_status = STATUS_SUCCESS;
 	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
 	increment_heartbeat(shared_info, VENT_CONTROL);
@@ -49,14 +51,14 @@ static void handle_vent_logic(void) {
 			if ((current_temp > (target_temp + TEMP_BUFFER)) && !vent_open) {
 				LOG(VENT_CONTROL, "Read STATE_RUNNING state with high temp, opening vent.");
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_raise();
+				servo_status = servo_raise();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 				vent_open = true;
 				state_updated = true;
 			} else if ((current_temp < (target_temp - TEMP_BUFFER)) && vent_open) {
 				LOG(VENT_CONTROL, "Read STATE_RUNNING state with low temp, closing vent.");
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_lower();
+				servo_status = servo_lower();
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
 				vent_open = false;
 				state_updated = true;
@@ -65,16 +67,27 @@ static void handle_vent_logic(void) {
 			}
 		} else if (current_state == STATE_FAIL_SAFE) {
 			// If idle map potentiometer reading to servo angle: SERVO_LOWER + (potentiometer_activation_percentage * (SERVO_RAISE - SERVO_LOWER))
-			if (!vent_open) {
-				LOG(VENT_CONTROL, "Read STATE_RUNNING state with manual control, closing vent.");
+			float64_t read_percent = shared_info->potentiometer_percentage_closed;
+			if (last_vent_percent_closed != read_percent) {
+				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%% closed", read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_lower();
+				servo_status = potentiometer_based_servo(read_percent);
 				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
+				last_vent_percent_closed = read_percent;
+				state_updated = true;
 			}
 		}
-		if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
+		if (state_updated) {
 			pthread_mutex_lock(&shared_info->mutex);
-			set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+			if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
+				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+			} else if (servo_status != STATUS_SUCCESS) {
+				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
+			} else if (has_error(&shared_info->thread_errors[VENT_CONTROL])) {
+				clear_error(&shared_info->thread_errors[VENT_CONTROL]);
+			} else {
+				/* MISRA requires else */
+			}
 			pthread_mutex_unlock(&shared_info->mutex);
 		}
 		/* We don't currently need to clear the servo error since it's terminal but leaving here for future changes */

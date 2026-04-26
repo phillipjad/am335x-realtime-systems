@@ -125,10 +125,19 @@ void set_pwm_period(uint8_t chip, uint8_t channel, uint32_t period_ns) {
 /*--------------------------------------
  * Function: set_pwm_duty_cycle
  *--------------------------------------*/
-void set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns) {
+int32_t set_pwm_duty_cycle(uint8_t chip, uint8_t channel, uint32_t duty_ns) {
 	char path[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 	(void)snprintf(path, MAX_FILE_PATH_LENGTH, "%s/pwmchip%u/pwm-%u:%u/duty_cycle", PWM_CHIP_PATH, chip, chip, channel);
-	write_int_to_file(path, duty_ns);
+	FILE *file = fopen(path, "w");
+	if (file == NULL) {
+		return STATUS_FAIL;
+	}
+	if (fprintf(file, "%" PRIu32, duty_ns) < 0) {
+		(void)fclose(file);
+		return STATUS_FAIL;
+	}
+	(void)fclose(file);
+	return STATUS_SUCCESS;
 }
 
 /*--------------------------------------

@@ -93,18 +93,23 @@ typedef struct {
  * @brief Global struct used to share values across various threads
  */
 typedef struct {
-	pthread_mutex_t mutex;                 /**< Mutex for protected access */
-	pthread_cond_t cv;                     /**< Condition variable to control threads */
-	atomic_bool is_shutdown_requested;     /**< atomic_bool to determine if we should shutdown the application */
-	configuration_items_t config;          /**< Configuration items used throughout application */
-	state_e current_state;                 /**< System state */
-	float64_t current_temp;                /**< Current temperature */
-	float64_t target_temp;                 /**< Target temperature */
-	struct timespec servo_activation_time; /**< Train arrival time */
-	uint64_t heartbeats[NUM_THREADS];      /**< Thread heartbeats */
-	error_e thread_errors[NUM_THREADS];    /**< Thread errors */
-	log_queue_t logger;                    /**< Application logger */
+	pthread_mutex_t mutex;                     /**< Mutex for protected access */
+	pthread_cond_t cv;                         /**< Condition variable to control threads */
+	atomic_bool is_shutdown_requested;         /**< atomic_bool to determine if we should shutdown the application */
+	configuration_items_t config;              /**< Configuration items used throughout application */
+	state_e current_state;                     /**< System state */
+	float64_t current_temp;                    /**< Current temperature */
+	float64_t target_temp;                     /**< Target temperature */
+	float64_t potentiometer_percentage_closed; /**< Potentiometer value used for manual control */
+	struct timespec servo_activation_time;     /**< Train arrival time */
+	uint64_t heartbeats[NUM_THREADS];          /**< Thread heartbeats */
+	error_e thread_errors[NUM_THREADS];        /**< Thread errors */
+	log_queue_t logger;                        /**< Application logger */
 } global_values_t;
+
+static inline bool has_error(const error_e *err) {
+	return err->is_set;
+}
 
 static inline void set_error(error_e *err, const char *error_msg) {
 	err->is_set = true;
