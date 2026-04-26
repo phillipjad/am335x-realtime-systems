@@ -182,7 +182,7 @@ void *temperature_sensor_thread_entry(void *arg) {
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		temp_readings_t readings = { 0 };
 		int32_t result = read_temp_sensor(&readings);
-		if (result != STATUS_SUCCESS) { 
+		if (result != STATUS_SUCCESS) {
 			++failed_sensor_reads;
 		} else {
 			pthread_mutex_lock(&shared_info->mutex);
@@ -196,7 +196,7 @@ void *temperature_sensor_thread_entry(void *arg) {
 			pthread_mutex_lock(&shared_info->mutex);
 			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed 3 consecutive sensor readings");
 			pthread_mutex_unlock(&shared_info->mutex);
-		} else { 
+		} else {
 			if (result == STATUS_SUCCESS) {
 				pthread_mutex_lock(&shared_info->mutex);
 				clear_error(&shared_info->thread_errors[TEMP_SENSOR]);

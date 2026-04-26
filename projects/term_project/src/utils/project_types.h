@@ -3,10 +3,12 @@
 
 #include <inttypes.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -111,9 +113,12 @@ static inline bool has_error(const error_e *err) {
 	return err->is_set;
 }
 
-static inline void set_error(error_e *err, const char *error_msg) {
+__attribute__((format(printf, 2, 3))) static inline void set_error(error_e *err, const char *fmt, ...) {
 	err->is_set = true;
-	(void)strncpy(err->error_msg, error_msg, MAX_LOG_LEN);
+	va_list args;
+	va_start(args, fmt);
+	(void)vsnprintf(err->error_msg, sizeof(err->error_msg), fmt, args);
+	va_end(args);
 }
 
 static inline void clear_error(error_e *err) {
