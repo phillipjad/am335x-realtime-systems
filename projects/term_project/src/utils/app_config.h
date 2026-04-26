@@ -11,6 +11,7 @@
 #define LCD_IC2_NUMBER_KEY ("LCD_IC2_NUMBER")
 #define SERVO_GPIO_PIN ("SERVO_GPIO")
 #define POTENTIOMETER_AIN_PIN ("POTENTIOMETER_AIN")
+#define TEMP_SENSOR_GPIO_PIN ("TEMP_SENSOR_GPIO")
 
 /* Config file key definitions */
 

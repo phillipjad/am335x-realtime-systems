@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -168,11 +169,6 @@ static void start_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create log handler thread");
 	}
-	/* Not currently used
-	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void
-	*)&shared_info); if (result != STATUS_SUCCESS) { LOG_AND_EXIT("Failed to create sensor monitoring thread");
-	}
-	*/
 	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to create LCD screen thread");
@@ -201,12 +197,6 @@ static void join_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join vent control thread");
 	}
-	/* Not currently used
-	result = pthread_join(threads.sensor_monitoring_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-	    LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
-	}
-	*/
 	result = pthread_join(threads.lcd_screen_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join LCD screen thread");
@@ -263,6 +253,15 @@ static void log_system_info(void) {
 	    sys_info.machine);
 }
 
+static void handle_critical_heartbeat_failure(void) {
+	pthread_mutex_lock(&shared_info.mutex);
+	shared_info.current_state = STATE_FAIL;
+	pthread_mutex_unlock(&shared_info.mutex);
+	struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
+	nanosleep(&lcd_update, NULL);
+	atomic_store(&shared_info.is_shutdown_requested, true);
+}
+
 static int32_t check_heartbeats(void) {
 	static uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
 	static uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
@@ -277,12 +276,7 @@ static int32_t check_heartbeats(void) {
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
 				LOG(NUM_THREADS, "%s thread has stalled or deadlocked. Heartbeat missed %u times in a row",
 				    THREAD_NAMES[ii], num_missed_heartbeats[ii]);
-				pthread_mutex_lock(&shared_info.mutex);
-				shared_info.current_state = STATE_FAIL;
-				pthread_mutex_unlock(&shared_info.mutex);
-				struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
-				nanosleep(&lcd_update, NULL);
-				atomic_store(&shared_info.is_shutdown_requested, true);
+				handle_critical_heartbeat_failure();
 				return STATUS_FAIL;
 			}
 		} else {
