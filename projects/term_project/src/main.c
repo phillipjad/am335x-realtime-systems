@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <sched.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
@@ -25,6 +26,16 @@
 #include "state_management.h"
 #include "temperature_sensor.h"
 #include "vent_control.h"
+
+/* SCHED_FIFO priorities — RMS by period with exceptions noted below
+ * Temp sensor is elevated above its 2s period to protect bit-timing during reads */
+#define SCHED_PRI_LED (60)
+#define SCHED_PRI_STATE_MGMT (59)
+#define SCHED_PRI_TEMP_SENSOR (55)
+#define SCHED_PRI_LCD (50)
+#define SCHED_PRI_POTMETER (49)
+#define SCHED_PRI_VENT (40)
+#define SCHED_PRI_LOG_HANDLER (30)
 
 /* Main controls all threads. As such, we register all of them in one neat struct for easier handling */
 typedef struct {
@@ -160,35 +171,48 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* !USE_CONFIG */
 
-static void start_project_threads() {
-	int32_t result = pthread_create(&threads.vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create vent control thread");
+static void make_rt_attr(pthread_attr_t *attr, int32_t priority) {
+	struct sched_param sp = { .sched_priority = priority };
+	if (pthread_attr_init(attr) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to init thread attr");
 	}
-	result = pthread_create(&threads.log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create log handler thread");
+	if (pthread_attr_setinheritsched(attr, PTHREAD_EXPLICIT_SCHED) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr inherit sched");
 	}
-	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LCD screen thread");
+	if (pthread_attr_setschedpolicy(attr, SCHED_FIFO) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr sched policy");
 	}
-	result = pthread_create(&threads.temperature_sensor_thread, NULL, &temperature_sensor_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create temperature sensor thread");
+	if (pthread_attr_setschedparam(attr, &sp) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr sched param");
 	}
-	result = pthread_create(&threads.led_thread, NULL, &led_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LED thread");
+}
+
+static void make_project_thread(pthread_t *thread, void *(*entry)(void *), void *arg, int32_t priority, const char *name) {
+	pthread_attr_t attr;
+	make_rt_attr(&attr, priority);
+	int32_t result = pthread_create(thread, &attr, entry, arg);
+	if (pthread_attr_destroy(&attr) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to destroy thead attr");
 	}
-	result = pthread_create(&threads.potentiometer_thread, NULL, &potentiometer_thread_entry, (void *)&shared_info);
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create potentiometer thread");
+		LOG_AND_EXIT("Failed to create %s thread", name);
 	}
-	result = pthread_create(&threads.state_management_thread, NULL, &state_management_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create state management thread");
-	}
+}
+
+static void start_project_threads(void) {
+	make_project_thread(&threads.vent_control_thread, &vent_control_thread_entry, (void *)&shared_info, SCHED_PRI_VENT,
+	    THREAD_NAMES[VENT_CONTROL]);
+	make_project_thread(&threads.log_handler_thread, &log_handler_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_LOG_HANDLER, THREAD_NAMES[LOG_HANDLER]);
+	make_project_thread(&threads.lcd_screen_thread, &lcd_screen_thread_entry, (void *)&shared_info, SCHED_PRI_LCD,
+	    THREAD_NAMES[LCD_SCREEN]);
+	make_project_thread(&threads.temperature_sensor_thread, &temperature_sensor_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_TEMP_SENSOR, THREAD_NAMES[TEMP_SENSOR]);
+	make_project_thread(&threads.led_thread, &led_thread_entry, (void *)&shared_info, SCHED_PRI_LED, THREAD_NAMES[LED]);
+	make_project_thread(&threads.potentiometer_thread, &potentiometer_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_POTMETER, THREAD_NAMES[POTENTIOMETER]);
+	make_project_thread(&threads.state_management_thread, &state_management_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_STATE_MGMT, THREAD_NAMES[STATE_MANAGEMENT]);
 }
 
 static void join_project_threads() {
