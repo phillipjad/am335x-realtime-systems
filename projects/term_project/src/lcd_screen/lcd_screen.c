@@ -169,7 +169,6 @@ void *lcd_screen_thread_entry(void *arg) {
 		float64_t current_temp = shared_info->current_temp;
 		float64_t target_temp = shared_info->target_temp;
 		state_e state_snapshot = shared_info->current_state;
-		increment_heartbeat(shared_info, LCD_SCREEN);
 		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);
 
@@ -253,9 +252,10 @@ void *lcd_screen_thread_entry(void *arg) {
 		} else {
 			/* MISRA requires else */
 		}
-		nanosleep(&timer, NULL);
 		// Update last read state
 		last_read_state = state_snapshot;
+		increment_heartbeat(shared_info, LCD_SCREEN);
+		(void)nanosleep(&timer, NULL);
 	}
 	LOG(LCD_SCREEN, "Shutting down LCD screen thread");
 	return NULL;
