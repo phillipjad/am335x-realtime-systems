@@ -3,10 +3,12 @@
 
 #include <inttypes.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -26,13 +28,14 @@ typedef struct {
 } servo_t;
 
 typedef struct {
+	int32_t lcd_fd;          /**< file descriptor for LCD screen */
+	servo_t servo;           /**< Pin for servo */
 	uint8_t target_temp_led; /**< Pin for target_temp_led */
 	uint8_t system_ok_led;   /**< Pin for system_ok_led */
 	uint8_t system_fail_led; /**< Pin for system_fail_led */
 	uint8_t lcd_i2c_bus;     /**< Bus for LCD screen */
-	int32_t lcd_fd;          /**< file descriptor for LCD screen */
 	uint8_t potentiometer;   /**< Pin for potentiometer */
-	servo_t servo;           /**< Pin for servo */
+	uint8_t temp_sensor;     /**< Pin for temp sensor */
 } gpio_layout_t;
 
 typedef struct {
@@ -42,8 +45,6 @@ typedef struct {
 typedef enum {
 	VENT_CONTROL,
 	LOG_HANDLER,
-	SENSOR_MONITORING,
-	SUPERVISOR_INPUT,
 	LCD_SCREEN,
 	TEMP_SENSOR,
 	LED,
@@ -99,6 +100,7 @@ typedef struct {
 	configuration_items_t config;              /**< Configuration items used throughout application */
 	state_e current_state;                     /**< System state */
 	float64_t current_temp;                    /**< Current temperature */
+	float64_t current_humidity_rh;             /**< Current relative humidity (%) */
 	float64_t target_temp;                     /**< Target temperature */
 	float64_t potentiometer_percentage_closed; /**< Potentiometer value used for manual control */
 	struct timespec servo_activation_time;     /**< Train arrival time */
@@ -111,9 +113,12 @@ static inline bool has_error(const error_e *err) {
 	return err->is_set;
 }
 
-static inline void set_error(error_e *err, const char *error_msg) {
+__attribute__((format(printf, 2, 3))) static inline void set_error(error_e *err, const char *fmt, ...) {
 	err->is_set = true;
-	(void)strncpy(err->error_msg, error_msg, MAX_LOG_LEN);
+	va_list args;
+	va_start(args, fmt);
+	(void)vsnprintf(err->error_msg, sizeof(err->error_msg), fmt, args);
+	va_end(args);
 }
 
 static inline void clear_error(error_e *err) {

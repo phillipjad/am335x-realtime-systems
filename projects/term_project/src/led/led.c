@@ -18,10 +18,10 @@ static void handle_system_led_state(void) {
 
 	if (is_system_healthy) {
 		gpio_clear(shared_info->config.gpio_layout.system_fail_led);
-		gpio_set(shared_info->config.gpio_layout.system_ok_led, true);
+		gpio_set(shared_info->config.gpio_layout.system_ok_led, GPIO_HIGH);
 	} else {
 		gpio_clear(shared_info->config.gpio_layout.system_ok_led);
-		gpio_set(shared_info->config.gpio_layout.system_fail_led, true);
+		gpio_set(shared_info->config.gpio_layout.system_fail_led, GPIO_HIGH);
 	}
 }
 

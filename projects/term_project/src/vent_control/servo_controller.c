@@ -136,7 +136,7 @@ void servo_shutdown(void) {
 	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, GATE_RAISE);
 	struct timespec timer = { 0 };
 	timer.tv_sec = 0;
-	timer.tv_nsec = SEC_TO_NSEC / 2;
+	timer.tv_nsec = NSEC_PER_SEC_F / 2;
 	nanosleep(&timer, NULL);
 	enable_pwm(extracted_chip_value, extracted_channel_value, false);
 	unexport_pwm_channel(extracted_chip_value, extracted_channel_value);

@@ -6,6 +6,8 @@
 /* GPIO Types */
 #define GPIO_IN ("In")
 #define GPIO_OUT ("Out")
+#define GPIO_HIGH (true)
+#define GPIO_LOW (false)
 
 void gpio_map_init(void);
 

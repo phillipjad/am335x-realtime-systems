@@ -1,4 +1,6 @@
 #include <pthread.h>
+#include <sched.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -19,12 +21,21 @@
 #include "logger.h"
 #include "potentiometer.h"
 #include "project_types.h"
-#include "sensor_monitoring.h"
 #include "servo_controller.h"
 #include "signal_handler.h"
 #include "state_management.h"
 #include "temperature_sensor.h"
 #include "vent_control.h"
+
+/* SCHED_FIFO priorities — RMS by period with exceptions noted below
+ * Temp sensor is elevated above its 2s period to protect bit-timing during reads */
+#define SCHED_PRI_TEMP_SENSOR (61)
+#define SCHED_PRI_LED (60)
+#define SCHED_PRI_STATE_MGMT (59)
+#define SCHED_PRI_LCD (50)
+#define SCHED_PRI_POTMETER (49)
+#define SCHED_PRI_VENT (40)
+#define SCHED_PRI_LOG_HANDLER (30)
 
 /* Main controls all threads. As such, we register all of them in one neat struct for easier handling */
 typedef struct {
@@ -60,25 +71,31 @@ static void hardware_init(void) {
 	LOG(NUM_THREADS, "Initializing mmap");
 	gpio_map_init();
 	configuration_items_t *user_config = &shared_info.config;
-	LOG(NUM_THREADS, "Initialized hardware LEDs");
+	/* Init system LEDs */
 	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
 	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
-
 	// Start with target reached off and system ok on
-	gpio_set(user_config->gpio_layout.target_temp_led, false);
-	gpio_set(user_config->gpio_layout.system_ok_led, true);
+	gpio_set(user_config->gpio_layout.target_temp_led, GPIO_LOW);
+	gpio_set(user_config->gpio_layout.system_ok_led, GPIO_HIGH);
+	LOG(NUM_THREADS, "Initialized hardware LEDs");
 
-	LOG(NUM_THREADS, "Initialized servo");
+	/* We'll start with the temp sensor set to output and high. Temp sensor thread will manipulate as necessary after */
+	gpio_set_direction(user_config->gpio_layout.temp_sensor, GPIO_OUT);
+	gpio_set(user_config->gpio_layout.temp_sensor, GPIO_HIGH);
+	LOG(NUM_THREADS, "Initialized temp sensor");
+
+
 	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
+	LOG(NUM_THREADS, "Initialized servo");
 
-	LOG(NUM_THREADS, "Initialized LCD");
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
 	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
 	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+	LOG(NUM_THREADS, "Initialized LCD");
 
-	LOG(NUM_THREADS, "Initialized potentiometer");
 	potentiometer_init(user_config->gpio_layout.potentiometer);
+	LOG(NUM_THREADS, "Initialized potentiometer");
 }
 
 /*--------------------------------------
@@ -154,40 +171,48 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 }
 #endif /* !USE_CONFIG */
 
-static void start_project_threads() {
-	int32_t result = pthread_create(&threads.vent_control_thread, NULL, &vent_control_thread_entry, (void *)&shared_info);
+static void make_rt_attr(pthread_attr_t *attr, int32_t priority) {
+	struct sched_param sp = { .sched_priority = priority };
+	if (pthread_attr_init(attr) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to init thread attr");
+	}
+	if (pthread_attr_setinheritsched(attr, PTHREAD_EXPLICIT_SCHED) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr inherit sched");
+	}
+	if (pthread_attr_setschedpolicy(attr, SCHED_FIFO) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr sched policy");
+	}
+	if (pthread_attr_setschedparam(attr, &sp) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to set thread attr sched param");
+	}
+}
+
+static void make_project_thread(pthread_t *thread, void *(*entry)(void *), void *arg, int32_t priority, const char *name) {
+	pthread_attr_t attr;
+	make_rt_attr(&attr, priority);
+	int32_t result = pthread_create(thread, &attr, entry, arg);
+	if (pthread_attr_destroy(&attr) != STATUS_SUCCESS) {
+		LOG_AND_EXIT("Failed to destroy thead attr");
+	}
 	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create vent control thread");
+		LOG_AND_EXIT("Failed to create %s thread", name);
 	}
-	result = pthread_create(&threads.log_handler_thread, NULL, &log_handler_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create log handler thread");
-	}
-	/* Not currently used
-	result = pthread_create(&threads.sensor_monitoring_thread, NULL, &sensor_monitoring_thread_entry, (void
-	*)&shared_info); if (result != STATUS_SUCCESS) { LOG_AND_EXIT("Failed to create sensor monitoring thread");
-	}
-	*/
-	result = pthread_create(&threads.lcd_screen_thread, NULL, &lcd_screen_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LCD screen thread");
-	}
-	result = pthread_create(&threads.temperature_sensor_thread, NULL, &temperature_sensor_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create temperature sensor thread");
-	}
-	result = pthread_create(&threads.led_thread, NULL, &led_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create LED thread");
-	}
-	result = pthread_create(&threads.potentiometer_thread, NULL, &potentiometer_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create potentiometer thread");
-	}
-	result = pthread_create(&threads.state_management_thread, NULL, &state_management_thread_entry, (void *)&shared_info);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to create state management thread");
-	}
+}
+
+static void start_project_threads(void) {
+	make_project_thread(&threads.vent_control_thread, &vent_control_thread_entry, (void *)&shared_info, SCHED_PRI_VENT,
+	    THREAD_NAMES[VENT_CONTROL]);
+	make_project_thread(&threads.log_handler_thread, &log_handler_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_LOG_HANDLER, THREAD_NAMES[LOG_HANDLER]);
+	make_project_thread(&threads.lcd_screen_thread, &lcd_screen_thread_entry, (void *)&shared_info, SCHED_PRI_LCD,
+	    THREAD_NAMES[LCD_SCREEN]);
+	make_project_thread(&threads.temperature_sensor_thread, &temperature_sensor_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_TEMP_SENSOR, THREAD_NAMES[TEMP_SENSOR]);
+	make_project_thread(&threads.led_thread, &led_thread_entry, (void *)&shared_info, SCHED_PRI_LED, THREAD_NAMES[LED]);
+	make_project_thread(&threads.potentiometer_thread, &potentiometer_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_POTMETER, THREAD_NAMES[POTENTIOMETER]);
+	make_project_thread(&threads.state_management_thread, &state_management_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_STATE_MGMT, THREAD_NAMES[STATE_MANAGEMENT]);
 }
 
 static void join_project_threads() {
@@ -196,12 +221,6 @@ static void join_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join vent control thread");
 	}
-	/* Not currently used
-	result = pthread_join(threads.sensor_monitoring_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-	    LOG(NUM_THREADS, "Failed to join sensor monitoring thread");
-	}
-	*/
 	result = pthread_join(threads.lcd_screen_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join LCD screen thread");
@@ -258,6 +277,15 @@ static void log_system_info(void) {
 	    sys_info.machine);
 }
 
+static void handle_critical_heartbeat_failure(void) {
+	pthread_mutex_lock(&shared_info.mutex);
+	shared_info.current_state = STATE_FAIL;
+	pthread_mutex_unlock(&shared_info.mutex);
+	struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
+	nanosleep(&lcd_update, NULL);
+	atomic_store(&shared_info.is_shutdown_requested, true);
+}
+
 static int32_t check_heartbeats(void) {
 	static uint64_t prev_heartbeats[NUM_THREADS] = { 0 };
 	static uint8_t num_missed_heartbeats[NUM_THREADS] = { 0 };
@@ -272,12 +300,7 @@ static int32_t check_heartbeats(void) {
 			if (num_missed_heartbeats[ii] >= MAX_MISSED_HEARTBEATS) {
 				LOG(NUM_THREADS, "%s thread has stalled or deadlocked. Heartbeat missed %u times in a row",
 				    THREAD_NAMES[ii], num_missed_heartbeats[ii]);
-				pthread_mutex_lock(&shared_info.mutex);
-				shared_info.current_state = STATE_FAIL;
-				pthread_mutex_unlock(&shared_info.mutex);
-				struct timespec lcd_update = { .tv_sec = 1L, .tv_nsec = 0L };
-				nanosleep(&lcd_update, NULL);
-				atomic_store(&shared_info.is_shutdown_requested, true);
+				handle_critical_heartbeat_failure();
 				return STATUS_FAIL;
 			}
 		} else {

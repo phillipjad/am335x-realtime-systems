@@ -85,6 +85,8 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return parse_input_to_uint8(value, &config->gpio_layout.lcd_i2c_bus);
 	} else if (strcmp(key, POTENTIOMETER_AIN_PIN) == 0) {
 		return parse_input_to_uint8(value, &config->gpio_layout.potentiometer);
+	} else if (strcmp(key, TEMP_SENSOR_GPIO_PIN) == 0) {
+		return parse_input_to_uint8(value, &config->gpio_layout.temp_sensor);
 	} else {
 		LOG(NUM_THREADS, "Received unknown config key: %s", key);
 		return STATUS_FAIL;

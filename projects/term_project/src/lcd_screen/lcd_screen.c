@@ -58,14 +58,16 @@ int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
 static void lcd_write_data(int32_t fd, uint8_t data) {
 	int32_t result = write(fd, &data, 1);
 	// Locking because of error checking/settings
-	pthread_mutex_lock(&shared_info->mutex);
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
-		set_error(&shared_info->thread_errors[LCD_SCREEN], strerror(errno));
-	} else if (has_error(&shared_info->thread_errors[LCD_SCREEN])) {
+		pthread_mutex_lock(&shared_info->mutex);
+		set_error(&shared_info->thread_errors[LCD_SCREEN], "%s", strerror(errno));
+		pthread_mutex_unlock(&shared_info->mutex);
+	} else {
+		pthread_mutex_lock(&shared_info->mutex);
 		clear_error(&shared_info->thread_errors[LCD_SCREEN]);
+		pthread_mutex_unlock(&shared_info->mutex);
 	}
-	pthread_mutex_unlock(&shared_info->mutex);
 }
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
@@ -113,7 +115,7 @@ void lcd_print_float(int32_t fd, float64_t val) {
 static float64_t get_current_time() {
 	struct timespec t = { 0 };
 	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-	return t.tv_sec + ((float64_t)t.tv_nsec / SEC_TO_NSEC);
+	return t.tv_sec + ((float64_t)t.tv_nsec / NSEC_PER_SEC_F);
 }
 
 static bool update_lcd(float64_t read_time, float64_t current_time, state_e last_state, state_e current_state) {
@@ -167,7 +169,6 @@ void *lcd_screen_thread_entry(void *arg) {
 		float64_t current_temp = shared_info->current_temp;
 		float64_t target_temp = shared_info->target_temp;
 		state_e state_snapshot = shared_info->current_state;
-		increment_heartbeat(shared_info, LCD_SCREEN);
 		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);
 
@@ -251,9 +252,10 @@ void *lcd_screen_thread_entry(void *arg) {
 		} else {
 			/* MISRA requires else */
 		}
-		nanosleep(&timer, NULL);
 		// Update last read state
 		last_read_state = state_snapshot;
+		increment_heartbeat(shared_info, LCD_SCREEN);
+		(void)nanosleep(&timer, NULL);
 	}
 	LOG(LCD_SCREEN, "Shutting down LCD screen thread");
 	return NULL;
