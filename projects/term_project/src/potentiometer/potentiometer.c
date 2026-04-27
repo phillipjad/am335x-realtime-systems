@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* Local project includes after system libraries */
 #include "heartbeat.h"
@@ -50,39 +51,40 @@ void potentiometer_init(uint8_t pin_number) {
 void *potentiometer_thread_entry(void *arg) {
 	LOG(POTENTIOMETER, "Starting potentiometer thread");
 	shared_info = (global_values_t *)arg;
+	static const struct timespec thread_sleep = { .tv_sec = 0L, .tv_nsec = 250L * NSEC_PER_MSEC };
 	char input[POT_INPUT_SIZE] = { 0 };
 	float64_t percent = 0.0;
 	float64_t temp = 0;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		sleep(2U);
 		// Reset fd to start
 		lseek(fd, 0, SEEK_SET);
 		(void)memset(input, 0, sizeof(input));
 		// Read potentiometer input
 		ssize_t result = read(fd, input, sizeof(input) - 1);
-		pthread_mutex_lock(&shared_info->mutex);
 		if (result < 0) {
 			LOG(POTENTIOMETER, "Potentiometer read error: %s", strerror(errno));
-			set_error(&shared_info->thread_errors[POTENTIOMETER], strerror(errno));
+			pthread_mutex_lock(&shared_info->mutex);
+			set_error(&shared_info->thread_errors[POTENTIOMETER], "%s", strerror(errno));
+			pthread_mutex_unlock(&shared_info->mutex);
 		} else {
-			if (has_error(&shared_info->thread_errors[POTENTIOMETER])) {
-				clear_error(&shared_info->thread_errors[POTENTIOMETER]);
-			}
 			float64_t value = atof(input);
 			percent = value / POT_MAX_VALUE;
 			temp = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * percent);
 			// Change to percentage after adjusting temperature
 			percent = percent * 100;
-
+			pthread_mutex_lock(&shared_info->mutex);
+			clear_error(&shared_info->thread_errors[POTENTIOMETER]);
 			// If in RUNNING or FAIL_SAFE mode, will read value and adjust target_temp or servo duty_cycle
 			// Write to global potentiometer values
 			shared_info->potentiometer_percentage_closed = percent;
 			shared_info->target_temp = temp;
+			pthread_mutex_unlock(&shared_info->mutex);
 		}
 		increment_heartbeat(shared_info, POTENTIOMETER);
-		pthread_mutex_unlock(&shared_info->mutex);
+		(void)nanosleep(&thread_sleep, NULL);
 	}
-	close(fd);
+	/* Best effort, we don't care if this fails */
+	(void)close(fd);
 	LOG(POTENTIOMETER, "Shutting down potentiometer thread");
 	return NULL;
 }
