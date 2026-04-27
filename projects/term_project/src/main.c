@@ -29,9 +29,9 @@
 
 /* SCHED_FIFO priorities — RMS by period with exceptions noted below
  * Temp sensor is elevated above its 2s period to protect bit-timing during reads */
+#define SCHED_PRI_TEMP_SENSOR (61)
 #define SCHED_PRI_LED (60)
 #define SCHED_PRI_STATE_MGMT (59)
-#define SCHED_PRI_TEMP_SENSOR (55)
 #define SCHED_PRI_LCD (50)
 #define SCHED_PRI_POTMETER (49)
 #define SCHED_PRI_VENT (40)
