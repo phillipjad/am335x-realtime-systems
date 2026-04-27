@@ -58,14 +58,16 @@ int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
 static void lcd_write_data(int32_t fd, uint8_t data) {
 	int32_t result = write(fd, &data, 1);
 	// Locking because of error checking/settings
-	pthread_mutex_lock(&shared_info->mutex);
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
-		set_error(&shared_info->thread_errors[LCD_SCREEN], strerror(errno));
-	} else if (has_error(&shared_info->thread_errors[LCD_SCREEN])) {
+		pthread_mutex_lock(&shared_info->mutex);
+		set_error(&shared_info->thread_errors[LCD_SCREEN], "%s", strerror(errno));
+		pthread_mutex_unlock(&shared_info->mutex);
+	} else {
+		pthread_mutex_lock(&shared_info->mutex);
 		clear_error(&shared_info->thread_errors[LCD_SCREEN]);
+		pthread_mutex_unlock(&shared_info->mutex);
 	}
-	pthread_mutex_unlock(&shared_info->mutex);
 }
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
