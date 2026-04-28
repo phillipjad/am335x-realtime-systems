@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "thread_utils.h"
 
 static global_values_t *shared_info = NULL;
 
@@ -169,7 +170,12 @@ static int32_t read_dht_22(temp_readings_t *out) {
  * @return int32_t Unix-like error code. 0 means success < 0 means error
  */
 static int32_t read_temp_sensor(temp_readings_t *out) {
-	return read_dht_22(out);
+	int32_t saved_priority = 0;
+	/* Attempt to minimize bit bang misses by reducing preemption likelihood */
+	boost_thread_priority(&saved_priority);
+	int32_t result = read_dht_22(out);
+	restore_thread_priority(saved_priority);
+	return result;
 }
 
 void *temperature_sensor_thread_entry(void *arg) {

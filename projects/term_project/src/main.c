@@ -101,7 +101,9 @@ static void hardware_init(void) {
 	potentiometer_init(user_config->pin_layout.potentiometer);
 	LOG(NUM_THREADS, "Initialized potentiometer");
 
+	/* Init fan controller and associated fan pins */
 	fan_controller_init(user_config->pin_layout.fan_pwm.pwm_chip, user_config->pin_layout.fan_pwm.pwm_channel);
+	gpio_set_direction(user_config->pin_layout.fan_tach, GPIO_IN);
 	LOG(NUM_THREADS, "Initialized fan controller");
 }
 
