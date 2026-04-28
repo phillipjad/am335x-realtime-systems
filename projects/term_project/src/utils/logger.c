@@ -16,7 +16,7 @@ static char LOG_PATH[MAX_FILE_PATH_LENGTH + 1U] = { 0 };
 static log_queue_t *g_log_queue = NULL;
 
 const char *const THREAD_NAMES[NUM_THREADS] = { "vent_control", "log_handler", "lcd_screen", "temperature_sensor",
-	"led", "potentiometer", "state_management" };
+	"led", "potentiometer", "state_management", "fan_control" };
 
 /**
  * @brief Asserts that path exists either through creation or pre-existance

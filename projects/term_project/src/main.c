@@ -14,6 +14,7 @@
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
 #endif              /* !USE_CONFIG */
+#include "fan_control.h"
 #include "gpio_control.h"
 #include "lcd_screen.h"
 #include "led.h"
@@ -35,6 +36,7 @@
 #define SCHED_PRI_LCD (50)
 #define SCHED_PRI_POTMETER (49)
 #define SCHED_PRI_VENT (40)
+#define SCHED_PRI_FAN_CONTROL (39)
 #define SCHED_PRI_LOG_HANDLER (30)
 
 /* Main controls all threads. As such, we register all of them in one neat struct for easier handling */
@@ -48,6 +50,7 @@ typedef struct {
 	pthread_t led_thread;
 	pthread_t potentiometer_thread;
 	pthread_t state_management_thread;
+	pthread_t fan_control_thread;
 } project_threads_t;
 
 global_values_t shared_info = { 0 };
@@ -213,6 +216,8 @@ static void start_project_threads(void) {
 	    SCHED_PRI_POTMETER, THREAD_NAMES[POTENTIOMETER]);
 	make_project_thread(&threads.state_management_thread, &state_management_thread_entry, (void *)&shared_info,
 	    SCHED_PRI_STATE_MGMT, THREAD_NAMES[STATE_MANAGEMENT]);
+	make_project_thread(&threads.fan_control_thread, &fan_control_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_FAN_CONTROL, THREAD_NAMES[FAN_CONTROL]);
 }
 
 static void join_project_threads() {
@@ -240,6 +245,10 @@ static void join_project_threads() {
 	result = pthread_join(threads.state_management_thread, NULL);
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join state management thread");
+	}
+	result = pthread_join(threads.fan_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join fan control thread");
 	}
 
 	/* Wake the log_handler so it exits its wait promptly and drains remaining messages */

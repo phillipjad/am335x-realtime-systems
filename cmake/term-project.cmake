@@ -20,4 +20,5 @@ target_include_directories(term-project PRIVATE
     "${CMAKE_SOURCE_DIR}/projects/term_project/src/led"
     "${CMAKE_SOURCE_DIR}/projects/term_project/src/potentiometer"
     "${CMAKE_SOURCE_DIR}/projects/term_project/src/state_management"
+    "${CMAKE_SOURCE_DIR}/projects/term_project/src/fan_control"
 )

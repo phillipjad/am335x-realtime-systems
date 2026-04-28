@@ -50,6 +50,7 @@ typedef enum {
 	LED,
 	POTENTIOMETER,
 	STATE_MANAGEMENT,
+	FAN_CONTROL,
 	NUM_THREADS
 } thread_index_e;
 
