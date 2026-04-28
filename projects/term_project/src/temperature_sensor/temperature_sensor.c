@@ -60,7 +60,7 @@ static void reset_pin(uint8_t pin) {
  */
 static int32_t read_dht_22(temp_readings_t *out) {
 	static const struct timespec start_low_duration = { .tv_sec = 0L, .tv_nsec = 10L * NSEC_PER_MSEC };
-	uint8_t data_pin = shared_info->config.gpio_layout.temp_sensor;
+	uint8_t data_pin = shared_info->config.pin_layout.temp_sensor;
 
 	/* Start signal: pull LOW >= 1ms, release HIGH, switch to input */
 	gpio_set(data_pin, GPIO_LOW);

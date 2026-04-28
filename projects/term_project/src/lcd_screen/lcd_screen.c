@@ -138,7 +138,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	bool render_lcd = true;
 
 	// Setup internal values
-	int32_t fd = shared_info->config.gpio_layout.lcd_fd;
+	int32_t fd = shared_info->config.pin_layout.lcd_fd;
 	float64_t latest_target_temp = 0;
 	float64_t latest_target_temp_timestamp = 0;
 	state_e last_read_state = STATE_IDLE;

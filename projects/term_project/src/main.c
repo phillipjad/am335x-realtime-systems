@@ -75,29 +75,29 @@ static void hardware_init(void) {
 	gpio_map_init();
 	configuration_items_t *user_config = &shared_info.config;
 	/* Init system LEDs */
-	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
-	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
+	gpio_set_direction(user_config->pin_layout.target_temp_led, GPIO_OUT);
+	gpio_set_direction(user_config->pin_layout.system_ok_led, GPIO_OUT);
 	// Start with target reached off and system ok on
-	gpio_set(user_config->gpio_layout.target_temp_led, GPIO_LOW);
-	gpio_set(user_config->gpio_layout.system_ok_led, GPIO_HIGH);
+	gpio_set(user_config->pin_layout.target_temp_led, GPIO_LOW);
+	gpio_set(user_config->pin_layout.system_ok_led, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized hardware LEDs");
 
 	/* We'll start with the temp sensor set to output and high. Temp sensor thread will manipulate as necessary after */
-	gpio_set_direction(user_config->gpio_layout.temp_sensor, GPIO_OUT);
-	gpio_set(user_config->gpio_layout.temp_sensor, GPIO_HIGH);
+	gpio_set_direction(user_config->pin_layout.temp_sensor, GPIO_OUT);
+	gpio_set(user_config->pin_layout.temp_sensor, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized temp sensor");
 
 
-	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
+	servo_init(user_config->pin_layout.servo.pwm_chip, user_config->pin_layout.servo.pwm_channel);
 	LOG(NUM_THREADS, "Initialized servo");
 
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
-	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
+	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->pin_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
-	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+	user_config->pin_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 	LOG(NUM_THREADS, "Initialized LCD");
 
-	potentiometer_init(user_config->gpio_layout.potentiometer);
+	potentiometer_init(user_config->pin_layout.potentiometer);
 	LOG(NUM_THREADS, "Initialized potentiometer");
 }
 
@@ -134,7 +134,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for target temperature status pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.target_temp_led);
+	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.target_temp_led);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for target temperature status LED GPIO");
 	}
@@ -144,7 +144,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for system health LED pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.system_ok_led);
+	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.system_ok_led);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for system health LED GPIO");
 	}
@@ -154,7 +154,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
-	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.servo_chip, &user_config->gpio_layout.servo.servo_channel);
+	result = parse_pwm_input(input_buffer, &user_config->pin_layout.servo.pwm_chip, &user_config->pin_layout.servo.pwm_channel);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
@@ -164,9 +164,9 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for LCD bus");
 	}
-	parse_input_to_uint8(input_buffer, &user_config->gpio_layout.lcd_i2c_bus);
+	parse_input_to_uint8(input_buffer, &user_config->pin_layout.lcd_i2c_bus);
 	// Use I2C-2
-	if (user_config->gpio_layout.lcd_i2c_bus != 2U) {
+	if (user_config->pin_layout.lcd_i2c_bus != 2U) {
 		LOG_AND_EXIT("Please use the I2C-2 bus");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));

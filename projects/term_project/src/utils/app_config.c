@@ -74,19 +74,21 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 	}
 
 	if (strcmp(key, TARGET_TEMP_LED_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.target_temp_led);
+		return parse_input_to_uint8(value, &config->pin_layout.target_temp_led);
 	} else if (strcmp(key, SYSTEM_OK_LED_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.system_ok_led);
+		return parse_input_to_uint8(value, &config->pin_layout.system_ok_led);
 	} else if (strcmp(key, SYSTEM_FAIL_LED_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.system_fail_led);
-	} else if (strcmp(key, SERVO_GPIO_PIN) == 0) {
-		return parse_pwm_input(value, &config->gpio_layout.servo.servo_chip, &config->gpio_layout.servo.servo_channel);
+		return parse_input_to_uint8(value, &config->pin_layout.system_fail_led);
+	} else if (strcmp(key, SERVO_PWM_PIN) == 0) {
+		return parse_pwm_input(value, &config->pin_layout.servo.pwm_chip, &config->pin_layout.servo.pwm_channel);
 	} else if (strcmp(key, LCD_IC2_NUMBER_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.lcd_i2c_bus);
+		return parse_input_to_uint8(value, &config->pin_layout.lcd_i2c_bus);
 	} else if (strcmp(key, POTENTIOMETER_AIN_PIN) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.potentiometer);
+		return parse_input_to_uint8(value, &config->pin_layout.potentiometer);
 	} else if (strcmp(key, TEMP_SENSOR_GPIO_PIN) == 0) {
-		return parse_input_to_uint8(value, &config->gpio_layout.temp_sensor);
+		return parse_input_to_uint8(value, &config->pin_layout.temp_sensor);
+	} else if (strcmp(key, TEMP_SENSOR_GPIO_PIN) == 0) {
+		return parse_pwm_input(value, &config->pin_layout.fan.pwm_chip, &config->pin_layout.fan.pwm_channel);
 	} else {
 		LOG(NUM_THREADS, "Received unknown config key: %s", key);
 		return STATUS_FAIL;
