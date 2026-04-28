@@ -15,6 +15,7 @@
 #include <string.h> /* string.h needed for memset */
 #endif              /* !USE_CONFIG */
 #include "fan_control.h"
+#include "fan_controller.h"
 #include "gpio_control.h"
 #include "lcd_screen.h"
 #include "led.h"
@@ -99,6 +100,9 @@ static void hardware_init(void) {
 
 	potentiometer_init(user_config->pin_layout.potentiometer);
 	LOG(NUM_THREADS, "Initialized potentiometer");
+
+	fan_controller_init(user_config->pin_layout.fan_pwm.pwm_chip, user_config->pin_layout.fan_pwm.pwm_channel);
+	LOG(NUM_THREADS, "Initialized fan controller");
 }
 
 /*--------------------------------------
@@ -269,6 +273,7 @@ static void handle_shutdown(int32_t exit_code) {
 	join_project_threads();
 	LOG(NUM_THREADS, "Shutting down...");
 	servo_shutdown();
+	fan_shutdown();
 	gpio_map_close();
 	exit(exit_code);
 }

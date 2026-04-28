@@ -75,6 +75,72 @@ static void write_int_to_file(const char *path, uint32_t value) {
 }
 
 /*--------------------------------------
+ * Function: map_ehrpwm_to_sysfs
+ *--------------------------------------*/
+void map_ehrpwm_to_sysfs(uint8_t ehrpwm_chip, char ehrpwm_channel, uint8_t *chip_out, uint8_t *channel_out) {
+	if (ehrpwm_chip == 1U) {
+		*chip_out = (uint8_t)4; /* EHRPWM1 maps to pwmchip4 */
+	} else if (ehrpwm_chip == 2U) {
+		*chip_out = (uint8_t)7; /* EHRPWM2 maps to pwmchip7 */
+	} else {
+		LOG_AND_EXIT("Invalid EHRPWM chip value: %u", ehrpwm_chip);
+	}
+
+	if ((ehrpwm_channel == 'a') || (ehrpwm_channel == 'A')) {
+		*channel_out = (uint8_t)0;
+	} else if ((ehrpwm_channel == 'b') || (ehrpwm_channel == 'B')) {
+		*channel_out = (uint8_t)1;
+	} else {
+		LOG_AND_EXIT("Invalid EHRPWM channel value: %c", ehrpwm_channel);
+	}
+}
+
+/*--------------------------------------
+ * Function: configure_ehrpwm_pinmux
+ *--------------------------------------*/
+void configure_ehrpwm_pinmux(uint8_t ehrpwm_chip, char ehrpwm_channel) {
+	const char *pin_name = NULL;
+	if (ehrpwm_chip == 1U) {
+		if ((ehrpwm_channel == 'a') || (ehrpwm_channel == 'A')) {
+			pin_name = "P9_14"; /* EHRPWM1A */
+		} else if ((ehrpwm_channel == 'b') || (ehrpwm_channel == 'B')) {
+			pin_name = "P9_16"; /* EHRPWM1B */
+		} else {
+			/* MISRA requires else */
+		}
+	} else if (ehrpwm_chip == 2U) {
+		if ((ehrpwm_channel == 'a') || (ehrpwm_channel == 'A')) {
+			pin_name = "P8_19"; /* EHRPWM2A */
+		} else if ((ehrpwm_channel == 'b') || (ehrpwm_channel == 'B')) {
+			pin_name = "P8_13"; /* EHRPWM2B */
+		} else {
+			/* MISRA requires else */
+		}
+	} else {
+		/* MISRA requires else */
+	}
+
+	if (pin_name == NULL) {
+		LOG_AND_EXIT("Could not resolve BBB pin for EHRPWM chip %u channel %c", ehrpwm_chip, ehrpwm_channel);
+		return;
+	}
+
+	char path[MAX_FILENAME_LENGTH + 1U] = { 0 };
+	(void)snprintf(path, MAX_FILENAME_LENGTH, "/sys/devices/platform/ocp/ocp:%s_pinmux/state", pin_name);
+	FILE *pinmux_file = fopen(path, "w");
+	if (pinmux_file == NULL) {
+		LOG_AND_EXIT("Failed to open pinmux state file: %s", path);
+		return;
+	}
+	if (fprintf(pinmux_file, "pwm") < 0) {
+		(void)fclose(pinmux_file);
+		LOG_AND_EXIT("Failed to write pwm to pinmux state file: %s", path);
+		return;
+	}
+	(void)fclose(pinmux_file);
+}
+
+/*--------------------------------------
  * Function: init_pwm_channel
  *--------------------------------------*/
 void init_pwm_channel(uint8_t chip, uint8_t channel) {
