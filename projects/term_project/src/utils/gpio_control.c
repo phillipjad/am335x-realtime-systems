@@ -240,7 +240,8 @@ void configure_gpio_pullup(uint8_t pin) {
 	static const uint32_t PADCONF_GPIO_INPUT_PULLUP = 0x37U;
 
 	volatile uint32_t *padconf_reg = reg32(ctrl_module_map.gpio_base, offset);
-	*padconf_reg = PADCONF_GPIO_INPUT_PULLUP;
+	// *padconf_reg = PADCONF_GPIO_INPUT_PULLUP;
+	*padconf_reg = (*padconf_reg & ~0x3F) | 0x37;
 	LOG(NUM_THREADS, "Configured pull-up on GPIO %u (PADCONF offset 0x%03X = 0x%02X)", (unsigned)pin, offset, PADCONF_GPIO_INPUT_PULLUP);
 }
 
