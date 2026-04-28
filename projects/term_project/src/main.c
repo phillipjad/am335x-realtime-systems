@@ -103,6 +103,8 @@ static void hardware_init(void) {
 
 	/* Init fan controller and associated fan pins */
 	fan_controller_init(user_config->pin_layout.fan_pwm.pwm_chip, user_config->pin_layout.fan_pwm.pwm_channel);
+	/* Fan tach is open-drain — enable internal pull-up before setting direction */
+	configure_gpio_pullup(user_config->pin_layout.fan_tach);
 	gpio_set_direction(user_config->pin_layout.fan_tach, GPIO_IN);
 	LOG(NUM_THREADS, "Initialized fan controller");
 }
@@ -362,9 +364,12 @@ int32_t main(void) {
 	/* Global params init */
 	globals_init();
 	start_project_threads();
+	pthread_mutex_lock(&shared_info.mutex);
+	shared_info.current_state = STATE_RUNNING;
+	pthread_mutex_unlock(&shared_info.mutex);
 	int32_t exit_code = 0;
 	while (!atomic_load(&shared_info.is_shutdown_requested)) {
-		struct timespec heartbeat_check_ticker = { .tv_sec = 5L, .tv_nsec = 0L };
+		struct timespec heartbeat_check_ticker = { .tv_sec = 10L, .tv_nsec = 0L };
 		nanosleep(&heartbeat_check_ticker, NULL);
 		exit_code = check_heartbeats();
 	}

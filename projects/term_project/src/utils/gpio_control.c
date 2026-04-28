@@ -2,11 +2,13 @@
 
 #include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
 #include "logger.h"
+#include "project_constants.h"
 #include "project_types.h"
 
 /* GPIO Count */
@@ -19,6 +21,8 @@
 #define GPIO1_BASE_PHYS (0x4804C000)
 #define GPIO2_BASE_PHYS (0x481AC000)
 #define GPIO3_BASE_PHYS (0x481AE000)
+/* AM335x Control Module base — contains PADCONF registers for pad mux/pull config */
+#define CTRL_MOD_BASE_PHYS (0x44E10000U)
 /* Offsets for registers within that GPIO module (from TRM register map) */
 /* Output Enable - GPIO_OE Register - offset = 134h */
 #define GPIO_OE_OFFSET (0x134)
@@ -30,6 +34,8 @@
 #define GPIO_CLEARDATAOUT_OFF (0x190)
 // Store GPIOs
 static gpio_map_t gpios_array[GPIO_COUNT];
+// Control Module mmap (for PADCONF pull-up/pull-down configuration)
+static gpio_map_t ctrl_module_map = { 0 };
 
 // Helper to access 32-bit registers by offset
 static inline volatile uint32_t *reg32(volatile uint8_t *base, uint32_t off) {
@@ -82,6 +88,20 @@ void gpio_map_init(void) {
 
 		gpios_array[ii].gpio_base = gpios_array[ii].map_base + page_off;
 	}
+
+	/* Control Module mmap — same pattern as GPIO banks above */
+	ctrl_module_map.fd = open("/dev/mem", O_RDWR | O_SYNC);
+	if (ctrl_module_map.fd < 0) {
+		LOG_AND_EXIT("Failed to open /dev/mem for Control Module");
+	}
+	uint32_t cm_page_base = CTRL_MOD_BASE_PHYS & ~(PAGE_SIZE - 1U);
+	uint32_t cm_page_off = CTRL_MOD_BASE_PHYS - cm_page_base;
+	ctrl_module_map.map_base =
+	    (volatile uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, ctrl_module_map.fd, cm_page_base);
+	if (ctrl_module_map.map_base == MAP_FAILED) {
+		LOG_AND_EXIT("Failed to mmap Control Module at 0x%X", CTRL_MOD_BASE_PHYS);
+	}
+	ctrl_module_map.gpio_base = ctrl_module_map.map_base + cm_page_off;
 }
 
 /*--------------------------------------
@@ -95,6 +115,12 @@ void gpio_map_close(void) {
 		if (gpios_array[ii].fd >= 0) {
 			close(gpios_array[ii].fd);
 		}
+	}
+	if (ctrl_module_map.map_base && ctrl_module_map.map_base != MAP_FAILED) {
+		(void)munmap((void *)(uintptr_t)ctrl_module_map.map_base, PAGE_SIZE);
+	}
+	if (ctrl_module_map.fd >= 0) {
+		close(ctrl_module_map.fd);
 	}
 }
 
@@ -176,6 +202,46 @@ void gpio_set_direction_out(uint8_t pin) {
 
 	// Set register to value 0 to set as output pin
 	*register_address &= ~(1U << pin_number);
+}
+
+/*--------------------------------------
+ * Function: configure_gpio_pullup
+ *--------------------------------------*/
+void configure_gpio_pullup(uint8_t pin) {
+	typedef struct {
+		uint8_t gpio;
+		uint32_t padconf_offset;
+	} padconf_entry_t;
+
+	/* AM335x TRM SPRUH73Q Table 9-10 — PADCONF register offsets within Control Module (base 0x44E10000) */
+	static const padconf_entry_t padconf_table[] = {
+		/* GPIO 27 = P8_17 = MII1_TXD0 — previous fan tachometer pin */
+		{ 27U, 0x928U },
+		/* GPIO 60 = P9_12 = GPMC_BEN1 — fan tachometer (open-drain, requires pull-up) */
+		{ 60U, 0x878U },
+	};
+	static const size_t PADCONF_TABLE_LEN = sizeof(padconf_table) / sizeof(padconf_table[0]);
+
+	uint32_t offset = 0U;
+	bool found = false;
+	for (size_t ii = 0U; ii < PADCONF_TABLE_LEN; ++ii) {
+		if (padconf_table[ii].gpio == pin) {
+			offset = padconf_table[ii].padconf_offset;
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		LOG_AND_EXIT("No PADCONF entry for GPIO %u — add it to padconf_table in gpio_control.c", (unsigned)pin);
+	}
+
+	/* conf_<module>_<pin> bit fields (AM335x TRM SPRUH73Q §9.3.1.50, Table 9-60):
+	 * bit5=rxactive(1=input enabled), bit4=putypesel(1=pullup), bit3=puden(0=pull enabled), bits2:0=mmode(7=GPIO) */
+	static const uint32_t PADCONF_GPIO_INPUT_PULLUP = 0x37U;
+
+	volatile uint32_t *padconf_reg = reg32(ctrl_module_map.gpio_base, offset);
+	*padconf_reg = PADCONF_GPIO_INPUT_PULLUP;
+	LOG(NUM_THREADS, "Configured pull-up on GPIO %u (PADCONF offset 0x%03X = 0x%02X)", (unsigned)pin, offset, PADCONF_GPIO_INPUT_PULLUP);
 }
 
 /*--------------------------------------
