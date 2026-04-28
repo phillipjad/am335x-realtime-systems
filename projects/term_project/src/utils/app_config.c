@@ -87,8 +87,10 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return parse_input_to_uint8(value, &config->pin_layout.potentiometer);
 	} else if (strcmp(key, TEMP_SENSOR_GPIO_PIN) == 0) {
 		return parse_input_to_uint8(value, &config->pin_layout.temp_sensor);
-	} else if (strcmp(key, TEMP_SENSOR_GPIO_PIN) == 0) {
-		return parse_pwm_input(value, &config->pin_layout.fan.pwm_chip, &config->pin_layout.fan.pwm_channel);
+	} else if (strcmp(key, FAN_PWM_PIN) == 0) {
+		return parse_pwm_input(value, &config->pin_layout.fan_pwm.pwm_chip, &config->pin_layout.fan_pwm.pwm_channel);
+	} else if (strcmp(key, FAN_TACH_GPIO) == 0) {
+		return parse_input_to_uint8(value, &config->pin_layout.fan_tach);
 	} else {
 		LOG(NUM_THREADS, "Received unknown config key: %s", key);
 		return STATUS_FAIL;

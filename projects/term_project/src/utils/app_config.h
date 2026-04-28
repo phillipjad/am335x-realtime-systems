@@ -12,6 +12,8 @@
 #define SERVO_PWM_PIN ("SERVO_PWM_PIN")
 #define POTENTIOMETER_AIN_PIN ("POTENTIOMETER_AIN")
 #define TEMP_SENSOR_GPIO_PIN ("TEMP_SENSOR_GPIO")
+#define FAN_PWM_PIN ("FAN_PWM_PIN")
+#define FAN_TACH_GPIO ("FAN_TACH_GPIO")
 
 /* Config file key definitions */
 
