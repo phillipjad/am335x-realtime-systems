@@ -1,6 +1,7 @@
 #include "potentiometer.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -69,10 +70,14 @@ void *potentiometer_thread_entry(void *arg) {
 		} else {
 			ssize_t result = read(fd, input, sizeof(input) - 1);
 			float64_t elapsed = 0.0;
+			static uint32_t num_reads = 0U;
+			static const uint8_t READ_LOG_THROTTLE = 16U;
 			if (read_timer_record(&potentiometer_timer, &elapsed)) {
-				if (elapsed > 0.5) {
+				/* We don't want to spam stdout or the log queue unless we are outside of the bounds */
+				if (((num_reads % READ_LOG_THROTTLE) == 0U) || (elapsed > 0.5)) {
 					LOG(POTENTIOMETER, "Potentiometer input registered in %.3lf s", elapsed);
 				}
+				++num_reads;
 			}
 			if (result <= 0) {
 				LOG(POTENTIOMETER, "Potentiometer read error: %s", result == 0 ? "empty read" : strerror(errno));
