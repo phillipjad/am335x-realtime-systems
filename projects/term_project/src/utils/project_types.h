@@ -23,23 +23,25 @@ typedef double float64_t;
 typedef enum { STATE_FAIL, STATE_FAIL_SAFE, STATE_RUNNING, STATE_IDLE } state_e;
 
 typedef struct {
-	uint8_t servo_chip; /**< chip number for servo */
-	char servo_channel; /**< channel number for servo */
-} servo_t;
+	uint8_t pwm_chip; /**< chip number for servo */
+	char pwm_channel; /**< channel number for servo */
+} pwm_pin_t;
 
 typedef struct {
 	int32_t lcd_fd;          /**< file descriptor for LCD screen */
-	servo_t servo;           /**< Pin for servo */
+	pwm_pin_t servo;         /**< Pin for servo */
+	pwm_pin_t fan_pwm;       /**< Pin for 4-pin PWM fan */
 	uint8_t target_temp_led; /**< Pin for target_temp_led */
 	uint8_t system_ok_led;   /**< Pin for system_ok_led */
 	uint8_t system_fail_led; /**< Pin for system_fail_led */
 	uint8_t lcd_i2c_bus;     /**< Bus for LCD screen */
 	uint8_t potentiometer;   /**< Pin for potentiometer */
 	uint8_t temp_sensor;     /**< Pin for temp sensor */
-} gpio_layout_t;
+	uint8_t fan_tach;        /**< Pin for reading current fan speed */
+} pin_layout_t;
 
 typedef struct {
-	gpio_layout_t gpio_layout;
+	pin_layout_t pin_layout;
 } configuration_items_t;
 
 typedef enum {
@@ -50,6 +52,7 @@ typedef enum {
 	LED,
 	POTENTIOMETER,
 	STATE_MANAGEMENT,
+	FAN_CONTROL,
 	NUM_THREADS
 } thread_index_e;
 
@@ -99,9 +102,9 @@ typedef struct {
 	atomic_bool is_shutdown_requested;         /**< atomic_bool to determine if we should shutdown the application */
 	configuration_items_t config;              /**< Configuration items used throughout application */
 	state_e current_state;                     /**< System state */
-	float64_t current_temp;                    /**< Current temperature */
+	float64_t current_temp;                    /**< Current temperature in Fahrenheit */
 	float64_t current_humidity_rh;             /**< Current relative humidity (%) */
-	float64_t target_temp;                     /**< Target temperature */
+	float64_t target_temp;                     /**< Target temperature in Fahrenheit */
 	float64_t potentiometer_percentage_closed; /**< Potentiometer value used for manual control */
 	struct timespec servo_activation_time;     /**< Train arrival time */
 	uint64_t heartbeats[NUM_THREADS];          /**< Thread heartbeats */

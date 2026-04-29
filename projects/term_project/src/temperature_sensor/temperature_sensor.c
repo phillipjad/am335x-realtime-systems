@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "thread_utils.h"
 
 static global_values_t *shared_info = NULL;
 
@@ -60,7 +61,7 @@ static void reset_pin(uint8_t pin) {
  */
 static int32_t read_dht_22(temp_readings_t *out) {
 	static const struct timespec start_low_duration = { .tv_sec = 0L, .tv_nsec = 10L * NSEC_PER_MSEC };
-	uint8_t data_pin = shared_info->config.gpio_layout.temp_sensor;
+	uint8_t data_pin = shared_info->config.pin_layout.temp_sensor;
 
 	/* Start signal: pull LOW >= 1ms, release HIGH, switch to input */
 	gpio_set(data_pin, GPIO_LOW);
@@ -169,7 +170,12 @@ static int32_t read_dht_22(temp_readings_t *out) {
  * @return int32_t Unix-like error code. 0 means success < 0 means error
  */
 static int32_t read_temp_sensor(temp_readings_t *out) {
-	return read_dht_22(out);
+	int32_t saved_priority = 0;
+	/* Attempt to minimize bit bang misses by reducing preemption likelihood */
+	boost_thread_priority(&saved_priority);
+	int32_t result = read_dht_22(out);
+	restore_thread_priority(saved_priority);
+	return result;
 }
 
 void *temperature_sensor_thread_entry(void *arg) {
@@ -186,10 +192,10 @@ void *temperature_sensor_thread_entry(void *arg) {
 			++failed_sensor_reads;
 		} else {
 			pthread_mutex_lock(&shared_info->mutex);
-			shared_info->current_temp = readings.temp_c;
+			shared_info->current_temp = (readings.temp_c * (9.0 / 5.0)) + 32;
 			shared_info->current_humidity_rh = readings.humidity_rh;
 			pthread_mutex_unlock(&shared_info->mutex);
-			LOG(TEMP_SENSOR, "Temp: %.3lf C  Humidity: %.1f %%RH", readings.temp_c, readings.humidity_rh);
+			LOG(TEMP_SENSOR, "Temp: %.3lf F  Humidity: %.1f %%RH", ((readings.temp_c * (9.0 / 5.0)) + 32), readings.humidity_rh);
 		}
 
 		if (failed_sensor_reads > SENSOR_FAIL_THRESHOLD) {

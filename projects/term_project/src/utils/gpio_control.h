@@ -25,4 +25,6 @@ void gpio_set_direction_out(uint8_t pin);
 
 void gpio_set_direction_in(uint8_t pin);
 
+void configure_gpio_pullup(uint8_t pin);
+
 #endif /* GPIO_CONTROL_H */

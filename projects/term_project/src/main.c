@@ -14,6 +14,8 @@
 #include "user_input.h"
 #include <string.h> /* string.h needed for memset */
 #endif              /* !USE_CONFIG */
+#include "fan_control.h"
+#include "fan_controller.h"
 #include "gpio_control.h"
 #include "lcd_screen.h"
 #include "led.h"
@@ -35,6 +37,7 @@
 #define SCHED_PRI_LCD (50)
 #define SCHED_PRI_POTMETER (49)
 #define SCHED_PRI_VENT (40)
+#define SCHED_PRI_FAN_CONTROL (39)
 #define SCHED_PRI_LOG_HANDLER (30)
 
 /* Main controls all threads. As such, we register all of them in one neat struct for easier handling */
@@ -48,6 +51,7 @@ typedef struct {
 	pthread_t led_thread;
 	pthread_t potentiometer_thread;
 	pthread_t state_management_thread;
+	pthread_t fan_control_thread;
 } project_threads_t;
 
 global_values_t shared_info = { 0 };
@@ -72,30 +76,37 @@ static void hardware_init(void) {
 	gpio_map_init();
 	configuration_items_t *user_config = &shared_info.config;
 	/* Init system LEDs */
-	gpio_set_direction(user_config->gpio_layout.target_temp_led, GPIO_OUT);
-	gpio_set_direction(user_config->gpio_layout.system_ok_led, GPIO_OUT);
+	gpio_set_direction(user_config->pin_layout.target_temp_led, GPIO_OUT);
+	gpio_set_direction(user_config->pin_layout.system_ok_led, GPIO_OUT);
 	// Start with target reached off and system ok on
-	gpio_set(user_config->gpio_layout.target_temp_led, GPIO_LOW);
-	gpio_set(user_config->gpio_layout.system_ok_led, GPIO_HIGH);
+	gpio_set(user_config->pin_layout.target_temp_led, GPIO_LOW);
+	gpio_set(user_config->pin_layout.system_ok_led, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized hardware LEDs");
 
 	/* We'll start with the temp sensor set to output and high. Temp sensor thread will manipulate as necessary after */
-	gpio_set_direction(user_config->gpio_layout.temp_sensor, GPIO_OUT);
-	gpio_set(user_config->gpio_layout.temp_sensor, GPIO_HIGH);
+	gpio_set_direction(user_config->pin_layout.temp_sensor, GPIO_OUT);
+	gpio_set(user_config->pin_layout.temp_sensor, GPIO_HIGH);
 	LOG(NUM_THREADS, "Initialized temp sensor");
 
 
-	servo_init(user_config->gpio_layout.servo.servo_chip, user_config->gpio_layout.servo.servo_channel);
+	servo_init(user_config->pin_layout.servo.pwm_chip, user_config->pin_layout.servo.pwm_channel);
 	LOG(NUM_THREADS, "Initialized servo");
 
 	char i2c_path[USER_INPUT_MAX_LEN + 1U] = { 0 };
-	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->gpio_layout.lcd_i2c_bus);
+	(void)snprintf(i2c_path, USER_INPUT_MAX_LEN, "/dev/i2c-%u", user_config->pin_layout.lcd_i2c_bus);
 	// Only i2c-# value allowed is 2, so address will be 0x27
-	user_config->gpio_layout.lcd_fd = lcd_init(i2c_path, 0x27);
+	user_config->pin_layout.lcd_fd = lcd_init(i2c_path, 0x27);
 	LOG(NUM_THREADS, "Initialized LCD");
 
-	potentiometer_init(user_config->gpio_layout.potentiometer);
+	potentiometer_init(user_config->pin_layout.potentiometer);
 	LOG(NUM_THREADS, "Initialized potentiometer");
+
+	/* Init fan controller and associated fan pins */
+	fan_controller_init(user_config->pin_layout.fan_pwm.pwm_chip, user_config->pin_layout.fan_pwm.pwm_channel);
+	/* Fan tach is open-drain — enable internal pull-up before setting direction */
+	configure_gpio_pullup(user_config->pin_layout.fan_tach);
+	gpio_set_direction(user_config->pin_layout.fan_tach, GPIO_IN);
+	LOG(NUM_THREADS, "Initialized fan controller");
 }
 
 /*--------------------------------------
@@ -131,7 +142,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for target temperature status pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.target_temp_led);
+	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.target_temp_led);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for target temperature status LED GPIO");
 	}
@@ -141,7 +152,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for system health LED pin");
 	}
-	result = parse_input_to_uint8(input_buffer, &user_config->gpio_layout.system_ok_led);
+	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.system_ok_led);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for system health LED GPIO");
 	}
@@ -151,7 +162,7 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for Servo pin");
 	}
-	result = parse_pwm_input(input_buffer, &user_config->gpio_layout.servo.servo_chip, &user_config->gpio_layout.servo.servo_channel);
+	result = parse_pwm_input(input_buffer, &user_config->pin_layout.servo.pwm_chip, &user_config->pin_layout.servo.pwm_channel);
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
 	}
@@ -161,9 +172,9 @@ static void get_user_configuration_items(configuration_items_t *user_config) {
 	if (result != STATUS_SUCCESS) {
 		LOG_AND_EXIT("Failed to get user input for LCD bus");
 	}
-	parse_input_to_uint8(input_buffer, &user_config->gpio_layout.lcd_i2c_bus);
+	parse_input_to_uint8(input_buffer, &user_config->pin_layout.lcd_i2c_bus);
 	// Use I2C-2
-	if (user_config->gpio_layout.lcd_i2c_bus != 2U) {
+	if (user_config->pin_layout.lcd_i2c_bus != 2U) {
 		LOG_AND_EXIT("Please use the I2C-2 bus");
 	}
 	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
@@ -213,6 +224,8 @@ static void start_project_threads(void) {
 	    SCHED_PRI_POTMETER, THREAD_NAMES[POTENTIOMETER]);
 	make_project_thread(&threads.state_management_thread, &state_management_thread_entry, (void *)&shared_info,
 	    SCHED_PRI_STATE_MGMT, THREAD_NAMES[STATE_MANAGEMENT]);
+	make_project_thread(&threads.fan_control_thread, &fan_control_thread_entry, (void *)&shared_info,
+	    SCHED_PRI_FAN_CONTROL, THREAD_NAMES[FAN_CONTROL]);
 }
 
 static void join_project_threads() {
@@ -241,6 +254,10 @@ static void join_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join state management thread");
 	}
+	result = pthread_join(threads.fan_control_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to join fan control thread");
+	}
 
 	/* Wake the log_handler so it exits its wait promptly and drains remaining messages */
 	(void)pthread_cond_broadcast(&shared_info.logger.log_cv);
@@ -260,6 +277,7 @@ static void handle_shutdown(int32_t exit_code) {
 	join_project_threads();
 	LOG(NUM_THREADS, "Shutting down...");
 	servo_shutdown();
+	fan_shutdown();
 	gpio_map_close();
 	exit(exit_code);
 }
@@ -348,7 +366,7 @@ int32_t main(void) {
 	start_project_threads();
 	int32_t exit_code = 0;
 	while (!atomic_load(&shared_info.is_shutdown_requested)) {
-		struct timespec heartbeat_check_ticker = { .tv_sec = 5L, .tv_nsec = 0L };
+		struct timespec heartbeat_check_ticker = { .tv_sec = 10L, .tv_nsec = 0L };
 		nanosleep(&heartbeat_check_ticker, NULL);
 		exit_code = check_heartbeats();
 	}
