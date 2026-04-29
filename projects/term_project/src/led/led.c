@@ -25,6 +25,11 @@ static void handle_system_led_state(void) {
 	}
 }
 
+void *led_off(void) {
+	gpio_set(shared_info->config.pin_layout.system_fail_led, GPIO_LOW);
+	gpio_set(shared_info->config.pin_layout.system_ok_led, GPIO_LOW);
+}
+
 /* This routine does practically nothing each iteration so we can run it very frequently */
 void *led_thread_entry(void *arg) {
 	LOG(LED, "Starting LED thread");
