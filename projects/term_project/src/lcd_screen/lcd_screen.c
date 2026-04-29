@@ -198,7 +198,6 @@ void *lcd_screen_thread_entry(void *arg) {
 			if ((current_time - latest_target_temp_timestamp) > LCD_TARGET_SHOW_TIME) {
 				render_lcd = true;
 			}
-			
 		}
 		bool show_target = (current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME;
 		if (was_showing_target && !show_target) {
@@ -209,8 +208,7 @@ void *lcd_screen_thread_entry(void *arg) {
 		if (state_snapshot == STATE_RUNNING) {
 			// Buffer of temp before updating so we don't spam updates
 			// Show target for first 2 sec then current temp
-			if (render_lcd &&
-			    ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME)) {
+			if (render_lcd && ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME)) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
