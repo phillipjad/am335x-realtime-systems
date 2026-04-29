@@ -104,7 +104,7 @@ void project_log(thread_index_e tid, FILE *stream, bool include_newline, const c
 	msg.thread_id = tid;
 	msg.include_newline = include_newline;
 	msg.line_no = line_no;
-	(void)strncpy(msg.filename, filename, MAX_FILENAME_LENGTH);
+	(void)snprintf(msg.filename, MAX_FILENAME_LENGTH + 1U, "%s", filename);
 	(void)vsnprintf(msg.message, MAX_LOG_LEN, format, args);
 	va_end(args);
 
