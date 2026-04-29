@@ -221,5 +221,6 @@ void *lcd_screen_thread_entry(void *arg) {
 	}
 
 	LOG(LCD_SCREEN, "Shutting down LCD screen thread");
+	lcd_clear(shared_info->config.pin_layout.lcd_fd);
 	return NULL;
 }

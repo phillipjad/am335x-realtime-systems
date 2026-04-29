@@ -279,8 +279,6 @@ static void handle_shutdown(int32_t exit_code) {
 	servo_shutdown();
 	fan_shutdown();
 	gpio_map_close();
-	lcd_clear();
-	led_off();
 	exit(exit_code);
 }
 
