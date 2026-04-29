@@ -140,6 +140,7 @@ void *lcd_screen_thread_entry(void *arg) {
 	// Setup internal values
 	int32_t fd = shared_info->config.pin_layout.lcd_fd;
 	float64_t latest_target_temp = 0;
+	float64_t latest_current_temp = 0;
 	float64_t latest_target_temp_timestamp = 0;
 	state_e last_read_state = STATE_IDLE;
 
@@ -178,6 +179,11 @@ void *lcd_screen_thread_entry(void *arg) {
 		if (temp_difference < 0) {
 			temp_difference = -temp_difference;
 		}
+		// Current temp check
+		float64_t current_temp_difference = latest_current_temp - current_temp;
+		if (current_temp_difference < 0) {
+			current_temp_difference = -current_temp_difference;
+		}
 		// printf("temp diff: %f\n", temp_difference);
 		// printf("%f vs %f\n", latest_target_temp, target_temp);
 
@@ -187,6 +193,12 @@ void *lcd_screen_thread_entry(void *arg) {
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
 		} else if (last_read_state != state_snapshot) {
 			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
+		} else if (current_temp_difference > 0.1) {
+			latest_current_temp = current_temp;
+			if ((current_time - latest_target_temp_timestamp) > LCD_TARGET_SHOW_TIME) {
+				render_lcd = true;
+			}
+			
 		}
 		bool show_target = (current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME;
 		if (was_showing_target && !show_target) {
@@ -197,7 +209,7 @@ void *lcd_screen_thread_entry(void *arg) {
 		if (state_snapshot == STATE_RUNNING) {
 			// Buffer of temp before updating so we don't spam updates
 			// Show target for first 2 sec then current temp
-			if (render_lcd && last_read_state != state_snapshot &&
+			if (render_lcd &&
 			    ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME)) {
 				// Print on LCD - Target Temp: ##
 				lcd_clear(fd);
@@ -207,7 +219,7 @@ void *lcd_screen_thread_entry(void *arg) {
 				lcd_print_float(fd, target_temp);
 				LOG(LCD_SCREEN, "Running: Target Temp: %lf", target_temp);
 				render_lcd = false;
-			} else if (render_lcd && last_read_state != state_snapshot) {
+			} else if (render_lcd) {
 				// Print on LCD - Current temperature: ###
 				lcd_clear(fd);
 				lcd_set_cursor(fd, 0, 0);
