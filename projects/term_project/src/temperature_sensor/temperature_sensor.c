@@ -192,10 +192,10 @@ void *temperature_sensor_thread_entry(void *arg) {
 			++failed_sensor_reads;
 		} else {
 			pthread_mutex_lock(&shared_info->mutex);
-			shared_info->current_temp = readings.temp_c;
+			shared_info->current_temp = (readings.temp_c * (9.0 / 5.0)) + 32;
 			shared_info->current_humidity_rh = readings.humidity_rh;
 			pthread_mutex_unlock(&shared_info->mutex);
-			LOG(TEMP_SENSOR, "Temp: %.3lf C  Humidity: %.1f %%RH", readings.temp_c, readings.humidity_rh);
+			LOG(TEMP_SENSOR, "Temp: %.3lf F  Humidity: %.1f %%RH", ((readings.temp_c * (9.0 / 5.0)) + 32), readings.humidity_rh);
 		}
 
 		if (failed_sensor_reads > SENSOR_FAIL_THRESHOLD) {
