@@ -42,7 +42,7 @@ static void handle_application_health(void) {
 			pthread_mutex_unlock(&shared_info->mutex);
 		}
 	}
-	
+
 	if (!error_present) {
 		pthread_mutex_lock(&shared_info->mutex);
 		shared_info->current_state = STATE_RUNNING;
