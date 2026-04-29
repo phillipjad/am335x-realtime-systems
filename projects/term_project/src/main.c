@@ -364,9 +364,6 @@ int32_t main(void) {
 	/* Global params init */
 	globals_init();
 	start_project_threads();
-	pthread_mutex_lock(&shared_info.mutex);
-	shared_info.current_state = STATE_RUNNING;
-	pthread_mutex_unlock(&shared_info.mutex);
 	int32_t exit_code = 0;
 	while (!atomic_load(&shared_info.is_shutdown_requested)) {
 		struct timespec heartbeat_check_ticker = { .tv_sec = 10L, .tv_nsec = 0L };
