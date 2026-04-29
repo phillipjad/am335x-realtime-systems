@@ -10,6 +10,7 @@
 #include "thread_utils.h"
 
 #define MAX_JITTER_TEMP_SENS (0.250)
+#define MAX_LATENCY_TEMP_SENS (2.0)
 
 static global_values_t *shared_info = NULL;
 static read_timer_t sensor_timer = { 0 };
@@ -190,28 +191,39 @@ void *temperature_sensor_thread_entry(void *arg) {
 	const struct timespec thread_sleep = { .tv_sec = 2L, .tv_nsec = 0L };
 
 	uint8_t failed_sensor_reads = 0U;
+	bool timing_failure = false;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		temp_readings_t readings = { 0 };
 		int32_t result = read_temp_sensor(&readings);
-
-		float64_t elapsed = 0.0;
-		if (read_timer_record(&sensor_timer, &elapsed)) {
-			float64_t jitter = read_timer_jitter(&sensor_timer);
-			LOG(TEMP_SENSOR, "Time since last read: %.3lf s (Jitter: %.3lf ms)", elapsed, (jitter * MSEC_PER_SEC));
-			if (jitter > (float64_t)MAX_JITTER_TEMP_SENS) {
-				LOG(TEMP_SENSOR, "Temp sensor jitter exceeds maximum: %.3lf > %.3lf s", jitter, (float64_t)MAX_JITTER_TEMP_SENS);
-			}
-		}
 
 		if (result != STATUS_SUCCESS) {
 			++failed_sensor_reads;
 		} else {
 			failed_sensor_reads = 0U;
+			float64_t elapsed = 0.0;
+			if (read_timer_record(&sensor_timer, &elapsed)) {
+				float64_t jitter = read_timer_jitter(&sensor_timer);
+				if (jitter > (float64_t)MAX_JITTER_TEMP_SENS) {
+					pthread_mutex_lock(&shared_info->mutex);
+					set_error(&shared_info->thread_errors[TEMP_SENSOR],
+					    "TIMING ERROR: Temp sensor jitter exceeds maximum: %.3lf > %.3lf s", jitter, (float64_t)MAX_JITTER_TEMP_SENS);
+					pthread_mutex_unlock(&shared_info->mutex);
+					timing_failure = true;
+				} else if (elapsed > (MAX_LATENCY_TEMP_SENS + MAX_JITTER_TEMP_SENS)) {
+					pthread_mutex_lock(&shared_info->mutex);
+					set_error(&shared_info->thread_errors[TEMP_SENSOR],
+					    "TIMING ERROR: Temp sensor latency exceeds maximum (including jitter): %.3lf > %.3lf s",
+					    elapsed, (float64_t)(MAX_LATENCY_TEMP_SENS + MAX_JITTER_TEMP_SENS));
+					pthread_mutex_unlock(&shared_info->mutex);
+					timing_failure = true;
+				} else {
+					timing_failure = false;
+				}
+			}
 			pthread_mutex_lock(&shared_info->mutex);
 			shared_info->current_temp = (readings.temp_c * (9.0 / 5.0)) + 32;
 			shared_info->current_humidity_rh = readings.humidity_rh;
 			pthread_mutex_unlock(&shared_info->mutex);
-			LOG(TEMP_SENSOR, "Temp: %.3lf F  Humidity: %.1f %%RH", ((readings.temp_c * (9.0 / 5.0)) + 32), readings.humidity_rh);
 		}
 
 		if (failed_sensor_reads > SENSOR_FAIL_THRESHOLD) {
@@ -219,7 +231,8 @@ void *temperature_sensor_thread_entry(void *arg) {
 			set_error(&shared_info->thread_errors[TEMP_SENSOR], "DHT22 failed %u consecutive sensor readings", SENSOR_FAIL_THRESHOLD);
 			pthread_mutex_unlock(&shared_info->mutex);
 		} else {
-			if (result == STATUS_SUCCESS) {
+			/* We only want to clear the error if our timing is solid and we successfully polled the sensor */
+			if ((result == STATUS_SUCCESS) && (timing_failure == false)) {
 				pthread_mutex_lock(&shared_info->mutex);
 				clear_error(&shared_info->thread_errors[TEMP_SENSOR]);
 				pthread_mutex_unlock(&shared_info->mutex);
