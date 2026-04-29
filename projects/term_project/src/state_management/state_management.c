@@ -19,7 +19,7 @@ static void handle_application_health(void) {
 	/* All errors are able to operate in fail-safe except for servo */
 	error_e error_copy[NUM_THREADS] = { 0 };
 	pthread_mutex_lock(&shared_info->mutex);
-	(void)memccpy(error_copy, shared_info->thread_errors, NUM_THREADS, sizeof(error_e));
+	(void)memcpy(error_copy, shared_info->thread_errors, NUM_THREADS * sizeof(error_e));
 	pthread_mutex_unlock(&shared_info->mutex);
 
 	bool error_present = false;

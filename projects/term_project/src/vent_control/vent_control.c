@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 /* Local project includes after system libraries */
@@ -12,18 +13,72 @@
 #include "servo_controller.h"
 
 static global_values_t *shared_info = NULL;
-static bool vent_open = false;
-static float64_t last_vent_percent_closed = -1;
+static float64_t last_vent_pct = -1.0;
+
+#define VENT_DELTA_MAX (10.0)   /* delta at/above which vent is 100% open */
+#define VENT_DELTA_CLOSE (-5.0) /* delta at/below which vent closes (hysteresis) */
 
 /*---------------------------
  * Function: time_taken in ms
  *---------------------------*/
 static int64_t time_taken(struct timespec *start, struct timespec *end) {
 	time_t seconds = (end->tv_sec - start->tv_sec);
-	int64_t nanoseconds = (end->tv_nsec - start->tv_nsec) / (int64_t)NSEC_PER_MSEC;
-	int64_t milliseconds = (nanoseconds / NSEC_PER_MSEC);
+	int64_t nanoseconds = end->tv_nsec - start->tv_nsec;
+	int64_t milliseconds = (nanoseconds / (int64_t)NSEC_PER_MSEC);
 	milliseconds += ((int64_t)seconds * MSEC_PER_SEC);
 	return milliseconds;
+}
+
+/*---------------------------
+ * Function: compute_vent_open_pct
+ *---------------------------*/
+static float64_t compute_vent_open_pct(state_e current_state, float64_t delta) {
+	static bool vent_is_active = false;
+
+	if ((current_state == STATE_IDLE) || (current_state == STATE_FAIL)) {
+		vent_is_active = false;
+		return 0.0;
+	}
+
+	if (delta > 0.0) {
+		vent_is_active = true;
+	} else if (delta <= VENT_DELTA_CLOSE) {
+		vent_is_active = false;
+	} else {
+		/* -5.0 < delta <= 0.0: hysteresis zone, maintain vent_is_active */
+	}
+
+	if (!vent_is_active) {
+		return 0.0;
+	}
+	if (delta >= VENT_DELTA_MAX) {
+		return 100.0;
+	}
+	if (delta > 0.0) {
+		return (delta / VENT_DELTA_MAX) * 100.0;
+	}
+	return 0.0;
+}
+
+/*---------------------------
+ * Function: apply_vent_position
+ *---------------------------*/
+static void apply_vent_position(float64_t open_pct) {
+	struct timespec servo_start = { 0 };
+	struct timespec servo_end = { 0 };
+	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start);
+	int32_t result = potentiometer_based_servo(open_pct);
+	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end);
+
+	pthread_mutex_lock(&shared_info->mutex);
+	if (time_taken(&servo_start, &servo_end) > SERVO_TIMEOUT_MS_TIME_F) {
+		set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+	} else if (result != STATUS_SUCCESS) {
+		set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
+	} else {
+		clear_error(&shared_info->thread_errors[VENT_CONTROL]);
+	}
+	pthread_mutex_unlock(&shared_info->mutex);
 }
 
 static void handle_vent_logic(void) {
@@ -31,74 +86,36 @@ static void handle_vent_logic(void) {
 		return;
 	}
 
-	bool state_updated = false;
-	int32_t servo_status = STATUS_SUCCESS;
-	/* Grab state snapshot */
 	pthread_mutex_lock(&shared_info->mutex);
 	increment_heartbeat(shared_info, VENT_CONTROL);
 	state_e current_state = shared_info->current_state;
 	float64_t current_temp = shared_info->current_temp;
 	float64_t target_temp = shared_info->target_temp;
+	float64_t potentiometer_pct = shared_info->potentiometer_percentage_closed;
 	pthread_mutex_unlock(&shared_info->mutex);
-	struct timespec servo_start_time = { 0 };
-	struct timespec servo_end_time = { 0 };
 
-	// Check if shutdown requested or state changed from idle
-	if (!atomic_load(&shared_info->is_shutdown_requested)) {
-		// If operating automatically
-		if (current_state == STATE_RUNNING) {
-			// Check if temp changed and vent needs to be opened/closed
-			if ((current_temp > (target_temp + TEMP_BUFFER)) && !vent_open) {
-				LOG(VENT_CONTROL, "Read STATE_RUNNING state with high temp, opening vent.");
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_status = servo_raise();
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
-				vent_open = true;
-				state_updated = true;
-			} else if ((current_temp < (target_temp - TEMP_BUFFER)) && vent_open) {
-				LOG(VENT_CONTROL, "Read STATE_RUNNING state with low temp, closing vent.");
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_status = servo_lower();
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
-				vent_open = false;
-				state_updated = true;
-			} else {
-				/* MISRA requires else */
-			}
-		} else if (current_state == STATE_FAIL_SAFE) {
-			// If idle map potentiometer reading to servo angle: SERVO_LOWER + (potentiometer_activation_percentage * (SERVO_RAISE - SERVO_LOWER))
-			float64_t read_percent = shared_info->potentiometer_percentage_closed;
-			if (last_vent_percent_closed != read_percent) {
-				LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%% closed", read_percent);
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_start_time);
-				servo_status = potentiometer_based_servo(read_percent);
-				(void)clock_gettime(CLOCK_MONOTONIC_RAW, &servo_end_time);
-				last_vent_percent_closed = read_percent;
-				state_updated = true;
-			}
-		}
-		if (state_updated) {
-			if ((time_taken(&servo_start_time, &servo_end_time) > SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
-				pthread_mutex_lock(&shared_info->mutex);
-				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
-				pthread_mutex_unlock(&shared_info->mutex);
-			} else if (servo_status != STATUS_SUCCESS) {
-				pthread_mutex_lock(&shared_info->mutex);
-				set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
-				pthread_mutex_unlock(&shared_info->mutex);
-			} else {
-				pthread_mutex_lock(&shared_info->mutex);
-				clear_error(&shared_info->thread_errors[VENT_CONTROL]);
-				pthread_mutex_unlock(&shared_info->mutex);
-			}
-		}
-		/* We don't currently need to clear the servo error since it's terminal but leaving here for future changes */
-		// else if ((time_taken(&servo_start_time, &servo_end_time) <= SERVO_TIMEOUT_MS_TIME_F) && state_updated) {
-		// 	pthread_mutex_lock(&shared_info->mutex);
-		// 	clear_error(&shared_info->thread_errors[VENT_CONTROL]);
-		// 	pthread_mutex_unlock(&shared_info->mutex);
-		// }
+	if (atomic_load(&shared_info->is_shutdown_requested)) {
+		return;
 	}
+
+	float64_t vent_pct;
+	if (current_state == STATE_RUNNING) {
+		float64_t delta = current_temp - target_temp;
+		vent_pct = compute_vent_open_pct(current_state, delta);
+		if (vent_pct != last_vent_pct) {
+			LOG(VENT_CONTROL, "Adjusting vent to %.1f%% open (delta: %.2f F)", vent_pct, delta);
+		}
+	} else if (current_state == STATE_FAIL_SAFE) {
+		vent_pct = potentiometer_pct;
+		if (vent_pct != last_vent_pct) {
+			LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%%", vent_pct);
+		}
+	} else {
+		vent_pct = compute_vent_open_pct(current_state, 0.0);
+	}
+
+	last_vent_pct = vent_pct;
+	apply_vent_position(vent_pct);
 }
 
 /*--------------------------------------
@@ -108,7 +125,6 @@ void *vent_control_thread_entry(void *arg) {
 	LOG(VENT_CONTROL, "Starting vent control thread");
 	shared_info = (global_values_t *)arg;
 	struct timespec thread_sleep = { .tv_sec = 0L, .tv_nsec = 500 * NSEC_PER_MSEC };
-	// Assign current starting state
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		handle_vent_logic();
 		(void)nanosleep(&thread_sleep, NULL);

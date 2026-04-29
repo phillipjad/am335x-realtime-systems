@@ -10,13 +10,15 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "read_timer.h"
 
 #define POT_INPUT_SIZE 20
 #define POT_MAX_VALUE 4095.0
 #define POT_MIN_VALUE 0.0
 
 static global_values_t *shared_info = NULL;
-static int fd = 0;
+static read_timer_t potentiometer_timer = { 0 };
+static int32_t fd = 0;
 
 static void potentiometer_init_hw(uint8_t pin_number) {
 	// Map pin number value to AIN #
@@ -51,34 +53,56 @@ void potentiometer_init(uint8_t pin_number) {
 void *potentiometer_thread_entry(void *arg) {
 	LOG(POTENTIOMETER, "Starting potentiometer thread");
 	shared_info = (global_values_t *)arg;
+	read_timer_init(&potentiometer_timer);
 	static const struct timespec thread_sleep = { .tv_sec = 0L, .tv_nsec = 250L * NSEC_PER_MSEC };
 	char input[POT_INPUT_SIZE] = { 0 };
 	float64_t percent = 0.0;
 	float64_t temp = 0;
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		// Reset fd to start
-		lseek(fd, 0, SEEK_SET);
 		(void)memset(input, 0, sizeof(input));
-		// Read potentiometer input
-		ssize_t result = read(fd, input, sizeof(input) - 1);
-		if (result < 0) {
-			LOG(POTENTIOMETER, "Potentiometer read error: %s", strerror(errno));
+		ssize_t seek_result = lseek(fd, 0, SEEK_SET);
+		if (seek_result < 0) {
+			LOG(POTENTIOMETER, "Potentiometer seek error: %s", strerror(errno));
 			pthread_mutex_lock(&shared_info->mutex);
 			set_error(&shared_info->thread_errors[POTENTIOMETER], "%s", strerror(errno));
 			pthread_mutex_unlock(&shared_info->mutex);
 		} else {
-			float64_t value = atof(input);
-			percent = value / POT_MAX_VALUE;
-			temp = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * percent);
-			// Change to percentage after adjusting temperature
-			percent = percent * 100;
-			pthread_mutex_lock(&shared_info->mutex);
-			clear_error(&shared_info->thread_errors[POTENTIOMETER]);
-			// If in RUNNING or FAIL_SAFE mode, will read value and adjust target_temp or servo duty_cycle
-			// Write to global potentiometer values
-			shared_info->potentiometer_percentage_closed = percent;
-			shared_info->target_temp = temp;
-			pthread_mutex_unlock(&shared_info->mutex);
+			ssize_t result = read(fd, input, sizeof(input) - 1);
+			float64_t elapsed = 0.0;
+			if (read_timer_record(&potentiometer_timer, &elapsed)) {
+				if (elapsed > 0.5) {
+					LOG(POTENTIOMETER, "Potentiometer input registered in %.3lf s", elapsed);
+				}
+			}
+			if (result <= 0) {
+				LOG(POTENTIOMETER, "Potentiometer read error: %s", result == 0 ? "empty read" : strerror(errno));
+				pthread_mutex_lock(&shared_info->mutex);
+				set_error(&shared_info->thread_errors[POTENTIOMETER], "%s", result == 0 ? "empty read" : strerror(errno));
+				pthread_mutex_unlock(&shared_info->mutex);
+			} else {
+				char *endptr = NULL;
+				errno = 0;
+				float64_t value = strtod(input, &endptr);
+				if (errno != 0 || endptr == input) {
+					LOG(POTENTIOMETER, "Potentiometer parse error: %s", errno != 0 ? strerror(errno) : "no digits");
+					pthread_mutex_lock(&shared_info->mutex);
+					set_error(&shared_info->thread_errors[POTENTIOMETER], "bad ADC value: %s",
+					    errno != 0 ? strerror(errno) : "no digits");
+					pthread_mutex_unlock(&shared_info->mutex);
+				} else {
+					percent = value / POT_MAX_VALUE;
+					temp = MIN_TEMP + ((MAX_TEMP - MIN_TEMP) * percent);
+					// Change to percentage after adjusting temperature
+					percent = percent * 100;
+					pthread_mutex_lock(&shared_info->mutex);
+					clear_error(&shared_info->thread_errors[POTENTIOMETER]);
+					// If in RUNNING or FAIL_SAFE mode, will read value and adjust target_temp or servo duty_cycle
+					// Write to global potentiometer values
+					shared_info->potentiometer_percentage_closed = percent;
+					shared_info->target_temp = temp;
+					pthread_mutex_unlock(&shared_info->mutex);
+				}
+			}
 		}
 		increment_heartbeat(shared_info, POTENTIOMETER);
 		(void)nanosleep(&thread_sleep, NULL);

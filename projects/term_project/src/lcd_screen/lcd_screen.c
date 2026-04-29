@@ -34,7 +34,24 @@
 #define LCD_FOUR_BIT_MODE 0x20
 #define LCD_CHAR_SIZE 16
 
-#define LCD_TARGET_SHOW_TIME 2
+/*
+ * Fixed layout (16 chars × 2 rows):
+ *   Row 0: "CT    TT    XXXX"  — labels + 4-char state at col 12
+ *   Row 1: " YY.Y  ZZ.Z     "  — %5.1f CT at col 0, %5.1f TT at col 6
+ *
+ * Column map:
+ *   0-4   CT value  (row 1) / "CT   " label (row 0)
+ *   5     separator space
+ *   6-10  TT value  (row 1) / "TT   " label (row 0)
+ *   11    separator space
+ *   12-15 state abbreviation (row 0 only)
+ */
+#define LCD_COL_CT_VALUE (0U)
+#define LCD_COL_TT_VALUE (6U)
+#define LCD_COL_STATE (12U)
+#define LCD_TEMP_FMT_LEN (5U) /* "%5.1f" always produces 5 chars for range -99.9..999.9 */
+#define LCD_STATE_LEN (4U)
+#define LCD_TEMP_THRESHOLD (0.1)
 
 static global_values_t *shared_info = NULL;
 
@@ -57,7 +74,6 @@ int32_t lcd_init(const char *i2c_path, uint8_t lcd_addr) {
 
 static void lcd_write_data(int32_t fd, uint8_t data) {
 	int32_t result = write(fd, &data, 1);
-	// Locking because of error checking/settings
 	if (result < 0) {
 		LOG(LCD_SCREEN, "Failed to write: %u to fd: %d", data, fd);
 		pthread_mutex_lock(&shared_info->mutex);
@@ -72,12 +88,10 @@ static void lcd_write_data(int32_t fd, uint8_t data) {
 
 static void lcd_pulse(int32_t fd, uint8_t data) {
 	struct timespec timer = { 0 };
-	timer.tv_nsec = HALF_SECOND_AS_NSEC;
+	timer.tv_nsec = LCD_ENABLE_PULSE_NS;
 
-	// Write with high
 	lcd_write_data(fd, data | LCD_ENABLE_OFFSET);
 	nanosleep(&timer, NULL);
-	// Confirm write with low
 	lcd_write_data(fd, data & ~LCD_ENABLE_OFFSET);
 	nanosleep(&timer, NULL);
 }
@@ -91,7 +105,6 @@ void lcd_clear(int32_t fd) {
 	lcd_send_byte(fd, LCD_CLEAR, LCD_COMMAND);
 }
 
-// Only using two rows in screen
 void lcd_set_cursor(int32_t fd, uint8_t row, uint8_t col) {
 	if (row == 0) {
 		lcd_send_byte(fd, LCD_SET_CURSOR | (col + LCD_ROW_ZERO), LCD_COMMAND);
@@ -112,20 +125,21 @@ void lcd_print_float(int32_t fd, float64_t val) {
 	lcd_print(fd, buffer);
 }
 
-static float64_t get_current_time() {
-	struct timespec t = { 0 };
-	(void)clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-	return t.tv_sec + ((float64_t)t.tv_nsec / NSEC_PER_SEC_F);
+static const char *state_to_str(state_e state) {
+	switch (state) {
+	case STATE_IDLE: return "IDLE";
+	case STATE_RUNNING: return "RUN ";
+	case STATE_FAIL_SAFE: return "SAFE";
+	case STATE_FAIL: return "FAIL";
+	default: return "????";
+	}
 }
 
-static bool update_lcd(float64_t read_time, float64_t current_time, state_e last_state, state_e current_state) {
-	bool update = false;
-	if (read_time != 0 && (current_time - read_time) < LCD_TARGET_SHOW_TIME) {
-		update = true;
-	} else if (last_state != current_state) {
-		update = true;
-	}
-	return update;
+static void lcd_write_temp(int32_t fd, uint8_t row, uint8_t col, float64_t temp) {
+	char buf[LCD_TEMP_FMT_LEN + 1U] = { 0 };
+	(void)snprintf(buf, sizeof(buf), "%5.1f", temp);
+	lcd_set_cursor(fd, row, col);
+	lcd_print(fd, buf);
 }
 
 void *lcd_screen_thread_entry(void *arg) {
@@ -135,138 +149,77 @@ void *lcd_screen_thread_entry(void *arg) {
 	timer.tv_nsec = QUARTER_SECOND_AS_NSEC;
 	init_timer.tv_nsec = HALF_SECOND_AS_NSEC;
 	shared_info = (global_values_t *)arg;
-	bool render_lcd = true;
 
-	// Setup internal values
 	int32_t fd = shared_info->config.pin_layout.lcd_fd;
-	float64_t latest_target_temp = 0;
-	float64_t latest_current_temp = 0;
-	float64_t latest_target_temp_timestamp = 0;
-	state_e last_read_state = STATE_IDLE;
 
-	// Wake up display
+	/* Wake up display */
 	for (int32_t ii = 0; ii < 3; ++ii) {
 		lcd_pulse(fd, (LCD_DATA_PINS & 0xF0) | LCD_COMMAND | LCD_BACKLIGHT_OFFSET);
 		nanosleep(&init_timer, NULL);
 	}
 	lcd_pulse(fd, (LCD_FOUR_BIT_MODE & 0xF0) | LCD_COMMAND | LCD_BACKLIGHT_OFFSET);
-	// Clear screen
 	lcd_clear(fd);
-	// Auto increment cursor
-	lcd_send_byte(fd, 0x06, LCD_COMMAND);
-	// Turn on screen
-	lcd_send_byte(fd, 0x0C, LCD_COMMAND);
+	lcd_send_byte(fd, 0x06, LCD_COMMAND); /* auto-increment cursor */
+	lcd_send_byte(fd, 0x0C, LCD_COMMAND); /* display on */
 
-	// Starting text
+	/* Read initial snapshot */
+	pthread_mutex_lock(&shared_info->mutex);
+	float64_t prev_current_temp = shared_info->current_temp;
+	float64_t prev_target_temp = shared_info->target_temp;
+	state_e prev_state = shared_info->current_state;
+	pthread_mutex_unlock(&shared_info->mutex);
+
+	/* Write static row 0 layout and initial values — never cleared again */
 	lcd_clear(fd);
 	lcd_set_cursor(fd, 0, 0);
-	lcd_print(fd, "Starting LCD...");
-	render_lcd = false;
-	bool was_showing_target = false;
+	lcd_print(fd, "CT    TT    ");
+	lcd_print(fd, state_to_str(prev_state));
+	lcd_write_temp(fd, 1, LCD_COL_CT_VALUE, prev_current_temp);
+	lcd_set_cursor(fd, 1, 5);
+	lcd_print(fd, " ");
+	lcd_write_temp(fd, 1, LCD_COL_TT_VALUE, prev_target_temp);
 
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
-		// Lock thread
 		pthread_mutex_lock(&shared_info->mutex);
 		float64_t current_temp = shared_info->current_temp;
 		float64_t target_temp = shared_info->target_temp;
 		state_e state_snapshot = shared_info->current_state;
-		// Unlock thread
 		pthread_mutex_unlock(&shared_info->mutex);
 
-		// Check if target temp changed between certain range to account for noise
-		float64_t current_time = get_current_time();
-		float64_t temp_difference = latest_target_temp - target_temp;
-		if (temp_difference < 0) {
-			temp_difference = -temp_difference;
+		/* Update state abbreviation if changed */
+		if (state_snapshot != prev_state) {
+			lcd_set_cursor(fd, 0, LCD_COL_STATE);
+			lcd_print(fd, state_to_str(state_snapshot));
+			LOG(LCD_SCREEN, "State: %s", state_to_str(state_snapshot));
+			prev_state = state_snapshot;
 		}
-		// Current temp check
-		float64_t current_temp_difference = latest_current_temp - current_temp;
-		if (current_temp_difference < 0) {
-			current_temp_difference = -current_temp_difference;
-		}
-		// printf("temp diff: %f\n", temp_difference);
-		// printf("%f vs %f\n", latest_target_temp, target_temp);
 
-		if (temp_difference > 0.1) {
-			latest_target_temp = target_temp;
-			latest_target_temp_timestamp = get_current_time();
-			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
-		} else if (last_read_state != state_snapshot) {
-			render_lcd = update_lcd(latest_target_temp_timestamp, current_time, last_read_state, state_snapshot);
-		} else if (current_temp_difference > 0.1) {
-			latest_current_temp = current_temp;
-			if ((current_time - latest_target_temp_timestamp) > LCD_TARGET_SHOW_TIME) {
-				render_lcd = true;
-			}
+		/* Update CT field if changed beyond noise threshold */
+		float64_t ct_diff = current_temp - prev_current_temp;
+		if (ct_diff < 0.0) {
+			ct_diff = -ct_diff;
 		}
-		bool show_target = (current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME;
-		if (was_showing_target && !show_target) {
-			render_lcd = true;
+		if (ct_diff > LCD_TEMP_THRESHOLD) {
+			lcd_write_temp(fd, 1, LCD_COL_CT_VALUE, current_temp);
+			LOG(LCD_SCREEN, "Current temp: %.1lf F", current_temp);
+			prev_current_temp = current_temp;
 		}
-		was_showing_target = show_target;
 
-		if (state_snapshot == STATE_RUNNING) {
-			// Buffer of temp before updating so we don't spam updates
-			// Show target for first 2 sec then current temp
-			if (render_lcd && ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME)) {
-				// Print on LCD - Target Temp: ##
-				lcd_clear(fd);
-				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "R: Target Temp");
-				lcd_set_cursor(fd, 1, 0);
-				lcd_print_float(fd, target_temp);
-				LOG(LCD_SCREEN, "Running: Target Temp: %lf", target_temp);
-				render_lcd = false;
-			} else if (render_lcd) {
-				// Print on LCD - Current temperature: ###
-				lcd_clear(fd);
-				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "R: Current Temp");
-				lcd_set_cursor(fd, 1, 0);
-				lcd_print_float(fd, current_temp);
-				LOG(LCD_SCREEN, "Running: Current Temp: %lf", current_temp);
-				render_lcd = false;
-			} else {
-				/* MISRA requires else */
-			}
-		} else if (render_lcd && state_snapshot == STATE_FAIL_SAFE) {
-			// Print on LCD - ERROR: LCD SCREEN STATE FAIL-SAFE
-			if ((current_time - latest_target_temp_timestamp) <= LCD_TARGET_SHOW_TIME) {
-				// Print on LCD - Target Temp: ##
-				lcd_clear(fd);
-				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "FS: Target Temp");
-				lcd_set_cursor(fd, 1, 0);
-				lcd_print_float(fd, target_temp);
-				LOG(LCD_SCREEN, "Fail-Safe: Target Temp: %lf", target_temp);
-				render_lcd = false;
-			} else {
-				// Print on LCD - Current temperature: ###
-				lcd_clear(fd);
-				lcd_set_cursor(fd, 0, 0);
-				lcd_print(fd, "FS: Current Temp");
-				lcd_set_cursor(fd, 1, 0);
-				lcd_print_float(fd, current_temp);
-				LOG(LCD_SCREEN, "Fail-Safe: Current Temp: %lf", current_temp);
-				render_lcd = false;
-			}
-		} else if (render_lcd && state_snapshot == STATE_FAIL) {
-			// Print on LCD - ERROR: LCD SCREEN STATE FAILURE
-			lcd_clear(fd);
-			lcd_set_cursor(fd, 0, 0);
-			lcd_print(fd, "ERROR:");
-			lcd_set_cursor(fd, 1, 0);
-			lcd_print(fd, "FAIL STATE");
-			LOG(LCD_SCREEN, "FAIL: LCD read Fail state");
-			render_lcd = false;
-		} else {
-			/* MISRA requires else */
+		/* Update TT field if changed beyond noise threshold */
+		float64_t tt_diff = target_temp - prev_target_temp;
+		if (tt_diff < 0.0) {
+			tt_diff = -tt_diff;
 		}
-		// Update last read state
-		last_read_state = state_snapshot;
+		if (tt_diff > LCD_TEMP_THRESHOLD) {
+			lcd_write_temp(fd, 1, LCD_COL_TT_VALUE, target_temp);
+			LOG(LCD_SCREEN, "Target temp: %.1lf F", target_temp);
+			prev_target_temp = target_temp;
+		}
+
 		increment_heartbeat(shared_info, LCD_SCREEN);
 		(void)nanosleep(&timer, NULL);
 	}
+
 	LOG(LCD_SCREEN, "Shutting down LCD screen thread");
 	return NULL;
 }

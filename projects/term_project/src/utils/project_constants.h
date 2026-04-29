@@ -17,7 +17,8 @@
 
 /* Various time constants */
 #define QUARTER_SECOND_AS_NSEC (250000000L)
-#define HALF_SECOND_AS_NSEC (5000000L)
+#define HALF_SECOND_AS_NSEC (500000000L)
+#define LCD_ENABLE_PULSE_NS (1000000L)
 
 /* Debounce Values */
 #define SAMPLE_MS (5)
@@ -53,6 +54,6 @@
 #define MAX_LOG_QUEUE_CAPACITY (1000U)
 
 /* Shared sensor constants */
-#define SENSOR_FAIL_THRESHOLD (3U)
+#define SENSOR_FAIL_THRESHOLD (15U)
 
 #endif /* PROJECT_CONSTANTS_H */

@@ -6,9 +6,13 @@
 #include "logger.h"
 #include "project_constants.h"
 #include "project_types.h"
+#include "read_timer.h"
 #include "thread_utils.h"
 
+#define MAX_JITTER_TEMP_SENS (0.250)
+
 static global_values_t *shared_info = NULL;
+static read_timer_t sensor_timer = { 0 };
 
 typedef struct {
 	float64_t temp_c;
@@ -181,6 +185,7 @@ static int32_t read_temp_sensor(temp_readings_t *out) {
 void *temperature_sensor_thread_entry(void *arg) {
 	LOG(TEMP_SENSOR, "Starting temperature sensor thread");
 	shared_info = (global_values_t *)arg;
+	read_timer_init(&sensor_timer);
 	/* Sleep 2 seconds between reads to not overload sensor */
 	const struct timespec thread_sleep = { .tv_sec = 2L, .tv_nsec = 0L };
 
@@ -188,9 +193,20 @@ void *temperature_sensor_thread_entry(void *arg) {
 	while (!atomic_load(&shared_info->is_shutdown_requested)) {
 		temp_readings_t readings = { 0 };
 		int32_t result = read_temp_sensor(&readings);
+
+		float64_t elapsed = 0.0;
+		if (read_timer_record(&sensor_timer, &elapsed)) {
+			float64_t jitter = read_timer_jitter(&sensor_timer);
+			LOG(TEMP_SENSOR, "Time since last read: %.3lf s (Jitter: %.3lf ms)", elapsed, (jitter * MSEC_PER_SEC));
+			if (jitter > (float64_t)MAX_JITTER_TEMP_SENS) {
+				LOG(TEMP_SENSOR, "Temp sensor jitter exceeds maximum: %.3lf > %.3lf s", jitter, (float64_t)MAX_JITTER_TEMP_SENS);
+			}
+		}
+
 		if (result != STATUS_SUCCESS) {
 			++failed_sensor_reads;
 		} else {
+			failed_sensor_reads = 0U;
 			pthread_mutex_lock(&shared_info->mutex);
 			shared_info->current_temp = (readings.temp_c * (9.0 / 5.0)) + 32;
 			shared_info->current_humidity_rh = readings.humidity_rh;
