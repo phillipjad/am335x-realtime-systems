@@ -12,8 +12,10 @@
 #define MAX_JITTER_TEMP_SENS (0.250)
 #define MAX_LATENCY_TEMP_SENS (2.0)
 
+
 static global_values_t *shared_info = NULL;
 static read_timer_t sensor_timer = { 0 };
+static const uint8_t SENSOR_FAIL_THRESHOLD = 5U;
 
 typedef struct {
 	float64_t temp_c;

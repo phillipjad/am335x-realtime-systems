@@ -54,6 +54,4 @@
 #define MAX_LOG_QUEUE_CAPACITY (1000U)
 
 /* Shared sensor constants */
-#define SENSOR_FAIL_THRESHOLD (15U)
-
 #endif /* PROJECT_CONSTANTS_H */
