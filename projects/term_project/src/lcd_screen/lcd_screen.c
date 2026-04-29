@@ -178,8 +178,8 @@ void *lcd_screen_thread_entry(void *arg) {
 		if (temp_difference < 0) {
 			temp_difference = -temp_difference;
 		}
-		printf("temp diff: %f\n", temp_difference);
-		printf("%f vs %f\n", latest_target_temp, target_temp);
+		// printf("temp diff: %f\n", temp_difference);
+		// printf("%f vs %f\n", latest_target_temp, target_temp);
 
 		if (temp_difference > 0.1) {
 			latest_target_temp = target_temp;
