@@ -26,7 +26,7 @@ static void handle_application_health(void) {
 	for (uint8_t ii = 0U; ii < NUM_THREADS; ++ii) {
 		if (error_copy[ii].is_set) {
 			error_present = true;
-			LOG((thread_index_e)ii, "%s", error_copy[ii].error_msg);
+			LOG(STATE_MANAGEMENT, "%s", error_copy[ii].error_msg);
 			if (is_terminal_thread_error(THREAD_NAMES[ii])) {
 				pthread_mutex_lock(&shared_info->mutex);
 				shared_info->current_state = STATE_FAIL;
