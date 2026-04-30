@@ -258,14 +258,6 @@ static void join_project_threads() {
 	if (result != STATUS_SUCCESS) {
 		LOG(NUM_THREADS, "Failed to join fan control thread");
 	}
-
-	/* Wake the log_handler so it exits its wait promptly and drains remaining messages */
-	(void)pthread_cond_broadcast(&shared_info.logger.log_cv);
-
-	result = pthread_join(threads.log_handler_thread, NULL);
-	if (result != STATUS_SUCCESS) {
-		LOG(NUM_THREADS, "Failed to join log handler thread");
-	}
 }
 
 /**
@@ -279,6 +271,14 @@ static void handle_shutdown(int32_t exit_code) {
 	servo_shutdown();
 	fan_shutdown();
 	gpio_map_close();
+	/* Wake the log_handler so it exits its wait promptly and drains remaining messages */
+	(void)pthread_cond_broadcast(&shared_info.logger.log_cv);
+
+	int32_t result = pthread_join(threads.log_handler_thread, NULL);
+	if (result != STATUS_SUCCESS) {
+		/* We don't know the state of the log handler here so we can't log anything */
+		(void)result;
+	}
 	exit(exit_code);
 }
 

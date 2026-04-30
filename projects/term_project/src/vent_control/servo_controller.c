@@ -22,8 +22,11 @@ static void servo_init_hw(uint8_t servo_chip, char servo_channel) {
 	configure_ehrpwm_pinmux(servo_chip, servo_channel);
 	init_pwm_channel(extracted_chip_value, extracted_channel_value);
 	set_pwm_period(extracted_chip_value, extracted_channel_value, SERVO_PERIOD_NS);
-	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, VENT_OPEN);
 	enable_pwm(extracted_chip_value, extracted_channel_value, true);
+	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, VENT_OPEN);
+	struct timespec timer = { 0 };
+	timer.tv_nsec = NSEC_PER_SEC / 2L;
+	(void)nanosleep(&timer, NULL);
 }
 
 /*--------------------------------------
@@ -59,12 +62,15 @@ int32_t potentiometer_based_servo(float64_t percent) {
  * Function: servo_shutdown
  *--------------------------------------*/
 void servo_shutdown(void) {
-	LOG(VENT_CONTROL, "Shutting down gate");
-	set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, VENT_OPEN);
+	LOG(NUM_THREADS, "Shutting down gate");
+	int32_t result = set_pwm_duty_cycle(extracted_chip_value, extracted_channel_value, VENT_CLOSED);
+	if (result != STATUS_SUCCESS) {
+		LOG(NUM_THREADS, "Failed to set closing duty cycle");
+	}
 	struct timespec timer = { 0 };
-	timer.tv_sec = 0;
-	timer.tv_nsec = NSEC_PER_SEC_F / 2;
-	nanosleep(&timer, NULL);
+	timer.tv_sec = 1;
+	timer.tv_nsec = NSEC_PER_SEC / 2L;
+	(void)nanosleep(&timer, NULL);
 	enable_pwm(extracted_chip_value, extracted_channel_value, false);
 	unexport_pwm_channel(extracted_chip_value, extracted_channel_value);
 }

@@ -200,6 +200,9 @@ void *temperature_sensor_thread_entry(void *arg) {
 
 		if (result != STATUS_SUCCESS) {
 			++failed_sensor_reads;
+			/* We don't want failures to invoke artificially long latency/jitter intervals
+			 * as such, we'll move the baseline when we fail to the next successful read */
+			sensor_timer.has_baseline = false;
 		} else {
 			failed_sensor_reads = 0U;
 			float64_t elapsed = 0.0;
@@ -234,7 +237,7 @@ void *temperature_sensor_thread_entry(void *arg) {
 			pthread_mutex_unlock(&shared_info->mutex);
 		} else {
 			/* We only want to clear the error if our timing is solid and we successfully polled the sensor */
-			if ((result == STATUS_SUCCESS) && (timing_failure == false)) {
+			if ((result == STATUS_SUCCESS) && (!timing_failure)) {
 				pthread_mutex_lock(&shared_info->mutex);
 				clear_error(&shared_info->thread_errors[TEMP_SENSOR]);
 				pthread_mutex_unlock(&shared_info->mutex);

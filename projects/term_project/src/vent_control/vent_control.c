@@ -37,7 +37,7 @@ static float64_t compute_vent_open_pct(state_e current_state, float64_t delta) {
 
 	if ((current_state == STATE_IDLE) || (current_state == STATE_FAIL)) {
 		vent_is_active = false;
-		return 0.0;
+		return 100.0;
 	}
 
 	if (delta > 0.0) {
@@ -72,7 +72,7 @@ static void apply_vent_position(float64_t open_pct) {
 
 	pthread_mutex_lock(&shared_info->mutex);
 	if (time_taken(&servo_start, &servo_end) > SERVO_TIMEOUT_MS_TIME_F) {
-		set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo is unresponsive and system has failed");
+		set_error(&shared_info->thread_errors[VENT_CONTROL], "TIMING ERROR: Servo is unresponsive and system has failed");
 	} else if (result != STATUS_SUCCESS) {
 		set_error(&shared_info->thread_errors[VENT_CONTROL], "Servo failed to move");
 	} else {
@@ -98,8 +98,8 @@ static void handle_vent_logic(void) {
 		return;
 	}
 
-	float64_t vent_pct;
-	if (current_state == STATE_RUNNING) {
+	float64_t vent_pct = 0.0;
+	if ((current_state == STATE_RUNNING) && (current_temp != 0)) {
 		float64_t delta = current_temp - target_temp;
 		vent_pct = compute_vent_open_pct(current_state, delta);
 		if (vent_pct != last_vent_pct) {
@@ -111,7 +111,7 @@ static void handle_vent_logic(void) {
 			LOG(VENT_CONTROL, "Read STATE_FAIL_SAFE state with manual control: %.2f%%", vent_pct);
 		}
 	} else {
-		vent_pct = compute_vent_open_pct(current_state, 0.0);
+		vent_pct = compute_vent_open_pct(current_state, 100.0);
 	}
 
 	last_vent_pct = vent_pct;
