@@ -6,14 +6,7 @@
 #include <unistd.h>
 
 /* Local project includes after system libraries */
-#ifdef USE_CONFIG
 #include "app_config.h"
-#endif /* USE_CONFIG */
-#include "project_constants.h"
-#ifndef USE_CONFIG
-#include "user_input.h"
-#include <string.h> /* string.h needed for memset */
-#endif              /* !USE_CONFIG */
 #include "fan_control.h"
 #include "fan_controller.h"
 #include "gpio_control.h"
@@ -22,6 +15,7 @@
 #include "log_handler.h"
 #include "logger.h"
 #include "potentiometer.h"
+#include "project_constants.h"
 #include "project_types.h"
 #include "servo_controller.h"
 #include "signal_handler.h"
@@ -127,60 +121,6 @@ static void globals_init(void) {
 static void log_mode(void) {
 	LOG(NUM_THREADS, "RELEASE MODE ENABLED");
 }
-
-#ifndef USE_CONFIG
-/*--------------------------------------
- * Static Function: get_user_configuration_items
- *--------------------------------------*/
-static void get_user_configuration_items(configuration_items_t *user_config) {
-	char input_buffer[USER_INPUT_MAX_LEN + 1U] = { 0 };
-
-	LOG(NUM_THREADS, "Prompting user for configuration items");
-
-	/* target temperature status LED Pin */
-	int32_t result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for target temperature status LED");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for target temperature status pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.target_temp_led);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for target temperature status LED GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* system health LED Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for system health LED");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for system health LED pin");
-	}
-	result = parse_input_to_uint8(input_buffer, &user_config->pin_layout.system_ok_led);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for system health LED GPIO");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* Servo Pin */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What pin should be used for Servo (ex: 2b for EHRPWM2B)");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for Servo pin");
-	}
-	result = parse_pwm_input(input_buffer, &user_config->pin_layout.servo.pwm_chip, &user_config->pin_layout.servo.pwm_channel);
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to parse user input for Servo EHRPWM pin");
-	}
-
-	/* LCD Setup */
-	result = get_user_input(input_buffer, USER_INPUT_MAX_LEN, "What I2C bus should be used for the LCD? (Ex: '2')");
-	if (result != STATUS_SUCCESS) {
-		LOG_AND_EXIT("Failed to get user input for LCD bus");
-	}
-	parse_input_to_uint8(input_buffer, &user_config->pin_layout.lcd_i2c_bus);
-	// Use I2C-2
-	if (user_config->pin_layout.lcd_i2c_bus != 2U) {
-		LOG_AND_EXIT("Please use the I2C-2 bus");
-	}
-	(void)memset((void *)input_buffer, 0, (USER_INPUT_MAX_LEN + 1U));
-	/* Servo Pin */
-}
-#endif /* !USE_CONFIG */
 
 static void make_rt_attr(pthread_attr_t *attr, int32_t priority) {
 	struct sched_param sp = { .sched_priority = priority };
@@ -343,9 +283,7 @@ int32_t main(void) {
 
 	verify_sudo();
 	configuration_items_t *user_config = &shared_info.config;
-#ifdef USE_CONFIG
 	load_app_config(user_config);
-#endif /* USE_CONFIG */
 
 	/* Log the mode that the binary was compiled with */
 	log_mode();
@@ -354,10 +292,6 @@ int32_t main(void) {
 
 	/* If initialization fails we fail-fast so no need for a return value */
 	application_init();
-
-#ifndef USE_CONFIG
-	get_user_configuration_items(user_config);
-#endif /* !USE_CONFIG */
 
 	hardware_init();
 

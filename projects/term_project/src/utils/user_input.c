@@ -1,22 +1,12 @@
 #include "user_input.h"
 
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
 
 /* Local project includes after system libraries */
 #include "logger.h"
 
 #define BASE_DEC (10)
-
-/*--------------------------------------
- * Function: get_user_input
- *--------------------------------------*/
-int32_t get_user_input(char *input_buffer, size_t input_buffer_len, const char *prompt) {
-	LOG_WITHOUT_NEWLINE(NUM_THREADS, "%s: ", prompt);
-	char *return_val = fgets(input_buffer, input_buffer_len, stdin);
-	return return_val != NULL ? STATUS_SUCCESS : STATUS_FAIL;
-}
 
 /*--------------------------------------
  * Function: parse_input_to_uint8

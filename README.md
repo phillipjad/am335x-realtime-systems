@@ -5,21 +5,25 @@
 - Kabir Jolly (kjolly2@gmu.edu)
 
 ## How to build assignments
-- Run the command `./build.sh -t p[1..n]` or `./build.sh -t project[1..n]`
+- Run the command `./build.sh -t p[1..n]` or `./build.sh -t project[1..n]` or `./build.sh -t (tp|term-project)`
 - To enable debug mode, add '-d' or '--debug' to build command
+    - debug mode only eliminates compiler optimizations and injects debug artifacts in term-project
 - To read from a project's configuration file instead of from stdio, add '-u' or '--use-config' to build command
+    - term project must provide this flag. Reading from user input is invalid behavior
 - To run the program using mmap, rather than i/o add '-m' or '--mmap` to build command
 - The project executable will be output into the `build/` directory
 - To build for various architectures, use the `-a` or `--arch` flag.
     - To build p2 for ARM -> `./build.sh -t p2 -a arm -c`
     - To build p2 for x86_64 -> `./build.sh -t p2 -a x86_64 -c`
+    - To build term project for x86_64 -> `./build.sh -t tp -a x86_64 -c`
     - etc...
 
 ## How to run assignments
-- After building run the produced executable in sudo. E.g. for project 2 -> `sudo ./p2`
+- After building run the produced executable in sudo. E.g. for project 2 -> `sudo ./p2` or `sudo ./term-project`
 
 ## Default dev pin assignments
 - Default pin assignments for each project can be found in the corresponding project config -> p2 default pin configuration can be found in [p2_config.cfg](https://github.com/phillipjad/swe660-s26-jolly-miavelstuck/blob/main/config/p2_config.cfg)
+- The pin assignment for the term-project is the only supported way to run the project due to the utilization of two EPWMSS modules. GPIO may be altered but other pins may not.
 
 ## Recommended aliases (Add to ~/.bashrc)
 - Run pre-commit: `alias pcrun='pre-commit run --all-files'`
