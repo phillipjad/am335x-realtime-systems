@@ -73,9 +73,7 @@ static int32_t parse_config_file_line(const char *line, configuration_items_t *c
 		return STATUS_FAIL;
 	}
 
-	if (strcmp(key, TARGET_TEMP_LED_GPIO_KEY) == 0) {
-		return parse_input_to_uint8(value, &config->pin_layout.target_temp_led);
-	} else if (strcmp(key, SYSTEM_OK_LED_GPIO_KEY) == 0) {
+	if (strcmp(key, SYSTEM_OK_LED_GPIO_KEY) == 0) {
 		return parse_input_to_uint8(value, &config->pin_layout.system_ok_led);
 	} else if (strcmp(key, SYSTEM_FAIL_LED_GPIO_KEY) == 0) {
 		return parse_input_to_uint8(value, &config->pin_layout.system_fail_led);

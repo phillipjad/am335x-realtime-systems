@@ -31,7 +31,6 @@ typedef struct {
 	int32_t lcd_fd;          /**< file descriptor for LCD screen */
 	pwm_pin_t servo;         /**< Pin for servo */
 	pwm_pin_t fan_pwm;       /**< Pin for 4-pin PWM fan */
-	uint8_t target_temp_led; /**< Pin for target_temp_led */
 	uint8_t system_ok_led;   /**< Pin for system_ok_led */
 	uint8_t system_fail_led; /**< Pin for system_fail_led */
 	uint8_t lcd_i2c_bus;     /**< Bus for LCD screen */
