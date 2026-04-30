@@ -190,7 +190,6 @@ void *lcd_screen_thread_entry(void *arg) {
 		if (state_snapshot != prev_state) {
 			lcd_set_cursor(fd, 0, LCD_COL_STATE);
 			lcd_print(fd, state_to_str(state_snapshot));
-			LOG(LCD_SCREEN, "State: %s", state_to_str(state_snapshot));
 			prev_state = state_snapshot;
 		}
 
@@ -201,7 +200,6 @@ void *lcd_screen_thread_entry(void *arg) {
 		}
 		if (ct_diff > LCD_TEMP_THRESHOLD) {
 			lcd_write_temp(fd, 1, LCD_COL_CT_VALUE, current_temp);
-			LOG(LCD_SCREEN, "Current temp: %.1lf F", current_temp);
 			prev_current_temp = current_temp;
 		}
 
@@ -212,7 +210,6 @@ void *lcd_screen_thread_entry(void *arg) {
 		}
 		if (tt_diff > LCD_TEMP_THRESHOLD) {
 			lcd_write_temp(fd, 1, LCD_COL_TT_VALUE, target_temp);
-			LOG(LCD_SCREEN, "Target temp: %.1lf F", target_temp);
 			prev_target_temp = target_temp;
 		}
 
