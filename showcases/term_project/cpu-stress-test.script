@@ -1,0 +1,316 @@
+Script started on 2026-04-30 02:13:49+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="218" LINES="51"]
+root@trn-beagle:/home/debian# ./term-project
+1777515233.459133[app_config.c:128]: Reading application configuration from /home/debian/config/tp_config.cfg
+1777515233.459318[main.c:128]: RELEASE MODE ENABLED
+1777515233.459355[main.c:294]: System information: Linux, 4.19.94-ti-rt-r74, #1buster SMP PREEMPT RT Tue Jun 27 20:59:55 UTC 2023, armv7l
+1777515233.459387[main.c:68]: Initialized application
+1777515233.459413[main.c:75]: Initializing mmap
+1777515233.459440[main.c:84]: Initialized hardware LEDs
+1777515233.459466[main.c:89]: Initialized temp sensor
+1777515233.459498[main.c:93]: Initialized servo
+1777515233.459524[main.c:99]: Initialized LCD
+1777515233.459551[potentiometer.c:44]: Potentiometer initialized with AIN-5
+1777515233.459848[main.c:102]: Initialized potentiometer
+1777515233.459896[gpio_control.c:245]: Configured pull-up on GPIO 60 (PADCONF offset 0x878 = 0x37)
+1777515233.459927[main.c:109]: Initialized fan controller
+1777515233.459953[main.c:116]: Initializing global states
+1777515233.459980[vent_control.c:125]: Starting vent control thread
+1777515233.460171[log_handler.c:56]: Starting log handler thread!
+1777515233.462874[lcd_screen.c:146]: Starting LCD screen thread
+1777515233.465846[temperature_sensor.c:189]: Starting temperature sensor thread
+1777515233.468005[led.c:30]: Starting LED thread
+1777515233.470554[potentiometer.c:55]: Starting potentiometer thread
+1777515233.472979[state_management.c:54]: Starting state management thread
+1777515233.728013[fan_control.c:114]: Starting fan control thread
+1777515233.728582[potentiometer.c:78]: Potentiometer input registered in 0.257 s
+1777515233.728719[fan_control.c:110]: Fan RPM: 0
+1777515237.732906[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515238.985269[fan_control.c:110]: Fan RPM: 0
+1777515241.737734[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515243.587216[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515243.687379[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515243.787478[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515243.887580[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515243.987769[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.241803[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.65%
+1777515244.242048[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.242145[fan_control.c:110]: Fan RPM: 0
+1777515244.341423[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.441520[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.541628[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.641801[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.742661[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.842021[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515244.942268[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.042471[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.142689[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.243790[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.343224[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.443458[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.492967[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.70%
+1777515245.543695[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.643935[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.744886[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.745182[potentiometer.c:78]: Potentiometer input registered in 0.251 s
+1777515245.844335[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.944681[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515245.993641[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.68%
+1777515246.044793[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.144908[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.245592[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.345238[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.445353[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.494280[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.70%
+1777515246.545490[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.645611[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.746191[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.845947[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.946045[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515246.994835[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.68%
+1777515247.046232[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.146342[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.246794[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.346642[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.446751[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.495382[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.63%
+1777515247.546937[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.647043[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.747397[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.847352[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.947463[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515247.995927[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.41%
+1777515248.047592[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.147773[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.248020[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.348040[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.448241[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.496609[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.43%
+1777515248.548376[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.648634[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.748742[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.848873[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.949065[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515248.997192[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.38%
+1777515249.049193[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.149317[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.500107[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.500398[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.16%
+1777515249.500606[fan_control.c:110]: Fan RPM: 0
+1777515249.599572[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.699702[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.750028[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515249.799876[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515249.900036[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.001398[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.001676[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.04%
+1777515250.100296[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.200399[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.300606[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.400702[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.501949[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.502197[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.09%
+1777515250.600983[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.701079[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.801176[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515250.901341[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.002547[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.002789[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.04%
+1777515251.101613[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.201720[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.301817[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.401977[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.503153[state_management.c:29]: DHT22 failed 5 consecutive sensor readings
+1777515251.503400[vent_control.c:111]: Read STATE_FAIL_SAFE state with manual control: 35.09%
+1777515252.004134[vent_control.c:106]: Adjusting vent to 13.3% open (delta: 1.33 F)
+1777515252.505188[vent_control.c:106]: Adjusting vent to 12.0% open (delta: 1.20 F)
+1777515253.005794[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515253.755522[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515254.006939[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515254.757981[vent_control.c:106]: Adjusting vent to 11.2% open (delta: 1.12 F)
+1777515254.758237[fan_control.c:110]: Fan RPM: 240
+1777515255.008279[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515256.510457[vent_control.c:106]: Adjusting vent to 11.8% open (delta: 1.18 F)
+1777515257.011102[vent_control.c:106]: Adjusting vent to 11.7% open (delta: 1.17 F)
+1777515257.511707[vent_control.c:106]: Adjusting vent to 11.4% open (delta: 1.14 F)
+1777515257.761924[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515258.012305[vent_control.c:106]: Adjusting vent to 11.8% open (delta: 1.18 F)
+1777515258.512902[vent_control.c:106]: Adjusting vent to 12.2% open (delta: 1.22 F)
+1777515259.513809[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515260.014816[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515260.015093[fan_control.c:110]: Fan RPM: 240
+1777515260.515746[vent_control.c:106]: Adjusting vent to 11.7% open (delta: 1.17 F)
+1777515261.016300[vent_control.c:106]: Adjusting vent to 11.6% open (delta: 1.16 F)
+1777515261.516927[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515261.766229[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515262.017499[vent_control.c:106]: Adjusting vent to 11.6% open (delta: 1.16 F)
+1777515262.518050[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515263.018682[vent_control.c:106]: Adjusting vent to 11.6% open (delta: 1.16 F)
+1777515263.519267[vent_control.c:106]: Adjusting vent to 11.2% open (delta: 1.12 F)
+1777515263.653947[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x21 got 0x20
+1777515264.019892[vent_control.c:106]: Adjusting vent to 11.4% open (delta: 1.14 F)
+1777515264.520536[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515265.271554[vent_control.c:106]: Adjusting vent to 11.4% open (delta: 1.14 F)
+1777515265.271821[fan_control.c:110]: Fan RPM: 240
+1777515265.521767[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515265.772389[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515266.022616[vent_control.c:106]: Adjusting vent to 11.4% open (delta: 1.14 F)
+1777515266.523403[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515267.524543[vent_control.c:106]: Adjusting vent to 11.8% open (delta: 1.18 F)
+1777515268.024971[vent_control.c:106]: Adjusting vent to 11.7% open (delta: 1.17 F)
+1777515268.525607[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515269.026147[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515269.695327[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x1E got 0x1D
+1777515269.777036[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515270.027425[vent_control.c:106]: Adjusting vent to 11.7% open (delta: 1.17 F)
+1777515270.528916[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515270.529187[fan_control.c:110]: Fan RPM: 120
+1777515271.029641[vent_control.c:106]: Adjusting vent to 11.6% open (delta: 1.16 F)
+1777515271.530192[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515272.030746[vent_control.c:106]: Adjusting vent to 11.9% open (delta: 1.19 F)
+1777515272.531362[vent_control.c:106]: Adjusting vent to 11.6% open (delta: 1.16 F)
+1777515273.031923[vent_control.c:106]: Adjusting vent to 11.5% open (delta: 1.15 F)
+1777515273.532569[vent_control.c:106]: Adjusting vent to 11.3% open (delta: 1.13 F)
+1777515273.722758[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x1A got 0x1C
+1777515273.781486[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515274.033134[vent_control.c:106]: Adjusting vent to 83.1% open (delta: 8.31 F)
+1777515274.533776[vent_control.c:106]: Adjusting vent to 100.0% open (delta: 15.31 F)
+1777515275.785454[fan_control.c:110]: Fan RPM: 1560
+1777515277.787892[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515281.042396[fan_control.c:110]: Fan RPM: 2760
+1777515281.792847[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515285.797928[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515286.299796[fan_control.c:110]: Fan RPM: 2760
+1777515289.804342[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515291.556867[fan_control.c:110]: Fan RPM: 2760
+1777515293.809373[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515293.922342[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x1E got 0x1A
+1777515296.813680[fan_control.c:110]: Fan RPM: 2760
+1777515297.815011[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515302.070770[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515302.071092[fan_control.c:110]: Fan RPM: 2760
+1777515305.825100[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515307.328041[fan_control.c:110]: Fan RPM: 2760
+1777515309.830893[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515310.138776[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x1F got 0x1B
+1777515312.585015[fan_control.c:110]: Fan RPM: 2880
+1777515313.836016[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515314.166222[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x21 got 0x1D
+1777515317.841428[potentiometer.c:78]: Potentiometer input registered in 0.251 s
+1777515317.841759[fan_control.c:110]: Fan RPM: 2760
+1777515321.846113[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515323.097916[fan_control.c:110]: Fan RPM: 2760
+1777515325.851007[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515328.354625[fan_control.c:110]: Fan RPM: 2760
+1777515328.367843[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0xA1 got 0x21
+1777515329.856633[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515333.611813[fan_control.c:110]: Fan RPM: 2760
+1777515333.861746[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515337.116627[vent_control.c:106]: Adjusting vent to 35.1% open (delta: 3.51 F)
+1777515337.617228[vent_control.c:106]: Adjusting vent to 0.0% open (delta: -6.85 F)
+1777515337.866601[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515338.868965[fan_control.c:110]: Fan RPM: 1680
+1777515341.872743[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515342.463814[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0xA4 got 0x24
+1777515344.126256[fan_control.c:110]: Fan RPM: 0
+1777515345.878201[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515349.382721[fan_control.c:110]: Fan RPM: 0
+1777515349.883715[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515353.888851[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515354.640271[fan_control.c:110]: Fan RPM: 0
+1777515357.893716[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515359.897253[fan_control.c:110]: Fan RPM: 0
+1777515361.899718[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515362.709000[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x26 got 0x36
+1777515365.154739[fan_control.c:110]: Fan RPM: 0
+1777515365.905309[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515368.408544[fan_control.c:110]: Fan RPM: 0
+1777515369.910847[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515373.665909[fan_control.c:110]: Fan RPM: 0
+1777515373.915809[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515377.920968[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515378.923571[fan_control.c:110]: Fan RPM: 0
+1777515381.926886[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515384.180873[fan_control.c:110]: Fan RPM: 0
+1777515385.932565[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515389.436708[fan_control.c:110]: Fan RPM: 0
+1777515389.937872[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515393.942649[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515394.694000[fan_control.c:110]: Fan RPM: 0
+1777515397.947713[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515399.950925[fan_control.c:110]: Fan RPM: 0
+1777515401.953945[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515403.102416[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x46 got 0x26
+1777515405.208855[fan_control.c:110]: Fan RPM: 0
+1777515405.959325[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515407.235211[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x06 got 0x26
+1777515409.964053[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515410.466031[fan_control.c:110]: Fan RPM: 0
+1777515413.970477[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515415.723251[fan_control.c:110]: Fan RPM: 0
+1777515417.975283[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515419.317778[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x06 got 0x26
+1777515420.980042[fan_control.c:110]: Fan RPM: 0
+1777515421.982065[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515426.237214[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515426.237677[fan_control.c:110]: Fan RPM: 0
+1777515427.373427[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x24 got 0x25
+1777515429.387259[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x05 got 0x25
+1777515429.991432[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515431.493764[fan_control.c:110]: Fan RPM: 0
+1777515433.997200[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515436.751264[fan_control.c:110]: Fan RPM: 0
+1777515438.002160[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515442.008230[potentiometer.c:78]: Potentiometer input registered in 0.251 s
+1777515442.008625[fan_control.c:110]: Fan RPM: 0
+1777515446.012988[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515447.265692[fan_control.c:110]: Fan RPM: 0
+1777515450.018636[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515452.522017[fan_control.c:110]: Fan RPM: 0
+1777515454.024431[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515457.779242[fan_control.c:110]: Fan RPM: 0
+1777515458.029265[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515462.034005[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515463.036427[fan_control.c:110]: Fan RPM: 0
+1777515466.040130[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515467.859649[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x2D got 0x25
+1777515468.293678[fan_control.c:110]: Fan RPM: 0
+1777515469.873424[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x2B got 0x27
+1777515470.045180[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515471.887161[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x06 got 0x26
+1777515473.550540[fan_control.c:110]: Fan RPM: 0
+1777515474.051583[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515478.056099[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515478.807420[fan_control.c:110]: Fan RPM: 0
+1777515482.061234[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515484.064349[fan_control.c:110]: Fan RPM: 0
+1777515486.067214[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515488.105588[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x36 got 0x26
+1777515489.321772[fan_control.c:110]: Fan RPM: 0
+1777515490.072293[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515490.119284[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x27 got 0x26
+1777515494.077369[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515494.579221[fan_control.c:110]: Fan RPM: 0
+1777515498.083246[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515499.836432[fan_control.c:110]: Fan RPM: 0
+1777515502.088688[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515502.198273[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x35 got 0x25
+1777515503.090931[fan_control.c:110]: Fan RPM: 0
+1777515506.095303[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515506.225761[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x05 got 0x25
+1777515508.348523[fan_control.c:110]: Fan RPM: 0
+1777515510.099802[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515512.388779[temperature_sensor.c:153]: DHT22 checksum mismatch: expected 0x25 got 0x24
+1777515513.605178[fan_control.c:110]: Fan RPM: 0
+1777515514.106108[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515518.110377[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515518.862323[fan_control.c:110]: Fan RPM: 0
+1777515522.115601[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515524.118373[fan_control.c:110]: Fan RPM: 0
+1777515526.121363[potentiometer.c:78]: Potentiometer input registered in 0.250 s
+1777515529.375295[fan_control.c:110]: Fan RPM: 0
+^C1777515529.870491[main.c:373]: Starting application shutdown sequence...
+1777515529.870585[log_handler.c:85]: Shutting down log handler thread
+root@trn-beagle:/home/debian# exit
+exit
+
+Script done on 2026-04-30 02:18:53+00:00 [COMMAND_EXIT_CODE="0"]
